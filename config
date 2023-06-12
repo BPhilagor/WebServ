@@ -1,0 +1,27 @@
+server billy {
+	listen = 8080
+	server_name = something www.something.com
+	location / {
+		root = html
+	}
+}
+
+not_server it's bad' {
+	listen = this that;
+}
+
+server sally {
+	listen = 4242
+	server_name = foo www.foo.com
+	location / {
+		root = html
+	}
+}
+
+not_server2 it {
+	sdlkfj = 123
+}
+
+ {
+	empths = 1
+ }
