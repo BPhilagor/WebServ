@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bphilago <bphilago@student.42.fr>          +#+  +:+       +#+        */
+/*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 09:39:37 by bphilago          #+#    #+#             */
-/*   Updated: 2023/06/11 09:39:37 by bphilago         ###   ########.fr       */
+/*   Updated: 2023/06/12 09:51:11 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
 	const int addrlen = sizeof(address);
 	const int PORT = 4242;
 	memset((char *)&address, 0, sizeof(address));
-	address.sin_family = AF_INET; 
-	address.sin_addr.s_addr = htonl(INADDR_ANY); 
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = htonl(INADDR_ANY);
 	address.sin_port = htons(PORT);
 
 	//Binding the socket with the wanted port
