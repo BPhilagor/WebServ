@@ -6,7 +6,7 @@
 /*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 05:21:02 by znichola          #+#    #+#             */
-/*   Updated: 2023/06/11 12:57:19 by znichola         ###   ########.fr       */
+/*   Updated: 2023/06/12 13:20:17 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,14 +61,15 @@ public:
 	const dataObj & getObj(size_t index) const;
 	size_t getObjSize() const;
 
-	int getCount(const std::string type);
-	Data & get(const std::string type, int n = 0);
+	int count(const std::string &type);
+	Data & find(const std::string &type, int n = 0);
+	Data get(const std::string &type);
 
 	Data & operator=(const Data &other);
 	// Data & operator[](const std::string node, size_t idx);
 
 	static void readFile(Data &n, const std::string &path);
-	static void print(const Data &d, int level = 0);
+	static void print(const Data &d, int level = 1);
 };
 
 std::ostream &operator<<(std::ostream &os, const dataObj &o);

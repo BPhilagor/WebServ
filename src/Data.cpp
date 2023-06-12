@@ -6,7 +6,7 @@
 /*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 05:21:02 by znichola          #+#    #+#             */
-/*   Updated: 2023/06/12 09:15:20 by znichola         ###   ########.fr       */
+/*   Updated: 2023/06/12 13:21:05 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ void Data::readFile(Data &n, const std::string &path)
 
 #pragma region Getters
 
-int Data::getCount(const std::string type)
+int Data::count(const std::string &type)
 {
 	int count = 0;
 	for (size_t i = 0; i < getObjSize(); i++)
@@ -103,7 +103,7 @@ int Data::getCount(const std::string type)
 	return count;
 }
 
-Data & Data::get(const std::string type, int n)
+Data & Data::find(const std::string &type, int n)
 {
 	int count = -1;
 	for (size_t i = 0; i < getObjSize(); i++)
@@ -116,6 +116,16 @@ Data & Data::get(const std::string type, int n)
 	// throw(500);
 	return _vecObjs.at(100000).second; // just to get it to throw an exception! replace with custom exceptions later
 }
+
+Data Data::get(const std::string &type)
+{
+	Data ret;
+	for (size_t i = 0; i < getObjSize(); i++)
+		if (_vecObjs.at(i).first == type)
+			ret._vecObjs.push_back(_vecObjs.at(i));
+	return ret;
+}
+
 
 const std::string Data::getContent() const { return _content; }
 
@@ -163,7 +173,10 @@ std::ostream &operator<<(std::ostream &os, const Data &d)
 
 void Data::print(const Data &d, int level)
 {
+	if (level < 1)
+		level = 1;
 	print_Data(d, level);
+	std::cout << "\n this that\n";
 	std::cout << std::endl;
 }
 
