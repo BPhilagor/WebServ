@@ -1,12 +1,9 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   utils.hpp                                          :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: bphilago <bphilago@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/06/11 15:24:53 by bphilago          #+#    #+#             */
-/*   Updated: 2023/06/12 13:09:17 by bphilago         ###   ########.fr       */
+/*                                                     __ __   __             */
+/*    WebServ                                         / // / /__ \            */
+/*                By: skoulen, bphilago, znichola    / // /_ __/ /            */
+/*                                                  /__  __// __/             */
+/*                Created: 2023/06/01 23:16:37        /_/  /____/ lausanne.ch */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,4 +25,3 @@ int send_to_socket(const std::string &message, int socket_fd);
 int send_file_to_socket(const std::string &filename, int socket_fd);
 
 #endif
-
