@@ -6,7 +6,7 @@
 /*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 09:39:37 by bphilago          #+#    #+#             */
-/*   Updated: 2023/06/12 14:49:43 by znichola         ###   ########.fr       */
+/*   Updated: 2023/06/12 16:51:31 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,8 @@ int main(int argc, char** argv)
 	Data servers = data.get("server");
 
 	launchServers(servers);
+
+	return 0;
 
 	// Data::print(servers, 2);
 	// std::cout << servers << "\n";

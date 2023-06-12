@@ -6,7 +6,7 @@
 /*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/12 12:25:47 by bphilago          #+#    #+#             */
-/*   Updated: 2023/06/12 16:06:50 by znichola         ###   ########.fr       */
+/*   Updated: 2023/06/12 17:06:57 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ void	launchServers(const Data & servers)
 	}
 
 
+	struct sockaddr_in address;
+	const int addrlen = sizeof(address);
 
 	// generat list of ports to listen too;
 	for (int i = 0; i < servers.count("server"); i++)
@@ -53,15 +55,11 @@ void	launchServers(const Data & servers)
 			std::cout << "Error: when creating socket" << std::endl;
 			return ;
 		}
-
 		// Creating the sockaddr_in struct
-		struct sockaddr_in address;
-		const int addrlen = sizeof(address);
-		const int PORT = *it;
 		memset((char *)&address, 0, sizeof(address));
 		address.sin_family = AF_INET;
 		address.sin_addr.s_addr = htonl(INADDR_ANY);
-		address.sin_port = htons(PORT);
+		address.sin_port = htons(*it);
 
 		//Binding the socket with the wanted port
 		if (bind(socketFD, (struct sockaddr *)&address, addrlen)) {
@@ -107,17 +105,46 @@ void	launchServers(const Data & servers)
 					std::cout << "Error: with singualr event from kq" << std::endl;
 					return ;
 				}
+				if (events[i].flags & EV_EOF)
+				{
+					std::cout << "End of file reached" << std::endl;
+					return ;
+				}
 				std::cout << "dealing with the event # " << i << events[i].data << "\n";
+
+					int new_socket = accept(events[i].ident, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+					if (new_socket < 0) {
+						std::cout << "Error when accepting request" << std::endl;
+						return ;
+					}
+					std::cout << "Connection established" << std::endl;
+
+					// while receiving display message
+					char buff[4096];
+					while (true)
+					{
+						// clear buffer
+						memset(buff, 0, 4096);
+						// wait for message
+						int bytesRecv = recv(new_socket, buff, 4096, 0);
+						if (bytesRecv == -1)
+						{
+							std::cerr << "Error: There was a connection issue" << std::endl;
+							break;
+						}
+						// display message
+						if (bytesRecv == 0)
+						{
+							std::cout << "The client disconnected" << std::endl;
+							break;
+						}
+						std::cout << "Received: " << std::string(buff, 0, bytesRecv) << std::endl;
+						send(events[i].ident, buff, bytesRecv + 1, 0);
+						// resend message
+					}
+					// close socket
+					close(events[i].ident);
 			}
 		}
 	}
 }
-
-// static void printSet(std::set<int> i)
-// {
-//     std::copy(
-//         i.begin(),
-//         i.end(),
-//         std::ostream_iterator(std::cout, " ")
-//         );
-// }
