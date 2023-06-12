@@ -6,17 +6,27 @@
 /*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 09:39:37 by bphilago          #+#    #+#             */
-/*   Updated: 2023/06/12 09:51:11 by znichola         ###   ########.fr       */
+/*   Updated: 2023/06/12 12:36:59 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "utils.hpp"
+#include "Data.hpp"
+
 #define BACK_LOG 10
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
 int main(int argc, char** argv) {
+
+	Data data;
+
+	Data::readFile(data, std::string(argv[1]));
+	Data::print(data, 2);
+
+	Data servers = data.get("server");
+
 	(void) argc;
 	(void) argv;
 

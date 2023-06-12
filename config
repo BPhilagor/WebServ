@@ -1,0 +1,7 @@
+server basic billy {
+	listen = 8080
+	server_name = something www.something.com
+	location / {
+		root = html
+	}
+}
