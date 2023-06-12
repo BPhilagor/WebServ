@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bphilago <bphilago@student.42.fr>          +#+  +:+       +#+        */
+/*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 09:39:37 by bphilago          #+#    #+#             */
-/*   Updated: 2023/06/12 12:24:47 by bphilago         ###   ########.fr       */
+/*   Updated: 2023/06/12 14:49:43 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "utils.hpp"
 #include "Data.hpp"
+#include "launchServers.hpp"
 
 #define BACK_LOG 10
 
@@ -28,11 +29,13 @@ int main(int argc, char** argv)
 	Data data;
 
 	Data::readFile(data, std::string(argv[1]));
-	Data::print(data, 2);
+	// Data::print(data, 2);
 
 	Data servers = data.get("server");
 
-	Data::print(servers, 2);
+	launchServers(servers);
+
+	// Data::print(servers, 2);
 	// std::cout << servers << "\n";
 
 	(void) argc;

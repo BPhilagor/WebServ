@@ -6,7 +6,7 @@
 /*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 05:21:02 by znichola          #+#    #+#             */
-/*   Updated: 2023/06/12 13:21:05 by znichola         ###   ########.fr       */
+/*   Updated: 2023/06/12 14:46:01 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ void Data::readFile(Data &n, const std::string &path)
 
 #pragma region Getters
 
-int Data::count(const std::string &type)
+int Data::count(const std::string &type) const
 {
 	int count = 0;
 	for (size_t i = 0; i < getObjSize(); i++)
@@ -103,7 +103,7 @@ int Data::count(const std::string &type)
 	return count;
 }
 
-Data & Data::find(const std::string &type, int n)
+const Data & Data::find(const std::string &type, int n) const
 {
 	int count = -1;
 	for (size_t i = 0; i < getObjSize(); i++)
@@ -113,11 +113,10 @@ Data & Data::find(const std::string &type, int n)
 		if (count == n)
 			return _vecObjs.at(i).second;
 	}
-	// throw(500);
-	return _vecObjs.at(100000).second; // just to get it to throw an exception! replace with custom exceptions later
+	throw(500);
 }
 
-Data Data::get(const std::string &type)
+Data Data::get(const std::string &type) const
 {
 	Data ret;
 	for (size_t i = 0; i < getObjSize(); i++)

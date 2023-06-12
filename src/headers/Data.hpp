@@ -6,7 +6,7 @@
 /*   By: znichola <znichola@student.42lausanne.ch>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 05:21:02 by znichola          #+#    #+#             */
-/*   Updated: 2023/06/12 13:20:17 by znichola         ###   ########.fr       */
+/*   Updated: 2023/06/12 14:46:29 by znichola         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,9 +61,9 @@ public:
 	const dataObj & getObj(size_t index) const;
 	size_t getObjSize() const;
 
-	int count(const std::string &type);
-	Data & find(const std::string &type, int n = 0);
-	Data get(const std::string &type);
+	int count(const std::string &type) const;
+	const Data & find(const std::string &type, int n = 0) const;
+	Data get(const std::string &type) const;
 
 	Data & operator=(const Data &other);
 	// Data & operator[](const std::string node, size_t idx);
