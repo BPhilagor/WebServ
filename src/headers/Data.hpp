@@ -56,7 +56,7 @@ public:
 
 	// accessors
 	const Data &		find(const std::string &type, int n = 0) const;
-	Data				get(const std::string &type) const;
+	Data				get(const std::string &type, int depth = 0) const;
 	int 				count(const std::string &type) const;
 	int					getInt() const;
 	const std::string	getContent() const;

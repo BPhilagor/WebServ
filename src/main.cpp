@@ -15,18 +15,18 @@
 
 int main(int argc, char** argv)
 {
+	Data data;
 	if (argc != 2)
 	{
 		std::cout << "usage: ./webserv path/to/config" << std::endl;
-		return 1;
+		std::cout << "still loading a server with the default config" << std::endl;
+		Data::readFile(data, NULL);
 	}
-	Data data;
-	std::cout << "here\n" << argv[0] << " " << argv[1] << "\n";
-
-	Data::readFile(data, argv[1]);
+	else
+		Data::readFile(data, argv[1]);
+	std::cout << "\nconfig:\n";
 	Data::print(data, 2);
-
-	std::cout << "here\n";
+	std::cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
 
 	Data servers = data.get("server");
 
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
 	// return 0;
 
-	Data::print(servers, 2);
+	// Data::print(servers, 2);
 	// std::cout << servers << "\n";
 
 	(void) argc;
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 	// Creating the sockaddr_in struct
 	struct sockaddr_in address;
 	const int addrlen = sizeof(address);
-	const int PORT = 4242;
+	const int PORT = servers.find("server").find("listen").getInt();
 	memset((char *)&address, 0, sizeof(address));
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = htonl(INADDR_ANY);

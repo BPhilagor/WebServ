@@ -19,7 +19,7 @@ static void print_Data(const Data &d, int level);
 static void print_dataObj(const dataObj &o, int level);
 
 // defaults for server configuration
-#define DF_LISTEN 80
+#define DF_LISTEN 8080
 
 Data::Data() {}
 
@@ -37,16 +37,22 @@ Data &Data::operator=(const Data &other)
 
 void Data::readFile(Data &n, const char *path)
 {
-	(void)n;
 	std::ifstream file(path);
-	if (!file.is_open())
+	if (path)
 	{
-		std::cerr << "can't read config file: " << path << std::endl;
-		exit(1);
+		if (!file.is_open())
+		{
+			std::cerr << "can't read config file: " << path << std::endl;
+			exit(1);
+		}
+		while(!file.eof())
+			read_ifstream(n, file);
 	}
-	while(!file.eof())
+	if (n._vecObjs.size() == 0)
 	{
-		read_ifstream(n, file);
+		dataObj emptyDataObj;
+		emptyDataObj.first = "server";
+		n.pushBack(emptyDataObj);
 	}
 }
 
@@ -123,7 +129,6 @@ void Data::pushBack(dataObj &o)
 /* accessors                                                                  */
 /* ************************************************************************** */
 
-
 const Data & Data::find(const std::string &type, int n) const
 {
 	int count = -1;
@@ -137,12 +142,18 @@ const Data & Data::find(const std::string &type, int n) const
 	throw(500); //asked to find a value that's not there
 }
 
-Data Data::get(const std::string &type) const
+Data Data::get(const std::string &type, int depth) const
 {
 	Data ret;
-	for (size_t i = 0; i < getObjSize(); i++)
-		if (_vecObjs.at(i).first == type)
-			ret._vecObjs.push_back(_vecObjs.at(i));
+	if (depth == 0)
+		for (size_t i = 0; i < getObjSize(); i++)
+			if (_vecObjs.at(i).first == type)
+				ret._vecObjs.push_back(_vecObjs.at(i));
+	else
+	{
+		for (size_t i = 0; i < getObjSize(); i++)
+			_vecObjs.at(i).second.get(type, depth - 1);
+	}
 	return ret;
 }
 
