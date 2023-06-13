@@ -8,6 +8,7 @@ server billy {
 
 not_server it's bad' {
 	listen = this that;
+	listen =
 }
 
 serverqwe sally {

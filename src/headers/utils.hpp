@@ -21,6 +21,9 @@
 # include <string>
 # include <vector>
 
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
+
 int send_to_socket(const std::string &message, int socket_fd);
 int send_file_to_socket(const std::string &filename, int socket_fd);
 void trim_outside_whitespace(std::string &line);

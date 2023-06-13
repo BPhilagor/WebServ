@@ -42,29 +42,32 @@ private:
 	std::string _content;
 	std::vector<dataObj> _vecObjs;
 
+	// parse in config file
 	static void read_ifstream(Data &n, std::ifstream &file);
+	void pushBack(dataObj &o);
 
 public:
 	Data();
 	Data(const Data &other);
 	~Data();
 
-	const std::string getContent() const;
-
-	int getInt() const;
-
-	const dataObj & getObj(size_t index) const;
-	size_t getObjSize() const;
-
-	int count(const std::string &type) const;
-	const Data & find(const std::string &type, int n = 0) const;
-	Data get(const std::string &type) const;
-
-	Data & operator=(const Data &other);
-	// Data & operator[](const std::string node, size_t idx);
-
+	// parse in config file
 	static void readFile(Data &n, const char *path);
+
+	// accessors
+	const Data &		find(const std::string &type, int n = 0) const;
+	Data				get(const std::string &type) const;
+	int 				count(const std::string &type) const;
+	int					getInt() const;
+	const std::string	getContent() const;
+	const dataObj & 	getObj(size_t index) const;
+	size_t				getObjSize() const;
+
+	// opperators and print functions
+	Data & operator=(const Data &other);
 	static void print(const Data &d, int level = 1);
+
+
 };
 
 std::ostream &operator<<(std::ostream &os, const dataObj &o);

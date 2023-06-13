@@ -13,9 +13,6 @@
 
 #define BACK_LOG 10
 
-#define SSTR( x ) static_cast< std::ostringstream & >( \
-        ( std::ostringstream() << std::dec << x ) ).str()
-
 int main(int argc, char** argv)
 {
 	if (argc != 2)
@@ -27,7 +24,7 @@ int main(int argc, char** argv)
 	std::cout << "here\n" << argv[0] << " " << argv[1] << "\n";
 
 	Data::readFile(data, argv[1]);
-	// Data::print(data, 2);
+	Data::print(data, 2);
 
 	std::cout << "here\n";
 
