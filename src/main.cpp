@@ -24,17 +24,20 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	Data data;
+	std::cout << "here\n" << argv[0] << " " << argv[1] << "\n";
 
-	Data::readFile(data, std::string(argv[1]));
+	Data::readFile(data, argv[1]);
 	// Data::print(data, 2);
+
+	std::cout << "here\n";
 
 	Data servers = data.get("server");
 
-	launchServers(servers);
+	// launchServers(servers);
 
-	return 0;
+	// return 0;
 
-	// Data::print(servers, 2);
+	Data::print(servers, 2);
 	// std::cout << servers << "\n";
 
 	(void) argc;

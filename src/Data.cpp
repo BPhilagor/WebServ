@@ -38,7 +38,7 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		size_t x;
 		std::string line;
 		std::getline(file, line); //needs protection?
-		line = trim_outside_whitespace(line);
+		trim_outside_whitespace(line);
 
 		// # to ignore comments
 		if (line.empty() || line.at(0) == '#')
@@ -49,9 +49,9 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		{
 			dataObj node;
 			node.first = line.substr(0, x);
-			line = trim_outside_whitespace(node.first);
+			trim_outside_whitespace(node.first);
 			node.second._content = line.substr(x + 1, line.length());
-			line = trim_outside_whitespace(node.second._content);
+			trim_outside_whitespace(node.second._content);
 			n._vecObjs.push_back(node);
 			continue;
 		}
@@ -60,8 +60,8 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		{
 			dataObj node;
 			split_around_first_space(line.substr(0, x), node.first, node.second._content);
-			line = trim_outside_whitespace(node.first);           // location
-			line = trim_outside_whitespace(node.second._content); // /home
+			trim_outside_whitespace(node.first);           // location
+			trim_outside_whitespace(node.second._content); // /home
 			read_ifstream(node.second, file);
 			n._vecObjs.push_back(node);
 			continue;
@@ -72,16 +72,15 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 	}
 }
 
-void Data::readFile(Data &n, const std::string &path)
+void Data::readFile(Data &n, const char *path)
 {
 	(void)n;
-	std::ifstream file(path.c_str());
+	std::ifstream file(path);
 	if (!file.is_open())
 	{
-		std::cerr << "can't read file: " << path << std::endl;
-		return ;
+		std::cerr << "can't read config file: " << path << std::endl;
+		exit(1);
 	}
-
 	while(!file.eof())
 	{
 		read_ifstream(n, file);

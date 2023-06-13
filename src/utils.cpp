@@ -25,11 +25,11 @@ int send_file_to_socket(const std::string &filename, int socket_fd) {
 	return send_to_socket(message, socket_fd);
 }
 
-std::string trim_outside_whitespace(const std::string &line)
+void trim_outside_whitespace(std::string &line)
 {
 	size_t start = line.find_first_not_of("\t\n\v\f\r ");
 	size_t end = line.find_last_not_of("\t\n\v\f\r ");
 	if (start == std::string::npos || end == std::string::npos)
-		return line;
-	return line.substr(start, end - start + 1);
+		return ;
+	line = line.substr(start, end - start + 1);
 }

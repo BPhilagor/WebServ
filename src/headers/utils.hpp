@@ -23,6 +23,6 @@
 
 int send_to_socket(const std::string &message, int socket_fd);
 int send_file_to_socket(const std::string &filename, int socket_fd);
-std::string trim_outside_whitespace(const std::string &line);
+void trim_outside_whitespace(std::string &line);
 
 #endif

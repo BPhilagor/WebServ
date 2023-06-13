@@ -63,7 +63,7 @@ public:
 	Data & operator=(const Data &other);
 	// Data & operator[](const std::string node, size_t idx);
 
-	static void readFile(Data &n, const std::string &path);
+	static void readFile(Data &n, const char *path);
 	static void print(const Data &d, int level = 1);
 };
 
