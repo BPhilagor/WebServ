@@ -16,7 +16,6 @@
 #include <functional>
 #include <fstream>
 #include <utility>
-#include <stack> // what does this do?!
 #include <sstream>
 
 class Data;

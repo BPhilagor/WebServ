@@ -13,7 +13,6 @@
 #include "utils.hpp"
 #include "Data.hpp"
 
-static void trim_outside_whitespace(std::string &line);
 static void split_around_first_space(const std::string src, std::string &s1, std::string &s2);
 static void print_Data(const Data &d, int level);
 static void print_dataObj(const dataObj &o, int level);
@@ -39,7 +38,7 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		size_t x;
 		std::string line;
 		std::getline(file, line); //needs protection?
-		trim_outside_whitespace(line);
+		line = trim_outside_whitespace(line);
 
 		// # to ignore comments
 		if (line.empty() || line.at(0) == '#')
@@ -50,9 +49,9 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		{
 			dataObj node;
 			node.first = line.substr(0, x);
-			trim_outside_whitespace(node.first);
+			line = trim_outside_whitespace(node.first);
 			node.second._content = line.substr(x + 1, line.length());
-			trim_outside_whitespace(node.second._content);
+			line = trim_outside_whitespace(node.second._content);
 			n._vecObjs.push_back(node);
 			continue;
 		}
@@ -61,8 +60,8 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		{
 			dataObj node;
 			split_around_first_space(line.substr(0, x), node.first, node.second._content);
-			trim_outside_whitespace(node.first);           // location
-			trim_outside_whitespace(node.second._content); // /home
+			line = trim_outside_whitespace(node.first);           // location
+			line = trim_outside_whitespace(node.second._content); // /home
 			read_ifstream(node.second, file);
 			n._vecObjs.push_back(node);
 			continue;
@@ -89,7 +88,9 @@ void Data::readFile(Data &n, const std::string &path)
 	}
 }
 
-#pragma region Getters
+/* ************************************************************************** */
+/* accessors                                                                  */
+/* ************************************************************************** */
 
 int Data::count(const std::string &type) const
 {
@@ -128,7 +129,6 @@ const std::string Data::getContent() const { return _content; }
 int Data::getInt() const
 {
 	int ret = 0;
-	// std::cout << "herewr" << ret << "\n";
 	std::stringstream ss;
 	ss << getContent();
 	ss >> ret;
@@ -142,8 +142,9 @@ const dataObj &Data::getObj(size_t index) const { return _vecObjs.at(index); }
 
 size_t Data::getObjSize() const { return _vecObjs.size(); }
 
-#pragma endregion
-#pragma region os operator overloads and print functions
+/* ************************************************************************** */
+/* os oppperators and print functions                                         */
+/* ************************************************************************** */
 
 
 std::ostream &operator<<(std::ostream &os, const dataObj &o)
@@ -201,18 +202,9 @@ static void print_Data(const Data &d, int level)
 		std::cout << "\n" << indent << "}";
 }
 
-#pragma endregion
-#pragma region Static helper functions
-
-static void trim_outside_whitespace(std::string &line)
-{
-	size_t start = line.find_first_not_of("\t\n\v\f\r ");
-	size_t end = line.find_last_not_of("\t\n\v\f\r ");
-	if (start == std::string::npos || end == std::string::npos)
-		return ;
-	line = line.substr(start, end - start + 1);
-	// std::cout << "\"" << line << "\"\n";
-}
+/* ************************************************************************** */
+/* static functions                                                           */
+/* ************************************************************************** */
 
 static void split_around_first_space(const std::string src, std::string &s1, std::string &s2)
 {
@@ -228,5 +220,3 @@ static void split_around_first_space(const std::string src, std::string &s1, std
 		s2 = src.substr(x + 1, src.length());
 	}
 }
-
-#pragma endregion

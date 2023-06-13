@@ -15,7 +15,7 @@ int send_to_socket(const std::string &message, int socket_fd) {
 
 int send_file_to_socket(const std::string &filename, int socket_fd) {
 	std::ifstream file;
-	file.open(filename);
+	file.open(filename.c_str());
 
 	std::string line;
 	std::string message;
@@ -23,4 +23,13 @@ int send_file_to_socket(const std::string &filename, int socket_fd) {
 		message += line + "\r\n";
 	}
 	return send_to_socket(message, socket_fd);
+}
+
+std::string trim_outside_whitespace(const std::string &line)
+{
+	size_t start = line.find_first_not_of("\t\n\v\f\r ");
+	size_t end = line.find_last_not_of("\t\n\v\f\r ");
+	if (start == std::string::npos || end == std::string::npos)
+		return line;
+	return line.substr(start, end - start + 1);
 }
