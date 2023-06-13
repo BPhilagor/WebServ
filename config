@@ -23,6 +23,6 @@ not_server2 it {
 	sdlkfj = 123
 }
 
- {
-	empths = 1
- }
+server empty config {
+	test = 1
+}

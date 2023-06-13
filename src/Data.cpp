@@ -62,7 +62,6 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		// # to ignore comments
 		if (line.empty() || line.at(0) == '#')
 			continue;
-
 		// check if it's an assigment ie. ip = 192.168.1.1
 		if ((x = line.find_first_of('=')) != std::string::npos)
 		{
@@ -72,7 +71,6 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 			node.second._content = line.substr(x + 1, line.length());
 			trim_outside_whitespace(node.second._content);
 			n.pushBack(node);
-			// n._vecObjs.push_back(node);
 			continue;
 		}
 		// check if it's an object ie. location /home {
@@ -83,7 +81,6 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 			trim_outside_whitespace(node.first);           // location
 			trim_outside_whitespace(node.second._content); // /home
 			read_ifstream(node.second, file);
-			// n._vecObjs.push_back(node);
 			n.pushBack(node);
 			continue;
 		}
@@ -100,17 +97,25 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 	porpery types supported:
 
 	listen : must be an int, else set to default
+	server : must have listen defined if not added default
 */
 void Data::pushBack(dataObj &o)
 {
+	dataObj emptyDataObj;
 	std::istringstream ss(o.second.getContent());
 	int integer;
 
-	if (o.first == "listen")
+	if (o.first == "listen" && !(ss >> integer))
+		o.second._content = SSTR(DF_LISTEN);
+	if (o.first == "server")
 	{
-		if (!(ss >> integer))
-			o.second._content = SSTR(DF_LISTEN);
+		if (o.second.count("listen") == 0)
+		{
+			emptyDataObj.first = "listen";
+			o.second.pushBack(emptyDataObj);
+		}
 	}
+
 	_vecObjs.push_back(o);
 }
 
@@ -172,7 +177,6 @@ const dataObj &Data::getObj(size_t index) const { return _vecObjs.at(index); }
 /* os oppperators and print functions                                         */
 /* ************************************************************************** */
 
-
 std::ostream &operator<<(std::ostream &os, const dataObj &o)
 {
 	std::string glue = o.second.getObjSize() ? " " : " = ";
@@ -199,7 +203,6 @@ void Data::print(const Data &d, int level)
 	if (level < 1)
 		level = 1;
 	print_Data(d, level);
-	std::cout << "\n this that\n";
 	std::cout << std::endl;
 }
 
