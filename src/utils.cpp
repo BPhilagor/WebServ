@@ -15,7 +15,7 @@ int send_to_socket(const std::string &message, int socket_fd) {
 
 int send_file_to_socket(const std::string &filename, int socket_fd) {
 	std::ifstream file;
-	file.open(filename);
+	file.open(filename.c_str());
 
 	std::string line;
 	std::string message;

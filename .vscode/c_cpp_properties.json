@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "defines": [
+                "WSL_DISTRO_NAME=Ubuntu"
+            ],
+            "intelliSenseMode": "${default}",
+            "compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\bin\\Hostx64\\x64\\cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "compilerArgs": [
+                "-Isrc/headers"
+            ]
+        }
+    ],
+    "version": 4
+}
