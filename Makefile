@@ -28,7 +28,7 @@ else
 LEAKS_CHECK = leaks -atExit --
 endif
 
-FILES	= main utils Data launchServers
+FILES	= main utils Data launchServers HTTPRequest HTTPHeaders
 
 OBJS_PATH = objs/
 SRCS_PATH = src/
