@@ -275,7 +275,7 @@ void	launchServersMacOS(const Data & servers)
 					// resend message
 				}
 				Data fakeData;
-				requestWorker(fakeData, se->fd, message);
+				requestWorker(fakeData, new_socket, message);
 
 				// close socket
 				close(new_socket);
