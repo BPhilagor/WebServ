@@ -12,7 +12,7 @@
 #include "handler.hpp"
 #include "requestWorker.hpp"
 
-static HTTPResponse generteSynatxErroResponse(const HTTPRequest &req);
+static HTTPResponse generateResponse(const Data &d, const HTTPRequest &req);
 
 std::string requestWorker(const Data &d, int socketFD, const std::string &rawRequest)
 {
@@ -27,6 +27,8 @@ std::string requestWorker(const Data &d, int socketFD, const std::string &rawReq
 		std::cout << req << std::endl;
 
 		// find the correct server for the request.
+		(void)socketFD;
+
 		if (1 /* server exists */)
 		{
 			//  give the data for only that server to the handler

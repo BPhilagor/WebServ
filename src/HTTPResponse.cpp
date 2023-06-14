@@ -104,6 +104,7 @@ void	HTTPResponse::setBody(std::string body)
 
 void HTTPResponse::constructReply(const Data &server, int code)
 {
+	setVersion(1, 1);
 	if (code >= 100 && code < 200)
 		informationalResponse(server, code);
 	else if (code >= 200 && code < 300)
