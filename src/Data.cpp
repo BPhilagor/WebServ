@@ -146,9 +146,11 @@ Data Data::get(const std::string &type, int depth) const
 {
 	Data ret;
 	if (depth == 0)
+	{
 		for (size_t i = 0; i < getObjSize(); i++)
 			if (_vecObjs.at(i).first == type)
 				ret._vecObjs.push_back(_vecObjs.at(i));
+	}
 	else
 	{
 		for (size_t i = 0; i < getObjSize(); i++)
