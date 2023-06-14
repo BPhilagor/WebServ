@@ -1,0 +1,11 @@
+GET / HTTP/1.1
+Host: monchef.ch
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/113.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Cookie: PHPSESSID=3a3b7d99ed87516cb901cd007496c7fe
+Upgrade-Insecure-Requests: 1
+Pragma: no-cache
+Cache-Control: no-cache
