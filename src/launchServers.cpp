@@ -8,14 +8,6 @@
 /* ************************************************************************** */
 
 #include "launchServers.hpp"
-#include <set>
-#include <iterator> //for std::ostream_iterator
-#include <algorithm> //for std::copy
-#include <iostream> //for std::cout
-#include <fcntl.h>
-
-#include "HTTPRequest.hpp"
-#include "requestWorker.hpp"
 
 typedef struct {
 	int fd;
@@ -32,7 +24,7 @@ static void find_ports(const Data & servers, std::set<int> &ports)
 	}
 }
 
-static socket_event* open_sockets(const std::set<int> ports, const size_t ADDRLEN)
+static socket_event* open_sockets(const std::set<int> ports)
 {
 	const int PORT_NUMBER = ports.size();;
 	socket_event* socket_events = (socket_event*) operator new[](sizeof(socket_event) * PORT_NUMBER); // TODO : manage memory error
@@ -58,7 +50,7 @@ static socket_event* open_sockets(const std::set<int> ports, const size_t ADDRLE
 		socket_events[index].address.sin_port = htons(*it);
 
 		//Binding the socket with the wanted port
-		if (bind(socketFD, (struct sockaddr *)&socket_events[index].address, ADDRLEN)) {
+		if (bind(socketFD, (struct sockaddr *)&socket_events[index].address, sizeof(sockaddr_in))) {
 			std::cout << "Error when binding socket" << std::endl;
 			delete[] socket_events;
 			return 0;
@@ -176,54 +168,20 @@ void	launchServersWSL(const Data & servers)
 
 #else
 
-void	launchServersMacOS(const Data & servers)
+static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked, std::set<int> &socket_fds)
 {
-
-	int kqfd;
 	const int ADDRLEN = sizeof(sockaddr_in);
-
-	if ((kqfd = kqueue()) == -1)
-	{
-		std::cout << "Error: when staring kqueue" << std::endl;
-		return ;
-	}
-
-	// Finds the ports that need to be opened
-	std::set<int> ports;
-	find_ports(servers, ports);
-	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
-	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
-
-	// Creates the sockets
-	socket_event* socket_events = open_sockets(ports, ADDRLEN);
-	if (socket_events == 0)
-	{
-		std::cout << "Error: when creating sockets" << std::endl;
-		return ;
-	}
-
-	std::vector<struct kevent> tracked; /* event we want to monitor */
-	std::vector<struct kevent> events; /* event that was triggered */
-	tracked.resize(PORTS_NBR);
-	events.resize(PORTS_NBR);
-
-	std::set<int> socket_fds;
-
-	// Add events to tracked list
-	for (size_t i = 0; i < PORTS_NBR; ++i)
-	{
-		socket_fds.insert(socket_events[i].fd);
-		EV_SET(&tracked[i], socket_events[i].fd, EVFILT_READ, EV_ADD, 0, 0, &socket_events[i]);
-	}
-
-	#define BUFFER_SIZE 1
+	const size_t PORTS_NBR = tracked.size();
+	struct kevent events[EVENTS_NBR]; /* event that was triggered */
 	struct kevent newEv;
+	std::map<int, std::string> messages;
+
 	while (true)
 	{
 		// new_event = kevent(/*int kq, const struct kevent *changelist, size_t nchanges,
 		// 	struct kevent *eventlist, size_t nevents,
 		// 	const struct timespec *timeout*/);
-		int event_number = kevent(kqfd, &tracked[0], PORTS_NBR, &events[0], PORTS_NBR, NULL);
+		int event_number = kevent(kqfd, &tracked[0], PORTS_NBR, events, EVENTS_NBR, NULL);
 		if (event_number < 0)
 		{
 			std::cout << "Error: with new_event in kq" << std::endl;
@@ -263,6 +221,7 @@ void	launchServersMacOS(const Data & servers)
 				}
 				EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
+				messages.insert(std::pair<int, std::string>(new_fd, ""));
 				std::cout << "Connection established" << std::endl;
 			}
 			else if (event->filter == EVFILT_READ)
@@ -270,16 +229,59 @@ void	launchServersMacOS(const Data & servers)
 				char buff[BUFFER_SIZE];
 				int bytesRecv = read(event->ident, buff, BUFFER_SIZE);
 				std::cout << "Received : " << std::string(buff, 0, bytesRecv) << std::endl;
+				messages.find(event->ident)->second += std::string(buff, 0, bytesRecv);
 			}
 			else if (event->filter == EVFILT_WRITE)
 			{
 				Data fakeData;
-				std::string message = "Foon\n";
-				std::string response = requestWorker(fakeData, event->ident, message);
-				write(event->ident, response.c_str(), response.length());
+				std::map<int, std::string>::iterator message = messages.find(event->ident);
+				std::string response = requestWorker(fakeData, event->ident, message->second);
+				write(event->ident, message->second.c_str(), message->second.length());
+				messages.erase(message);
 				close(event->ident);
+				std::cout << "Client " << event->ident << " closed" << std::endl;
 			}
 		}
 	}
+}
+
+void	launchServersMacOS(const Data & servers)
+{
+
+	int kqfd;
+
+	if ((kqfd = kqueue()) == -1)
+	{
+		std::cout << "Error: when staring kqueue" << std::endl;
+		return ;
+	}
+
+	// Finds the ports that need to be opened
+	std::set<int> ports;
+	find_ports(servers, ports);
+	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
+	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
+
+	// Creates the sockets
+	socket_event* socket_events = open_sockets(ports);
+	if (socket_events == 0)
+	{
+		std::cout << "Error: when creating sockets" << std::endl;
+		return ;
+	}
+
+	std::vector<struct kevent> tracked; /* event we want to monitor */
+	tracked.resize(PORTS_NBR);
+
+	std::set<int> socket_fds;
+
+	// Add events to tracked list
+	for (size_t i = 0; i < PORTS_NBR; ++i)
+	{
+		socket_fds.insert(socket_events[i].fd);
+		EV_SET(&tracked[i], socket_events[i].fd, EVFILT_READ, EV_ADD, 0, 0, &socket_events[i]);
+	}
+
+	process_requests_MacOS(kqfd, tracked, socket_fds);
 }
 #endif
