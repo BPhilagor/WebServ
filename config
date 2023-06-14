@@ -8,6 +8,7 @@ server billy {
 
 not_server it's bad' {
 	listen = this that;
+	listen =
 }
 
 server sally {
@@ -22,6 +23,6 @@ not_server2 it {
 	sdlkfj = 123
 }
 
- {
-	empths = 1
- }
+server empty config {
+	test = 1
+}

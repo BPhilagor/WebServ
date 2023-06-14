@@ -28,7 +28,7 @@ else
 LEAKS_CHECK = leaks -atExit --
 endif
 
-FILES	= main utils Data launchServers
+FILES	= main utils Data #launchServers
 
 OBJS_PATH = objs/
 SRCS_PATH = src/
@@ -41,7 +41,7 @@ all	: $(NAME)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -I$(INCS_PATH) -o $@ $<
+	$(CC) $(CFLAGS) -c -I$(INCS_PATH) -I/usr/include/kqueue/ -o $@ $< -lkqueue
 
 $(NAME)	: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@

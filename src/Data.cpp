@@ -9,14 +9,17 @@
 
 #include <cstdlib>
 #include <sstream>
+#include <iostream>
 
 #include "utils.hpp"
 #include "Data.hpp"
 
-static void trim_outside_whitespace(std::string &line);
 static void split_around_first_space(const std::string src, std::string &s1, std::string &s2);
 static void print_Data(const Data &d, int level);
 static void print_dataObj(const dataObj &o, int level);
+
+// defaults for server configuration
+#define DF_LISTEN 8080
 
 Data::Data() {}
 
@@ -32,6 +35,27 @@ Data &Data::operator=(const Data &other)
 	return *this;
 }
 
+void Data::readFile(Data &n, const char *path)
+{
+	std::ifstream file(path);
+	if (path)
+	{
+		if (!file.is_open())
+		{
+			std::cerr << "can't read config file: " << path << std::endl;
+			exit(1);
+		}
+		while(!file.eof())
+			read_ifstream(n, file);
+	}
+	if (n._vecObjs.size() == 0)
+	{
+		dataObj emptyDataObj;
+		emptyDataObj.first = "server";
+		n.pushBack(emptyDataObj);
+	}
+}
+
 void Data::read_ifstream(Data &n, std::ifstream &file)
 {
 	while(!file.eof())
@@ -44,7 +68,6 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 		// # to ignore comments
 		if (line.empty() || line.at(0) == '#')
 			continue;
-
 		// check if it's an assigment ie. ip = 192.168.1.1
 		if ((x = line.find_first_of('=')) != std::string::npos)
 		{
@@ -53,7 +76,7 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 			trim_outside_whitespace(node.first);
 			node.second._content = line.substr(x + 1, line.length());
 			trim_outside_whitespace(node.second._content);
-			n._vecObjs.push_back(node);
+			n.pushBack(node);
 			continue;
 		}
 		// check if it's an object ie. location /home {
@@ -64,7 +87,7 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 			trim_outside_whitespace(node.first);           // location
 			trim_outside_whitespace(node.second._content); // /home
 			read_ifstream(node.second, file);
-			n._vecObjs.push_back(node);
+			n.pushBack(node);
 			continue;
 		}
 		// check if it's the end of an object ie. }
@@ -73,32 +96,38 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 	}
 }
 
-void Data::readFile(Data &n, const std::string &path)
+/*
+	wrapper around the pushback function
+	to include some basic type/error checking
+
+	porpery types supported:
+
+	listen : must be an int, else set to default
+	server : must have listen defined if not added default
+*/
+void Data::pushBack(dataObj &o)
 {
-	(void)n;
-	std::ifstream file(path.c_str());
-	if (!file.is_open())
+	dataObj emptyDataObj;
+	std::istringstream ss(o.second.getContent());
+	int integer;
+
+	if (o.first == "listen" && !(ss >> integer))
+		o.second._content = SSTR(DF_LISTEN);
+	if (o.first == "server")
 	{
-		std::cerr << "can't read file: " << path << std::endl;
-		return ;
+		if (o.second.count("listen") == 0)
+		{
+			emptyDataObj.first = "listen";
+			o.second.pushBack(emptyDataObj);
+		}
 	}
 
-	while(!file.eof())
-	{
-		read_ifstream(n, file);
-	}
+	_vecObjs.push_back(o);
 }
 
-#pragma region Getters
-
-int Data::count(const std::string &type) const
-{
-	int count = 0;
-	for (size_t i = 0; i < getObjSize(); i++)
-		if (_vecObjs.at(i).first == type)
-			count++;
-	return count;
-}
+/* ************************************************************************** */
+/* accessors                                                                  */
+/* ************************************************************************** */
 
 const Data & Data::find(const std::string &type, int n) const
 {
@@ -110,25 +139,36 @@ const Data & Data::find(const std::string &type, int n) const
 		if (count == n)
 			return _vecObjs.at(i).second;
 	}
-	throw(500);
+	throw(500); //asked to find a value that's not there
 }
 
-Data Data::get(const std::string &type) const
+Data Data::get(const std::string &type, int depth) const
 {
 	Data ret;
-	for (size_t i = 0; i < getObjSize(); i++)
-		if (_vecObjs.at(i).first == type)
-			ret._vecObjs.push_back(_vecObjs.at(i));
+	if (depth == 0)
+		for (size_t i = 0; i < getObjSize(); i++)
+			if (_vecObjs.at(i).first == type)
+				ret._vecObjs.push_back(_vecObjs.at(i));
+	else
+	{
+		for (size_t i = 0; i < getObjSize(); i++)
+			_vecObjs.at(i).second.get(type, depth - 1);
+	}
 	return ret;
 }
 
-
-const std::string Data::getContent() const { return _content; }
+int Data::count(const std::string &type) const
+{
+	int count = 0;
+	for (size_t i = 0; i < getObjSize(); i++)
+		if (_vecObjs.at(i).first == type)
+			count++;
+	return count;
+}
 
 int Data::getInt() const
 {
 	int ret = 0;
-	// std::cout << "herewr" << ret << "\n";
 	std::stringstream ss;
 	ss << getContent();
 	ss >> ret;
@@ -137,14 +177,16 @@ int Data::getInt() const
 	return ret;
 }
 
-// returns the object at index or throw excpetion
-const dataObj &Data::getObj(size_t index) const { return _vecObjs.at(index); }
+const std::string Data::getContent() const { return _content; }
 
 size_t Data::getObjSize() const { return _vecObjs.size(); }
 
-#pragma endregion
-#pragma region os operator overloads and print functions
+// returns the object at index or throw excpetion
+const dataObj &Data::getObj(size_t index) const { return _vecObjs.at(index); }
 
+/* ************************************************************************** */
+/* os oppperators and print functions                                         */
+/* ************************************************************************** */
 
 std::ostream &operator<<(std::ostream &os, const dataObj &o)
 {
@@ -172,7 +214,6 @@ void Data::print(const Data &d, int level)
 	if (level < 1)
 		level = 1;
 	print_Data(d, level);
-	std::cout << "\n this that\n";
 	std::cout << std::endl;
 }
 
@@ -201,18 +242,9 @@ static void print_Data(const Data &d, int level)
 		std::cout << "\n" << indent << "}";
 }
 
-#pragma endregion
-#pragma region Static helper functions
-
-static void trim_outside_whitespace(std::string &line)
-{
-	size_t start = line.find_first_not_of("\t\n\v\f\r ");
-	size_t end = line.find_last_not_of("\t\n\v\f\r ");
-	if (start == std::string::npos || end == std::string::npos)
-		return ;
-	line = line.substr(start, end - start + 1);
-	// std::cout << "\"" << line << "\"\n";
-}
+/* ************************************************************************** */
+/* static functions                                                           */
+/* ************************************************************************** */
 
 static void split_around_first_space(const std::string src, std::string &s1, std::string &s2)
 {
@@ -228,5 +260,3 @@ static void split_around_first_space(const std::string src, std::string &s1, std
 		s2 = src.substr(x + 1, src.length());
 	}
 }
-
-#pragma endregion
