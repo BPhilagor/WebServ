@@ -19,6 +19,18 @@
 
 # include "utils.hpp"
 # include "Data.hpp"
+#include <set>
+#include <iterator> //for std::ostream_iterator
+#include <algorithm> //for std::copy
+#include <iostream> //for std::cout
+#include <fcntl.h>
+
+#include "HTTPRequest.hpp"
+#include "requestWorker.hpp"
+
+
+#define BUFFER_SIZE 1
+#define EVENTS_NBR 50
 
 #ifdef WSL_DISTRO_NAME
 	void	launchServersWSL(const Data &servers);
