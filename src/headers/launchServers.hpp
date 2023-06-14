@@ -9,12 +9,21 @@
 
 #ifndef LAUNCHSERVERS_HPP
 # define LAUNCHSERVERS_HPP
+# define BACK_LOG 10
 
-// # include <sys/event.h>
+#ifdef WSL_DISTRO_NAME
+	#include <sys/epoll.h>
+#else
+	#include <sys/event.h>
+#endif
 
 # include "utils.hpp"
 # include "Data.hpp"
 
-void	launchServers(const Data &servers);
+#ifdef WSL_DISTRO_NAME
+	void	launchServersWSL(const Data &servers);
+#else
+	void	launchServersMacOS(const Data &servers);
+#endif
 
 #endif /* LAUNCHSERVERS_HPP */

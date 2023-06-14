@@ -23,6 +23,7 @@ endif
 endif
 ifdef WSL_DISTRO_NAME
 LEAKS_CHECK = valgrind
+CFLAGS	+= -Wno-unknown-pragmas -DWSL_DISTRO_NAME=Ubuntu
 else
 LEAKS_CHECK = leaks -atExit --
 endif

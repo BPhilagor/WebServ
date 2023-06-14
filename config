@@ -11,7 +11,7 @@ not_server it's bad' {
 	listen =
 }
 
-serverqwe sally {
+server sally {
 	listen = 4242
 	server_name = foo www.foo.com
 	location / {
