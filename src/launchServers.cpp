@@ -12,6 +12,7 @@
 #include <iterator> //for std::ostream_iterator
 #include <algorithm> //for std::copy
 #include <iostream> //for std::cout
+#include <fcntl.h>
 
 #include "HTTPRequest.hpp"
 #include "requestWorker.hpp"
@@ -206,79 +207,77 @@ void	launchServersMacOS(const Data & servers)
 	tracked.resize(PORTS_NBR);
 	events.resize(PORTS_NBR);
 
+	std::set<int> socket_fds;
+
 	// Add events to tracked list
 	for (size_t i = 0; i < PORTS_NBR; ++i)
 	{
+		socket_fds.insert(socket_events[i].fd);
 		EV_SET(&tracked[i], socket_events[i].fd, EVFILT_READ, EV_ADD, 0, 0, &socket_events[i]);
 	}
 
-
+	#define BUFFER_SIZE 1
+	struct kevent newEv;
 	while (true)
 	{
-
 		// new_event = kevent(/*int kq, const struct kevent *changelist, size_t nchanges,
 		// 	struct kevent *eventlist, size_t nevents,
 		// 	const struct timespec *timeout*/);
 		int event_number = kevent(kqfd, &tracked[0], PORTS_NBR, &events[0], PORTS_NBR, NULL);
-		std::cout << "Connection established" << std::endl;
 		if (event_number < 0)
 		{
 			std::cout << "Error: with new_event in kq" << std::endl;
 			return ;
 		}
-		else
+		for (int i = 0; i < event_number; i++)
 		{
-			for (int i = 0; i < event_number; i++)
+			struct kevent *event = &events[i];
+
+			if (event->flags & EV_EOF)
 			{
-				if (events[i].flags & EV_ERROR)
+				std::cout << "Client " << event->ident << " Disconnected" << std::endl;
+				EV_SET(&newEv, event->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
+				EV_SET(&newEv, event->ident, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, NULL);
+				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
+			}
+			else if (event->flags & EV_ERROR)
+			{
+				std::cout << "Error with client" << std::endl;
+				close(event->ident);
+			}
+			else if (socket_fds.find(event->ident) != socket_fds.end())
+			{
+				if (event->flags & EV_ERROR)
 				{
-					fprintf(stderr, "EV_ERROR: %s\n", strerror(events[i].data));
+					fprintf(stderr, "EV_ERROR: %s\n", strerror(event->data));
 					std::cout << "Error: with singualr event from kq" << std::endl;
 					return ;
 				}
-				if (events[i].flags & EV_EOF)
-				{
-					std::cout << "End of file reached" << std::endl;
-					return ;
-				}
-				socket_event *se = (socket_event*) events[i].udata;
 
-				int new_socket = accept(se->fd, (struct sockaddr *)&se->address, (socklen_t*)&ADDRLEN);
-				if (new_socket < 0) {
+				socket_event *se = (socket_event*) event->udata;
+				int new_fd = accept(se->fd, (struct sockaddr *)&se->address, (socklen_t*)&ADDRLEN);
+				if (new_fd < 0) {
 					std::cout << "Error when accepting request" << std::endl;
 					return ;
 				}
+				EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
 				std::cout << "Connection established" << std::endl;
-
-				// while receiving display message
-				char buff[4096];
-				std::string message;
-				while (true)
-				{
-					// clear buffer
-					memset(buff, 0, 4096);
-					// wait for message
-					int bytesRecv = recv(new_socket, buff, 4096, 0);
-					if (bytesRecv == -1)
-					{
-						std::cerr << "Error: There was a connection issue" << std::endl;
-						break;
-					}
-					// display message
-					if (bytesRecv == 0)
-					{
-						std::cout << "The client disconnected" << std::endl;
-						break;
-					}
-					message += buff;
-					send(se->fd, buff, bytesRecv + 1, 0);
-					// resend message
-				}
+			}
+			else if (event->filter == EVFILT_READ)
+			{
+				char buff[BUFFER_SIZE];
+				int bytesRecv = read(event->ident, buff, BUFFER_SIZE);
+				std::cout << "Received : " << std::string(buff, 0, bytesRecv) << std::endl;
+			}
+			else if (event->filter == EVFILT_WRITE)
+			{
 				Data fakeData;
-				requestWorker(fakeData, new_socket, message);
-
-				// close socket
-				close(new_socket);
+				std::string message = "Foon\n";
+				std::string response = requestWorker(fakeData, event->ident, message);
+				write(event->ident, response.c_str(), response.length());
+				close(event->ident);
 			}
 		}
 	}
