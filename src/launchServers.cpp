@@ -36,7 +36,7 @@ static socket_event* open_sockets(const std::set<int> ports)
 		int socketFD = socket(AF_INET, SOCK_STREAM, 0);
 		if (socketFD < 0)
 		{
-			std::cout << "Error: when creating socket" << std::endl;
+			std::cout << "Error when creating socket: " << std::strerror(errno) << std::endl;
 			delete[] socket_events;
 			return 0;
 		}
@@ -51,7 +51,7 @@ static socket_event* open_sockets(const std::set<int> ports)
 
 		//Binding the socket with the wanted port
 		if (bind(socketFD, (struct sockaddr *)&socket_events[index].address, sizeof(sockaddr_in))) {
-			std::cout << "Error when binding socket" << std::endl;
+			std::cout << "Error when binding socket: " << std::strerror(errno) << std::endl;
 			delete[] socket_events;
 			return 0;
 		}
@@ -216,7 +216,7 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 				socket_event *se = (socket_event*) event->udata;
 				int new_fd = accept(se->fd, (struct sockaddr *)&se->address, (socklen_t*)&ADDRLEN);
 				if (new_fd < 0) {
-					std::cout << "Error when accepting request" << std::endl;
+					std::cout << "Error when accepting request: " << std::strerror(errno) << std::endl;
 					return ;
 				}
 				EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
@@ -252,7 +252,7 @@ void	launchServersMacOS(const Data & servers)
 
 	if ((kqfd = kqueue()) == -1)
 	{
-		std::cout << "Error: when staring kqueue" << std::endl;
+		std::cout << "Error when starting kqueue: " << std::strerror(errno) << std::endl;
 		return ;
 	}
 
@@ -266,7 +266,7 @@ void	launchServersMacOS(const Data & servers)
 	socket_event* socket_events = open_sockets(ports);
 	if (socket_events == 0)
 	{
-		std::cout << "Error: when creating sockets" << std::endl;
+		std::cout << "Error when creating sockets: " << std::strerror(errno) << std::endl;
 		return ;
 	}
 
