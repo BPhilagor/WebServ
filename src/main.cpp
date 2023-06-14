@@ -11,8 +11,6 @@
 #include "Data.hpp"
 #include "launchServers.hpp"
 
-#define BACK_LOG 10
-
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
@@ -30,8 +28,11 @@ int main(int argc, char** argv)
 
 	Data servers = data.get("server");
 
-	launchServers(servers);
-
+	#ifdef WSL_DISTRO_NAME
+		launchServersWSL(servers);
+	#else
+		launchServersMacOS(servers);
+	#endif
 	return 0;
 
 	// Data::print(servers, 2);

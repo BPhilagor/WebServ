@@ -19,7 +19,6 @@
 # include <sstream>
 # include <string>
 # include <vector>
-# include <unordered_map>
 
 int send_to_socket(const std::string &message, int socket_fd);
 int send_file_to_socket(const std::string &filename, int socket_fd);
