@@ -1,25 +1,27 @@
 #include "HTTPHeaders.hpp"
 #include <iostream>
 
+# define DEBUG_PRINT 0
+
 HTTPHeaders::HTTPHeaders()
 {
-	std::cout<< "HTTPHeaders constructor" << std::endl;
+	if (DEBUG_PRINT) std::cout<< "HTTPHeaders constructor" << std::endl;
 }
 
 HTTPHeaders::HTTPHeaders(const HTTPHeaders& h):
 	_headers(h._headers)
 {
-	std::cout<< "HTTPHeaders copy constructor" << std::endl;
+	if (DEBUG_PRINT) std::cout<< "HTTPHeaders copy constructor" << std::endl;
 }
 
 HTTPHeaders::~HTTPHeaders()
 {
-	std::cout<< "HTTPHeaders destructor" << std::endl;
+	if (DEBUG_PRINT) std::cout<< "HTTPHeaders destructor" << std::endl;
 }
 
 HTTPHeaders&	HTTPHeaders::operator=(const HTTPHeaders& h)
 {
-	std::cout << "HTTPHeaders assignement operator" << std::endl;
+	if (DEBUG_PRINT) std::cout << "HTTPHeaders assignement operator" << std::endl;
 	_headers = h._headers;
 	return (*this);
 }

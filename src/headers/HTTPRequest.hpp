@@ -2,22 +2,18 @@
 # define HTTP_REQUEST_H
 
 # include "HTTPHeaders.hpp"
+# include "common-http-message.hpp"
+
 # include <string>
 # include <ostream>
 # include <exception>
 # include <map>
 
-typedef struct
-{
-	int	major;
-	int	minor;
-}	t_version;
-
 class HTTPRequest
 {
 	public:
 
-		HTTPRequest(std::string& input);
+		HTTPRequest(const std::string& input);
 		HTTPRequest(const HTTPRequest& cpy);
 		~HTTPRequest();
 		HTTPRequest&	operator=(const HTTPRequest& rhs);

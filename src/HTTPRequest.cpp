@@ -4,11 +4,14 @@
 #include <sstream>
 #include <map>
 
+#define DEBUG_PRINT 0
+
 std::istream &operator>>(std::istream &is, char const *s);
 
-HTTPRequest::HTTPRequest(std::string &input)
+HTTPRequest::HTTPRequest(const std::string &input)
 {
-	std::cout << "HTTPRequest constructor" << std::endl;
+	if (DEBUG_PRINT) std::cout << "HTTPRequest constructor" << std::endl;
+
 	_hasValidSyntax = true;
 	try
 	{
@@ -28,23 +31,25 @@ HTTPRequest::HTTPRequest(const HTTPRequest &cpy):
 	_headers(cpy._headers),
 	_body(cpy._body)
 {
-	std::cout << "HTTPRequest copy constructor" << std::endl;
+	if (DEBUG_PRINT) std::cout << "HTTPRequest copy constructor" << std::endl;
 }
 
 HTTPRequest::~HTTPRequest()
 {
-	std::cout << "HTTPRequest destructor" << std::endl;
+	if (DEBUG_PRINT) std::cout << "HTTPRequest destructor" << std::endl;
 }
 
 HTTPRequest &HTTPRequest::operator=(const HTTPRequest &rhs)
 {
-	std::cout << "HTTPRequest assignment operator" << std::endl;
+	if (DEBUG_PRINT) std::cout << "HTTPRequest assignment operator" << std::endl;
+
 	_hasValidSyntax = rhs._hasValidSyntax;
 	_method = rhs._method;
 	_uri = rhs._uri;
 	_version = rhs._version;
 	_headers = rhs._headers;
 	_body = rhs._body;
+
 	return (*this);
 }
 
