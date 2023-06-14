@@ -49,6 +49,14 @@ int main(int argc, char** argv)
 
 	Data servers = data.get("server");
 
+	HTTPResponse res;
+
+	res.constructReply(data, 301);
+
+	std::cout << "res is <\n" << res << "\n>\n";
+
+	return 0;
+
   #ifdef WSL_DISTRO_NAME
 		launchServersWSL(servers);
 	#else

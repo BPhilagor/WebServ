@@ -37,6 +37,7 @@ class HTTPResponse
 		void			setReason(std::string reason);
 		void			setHeader(std::string name, std::string value);
 		void			setBody(std::string body);
+		void			setDate();
 
 		std::string	serialize() const;
 

@@ -102,9 +102,34 @@ void	HTTPResponse::setBody(std::string body)
 	_body = body;
 }
 
+/*
+RFC 7231 section 7.1.1.1.  Date/Time Formats
+	https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.1.1
+
+An example of the preferred format is
+	Sun, 06 Nov 1994 08:49:37 GMT    ; IMF-fixdate
+IMF-fixdate  = day-name "," SP date1 SP time-of-day SP GMT
+	; fixed length/zone/capitalization subset of the format
+	; see Section 3.3 of [RFC5322]
+*/
+void HTTPResponse::setDate()
+{
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer [30]; // i think it's never more than 20, .. but 10 bytes enh?
+
+	time (&rawtime);
+	timeinfo = localtime (&rawtime);
+
+	strftime (buffer,80,"%a, %m %R:%S GMT",timeinfo);
+
+	setHeader("Date", std::string(buffer));
+}
+
 void HTTPResponse::constructReply(const Data &server, int code)
 {
 	setVersion(1, 1);
+	setDate();
 	if (code >= 100 && code < 200)
 		informationalResponse(server, code);
 	else if (code >= 200 && code < 300)
@@ -116,7 +141,11 @@ void HTTPResponse::constructReply(const Data &server, int code)
 	else if (code >= 500 && code < 600)
 		clientErrorResponse(server, code);
 	else
-		std::cout  << "Stupid programmer, error code out of bounds\n";
+		std::cerr << "Stupid programmer, error code" << code << " is wack\n";
+
+	if (getReason() == "")
+		setCode(-1);
+	setCode(code);
 }
 
 
