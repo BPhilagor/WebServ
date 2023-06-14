@@ -172,79 +172,51 @@ void	launchServersWSL(const Data & servers)
 
 #else
 
-void	launchServersMacOs(const Data & servers)
+void	launchServersMacOS(const Data & servers)
 {
 
-	std::vector<struct kevent> changes; /* event we want to monitor */
-	std::vector<struct kevent> events; /* event that was triggered */
-	int kq;
+	int kqfd;
+	const int ADDRLEN = sizeof(sockaddr_in);
 
-	Data listening = servers;
-	std::set<int> ports;
-
-	if ((kq = kqueue()) == -1)
+	if ((kqfd = kqueue()) == -1)
 	{
 		std::cout << "Error: when staring kqueue" << std::endl;
 		return ;
 	}
 
+	// Finds the ports that need to be opened
+	std::set<int> ports;
+	find_ports(servers, ports);
+	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
+	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
 
-	struct sockaddr_in address;
-	const int addrlen = sizeof(address);
-
-	// generat list of ports to listen too;
-	for (int i = 0; i < servers.count("server"); i++)
+	// Creates the sockets
+	socket_event* socket_events = open_sockets(ports, ADDRLEN);
+	if (socket_events == 0)
 	{
-		Data srv = servers.find("server", i);
-		for (int j = 0; j < srv.count("listen"); j++)
-			ports.insert(srv.find("listen", j).getInt());
+		std::cout << "Error: when creating sockets" << std::endl;
+		return ;
 	}
-	changes.reserve(ports.size());
-	events.reserve(ports.size());
-	// we made our sockets
-	for (std::set<int>::iterator it = ports.begin(); it != ports.end(); ++it)
+
+	std::vector<struct kevent> tracked; /* event we want to monitor */
+	std::vector<struct kevent> events; /* event that was triggered */
+	tracked.resize(PORTS_NBR);
+	events.resize(PORTS_NBR);
+
+	// Add events to tracked list
+	for (size_t i = 0; i < PORTS_NBR; ++i)
 	{
-		std::cout << *it << " <- listening to\n";
-		int socketFD = socket(AF_INET, SOCK_STREAM, 0);
-		if (socketFD < 0)
-		{
-			std::cout << "Error: when creating socket" << std::endl;
-			return ;
-		}
-		// Creating the sockaddr_in struct
-		memset((char *)&address, 0, sizeof(address));
-		address.sin_family = AF_INET;
-		address.sin_addr.s_addr = htonl(INADDR_ANY);
-		address.sin_port = htons(*it);
-
-		//Binding the socket with the wanted port
-		if (bind(socketFD, (struct sockaddr *)&address, addrlen)) {
-			std::cout << "Error when binding socket" << std::endl;
-			return ;
-		}
-
-
-		struct kevent k;
-		EV_SET(&k, socketFD, EVFILT_READ, EV_ADD, 0, 0, NULL);
-		changes.push_back(k);
-
-
-
-		// Start listening
-		if (listen(socketFD, 10) < 0) {
-			std::cout << "Error: when establishing a listen" << std::endl;
-			return ;
-	}
+		EV_SET(&tracked[i], socket_events[i].fd, EVFILT_READ, EV_ADD, 0, 0, &socket_events[i]);
 	}
 
-	// the main program loop
+
 	while (true)
 	{
 
 		// new_event = kevent(/*int kq, const struct kevent *changelist, size_t nchanges,
 		// 	struct kevent *eventlist, size_t nevents,
 		// 	const struct timespec *timeout*/);
-		int event_number = kevent(kq, &changes[0], changes.size(), &events[0], changes.size(), NULL);
+		int event_number = kevent(kqfd, &tracked[0], PORTS_NBR, &events[0], PORTS_NBR, NULL);
 		std::cout << "Connection established" << std::endl;
 		if (event_number < 0)
 		{
@@ -266,43 +238,42 @@ void	launchServersMacOs(const Data & servers)
 					std::cout << "End of file reached" << std::endl;
 					return ;
 				}
-				std::cout << "dealing with the event # " << i << events[i].data << "\n";
+				socket_event *se = (socket_event*) events[i].udata;
 
-					int new_socket = accept(events[i].ident, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-					if (new_socket < 0) {
-						std::cout << "Error when accepting request" << std::endl;
-						return ;
-					}
-					std::cout << "Connection established" << std::endl;
+				int new_socket = accept(se->fd, (struct sockaddr *)&se->address, (socklen_t*)&ADDRLEN);
+				if (new_socket < 0) {
+					std::cout << "Error when accepting request" << std::endl;
+					return ;
+				}
+				std::cout << "Connection established" << std::endl;
 
-					// while receiving display message
-					char buff[4096];
-					while (true)
+				// while receiving display message
+				char buff[4096];
+				while (true)
+				{
+					// clear buffer
+					memset(buff, 0, 4096);
+					// wait for message
+					int bytesRecv = recv(new_socket, buff, 4096, 0);
+					if (bytesRecv == -1)
 					{
-						// clear buffer
-						memset(buff, 0, 4096);
-						// wait for message
-						int bytesRecv = recv(new_socket, buff, 4096, 0);
-						if (bytesRecv == -1)
-						{
-							std::cerr << "Error: There was a connection issue" << std::endl;
-							break;
-						}
-						// display message
-						if (bytesRecv == 0)
-						{
-							std::cout << "The client disconnected" << std::endl;
-							break;
-						}
-						std::cout << "Received: " << std::string(buff, 0, bytesRecv) << std::endl;
-						send(events[i].ident, buff, bytesRecv + 1, 0);
-						// resend message
+						std::cerr << "Error: There was a connection issue" << std::endl;
+						break;
 					}
-					// close socket
-					close(events[i].ident);
+					// display message
+					if (bytesRecv == 0)
+					{
+						std::cout << "The client disconnected" << std::endl;
+						break;
+					}
+					std::cout << "Received: " << std::string(buff, 0, bytesRecv) << std::endl;
+					send(se->fd, buff, bytesRecv + 1, 0);
+					// resend message
+				}
+				// close socket
+				close(new_socket);
 			}
 		}
 	}
 }
-
 #endif
