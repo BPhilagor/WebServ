@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
 	std::cout << "res is <\n" << res << "\n>\n";
 
-	return 0;
+	// return 0;
 
   #ifdef WSL_DISTRO_NAME
 		launchServersWSL(servers);
