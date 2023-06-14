@@ -13,6 +13,9 @@
 #include <algorithm> //for std::copy
 #include <iostream> //for std::cout
 
+#include "HTTPRequest.hpp"
+#include "requestWorker.hpp"
+
 typedef struct {
 	int fd;
 	struct sockaddr_in address;
@@ -102,7 +105,7 @@ void	launchServersWSL(const Data & servers)
 	for (size_t i = 0; i < PORTS_NBR; ++i)
 	{
 		struct epoll_event ev;
-		
+
 		ev.events = EPOLLIN;
 		ev.data.ptr = &socket_events[i];
 		if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket_events[i].fd, &ev) == -1) {
@@ -249,6 +252,7 @@ void	launchServersMacOS(const Data & servers)
 
 				// while receiving display message
 				char buff[4096];
+				std::string message;
 				while (true)
 				{
 					// clear buffer
@@ -266,10 +270,13 @@ void	launchServersMacOS(const Data & servers)
 						std::cout << "The client disconnected" << std::endl;
 						break;
 					}
-					std::cout << "Received: " << std::string(buff, 0, bytesRecv) << std::endl;
+					message += buff;
 					send(se->fd, buff, bytesRecv + 1, 0);
 					// resend message
 				}
+				Data fakeData;
+				requestWorker(fakeData, se->fd, message);
+
 				// close socket
 				close(new_socket);
 			}

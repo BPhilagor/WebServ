@@ -1,0 +1,4 @@
+GET /truc HTTP/1.1
+hello:world
+
+HELLO THIS IS THE BODY
