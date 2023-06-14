@@ -14,6 +14,7 @@
 
 # include "HTTPHeaders.hpp"
 # include "common-http-message.hpp"
+# include "Data.hpp"
 
 class HTTPResponse
 {
@@ -38,6 +39,17 @@ class HTTPResponse
 		void			setBody(std::string body);
 
 		std::string	serialize() const;
+
+		/* constructors */
+		void constructReply(const Data &server, int code);
+
+		void informationalResponse(const Data &server, int code);
+		void successfulResponse(const Data &server, int code);
+		void redirectionMessage(const Data &server, int code);
+		void clientErrorResponse(const Data &server, int code);
+		void serverErrorResponse(const Data &server, int code);
+
+
 
 	private:
 		/* status line */

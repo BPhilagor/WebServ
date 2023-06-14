@@ -102,6 +102,23 @@ void	HTTPResponse::setBody(std::string body)
 	_body = body;
 }
 
+void HTTPResponse::constructReply(const Data &server, int code)
+{
+	if (code >= 100 && code < 200)
+		informationalResponse(server, code);
+	else if (code >= 200 && code < 300)
+		successfulResponse(server, code);
+	else if (code >= 300 && code < 400)
+		redirectionMessage(server, code);
+	else if (code >= 400 && code < 500)
+		clientErrorResponse(server, code);
+	else if (code >= 500 && code < 600)
+		clientErrorResponse(server, code);
+	else
+		std::cout  << "Stupid programmer, error code out of bounds\n";
+}
+
+
 std::string	HTTPResponse::serialize() const
 {
 	std::ostringstream	output;

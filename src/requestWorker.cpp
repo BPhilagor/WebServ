@@ -8,26 +8,50 @@
 /* ************************************************************************** */
 
 #include "utils.hpp"
+#include "HTTPResponse.hpp"
 #include "handler.hpp"
 #include "requestWorker.hpp"
 
+static HTTPResponse generteSynatxErroResponse(const HTTPRequest &req);
+
 std::string requestWorker(const Data &d, int socketFD, const std::string &rawRequest)
 {
-	std::string nonConst = rawRequest;
-	HTTPRequest req(nonConst);
+	HTTPRequest req(rawRequest);
+	HTTPResponse res;
 
 	(void)d;
 
+
 	if (req.getHasValidSyntax())
 	{
-		send(socketFD, "Request has been rescieved, it's processing\n", 45, 0);
-		std::string response = handler(d, req);
 		std::cout << req << std::endl;
-		return response;
+
+		// find the correct server for the request.
+		if (1 /* server exists */)
+		{
+			//  give the data for only that server to the handler
+			res = generateResponse(d, req);
+		}
+		else
+		{
+			res.constructReply(d, 12312); // whatever the correct code for this is.
+		}
+	}
+	else
+	{
+		std::cout<<"Invalid request syntax"<< std::endl;
+		res.constructReply(d, 400);
 	}
 
-	send(socketFD, "Request has Invalid syntax, try again\n", 39, 0);
-	std::cout<<"Invalid syntax"<< std::endl;
-	return "";
+	return res.serialize();
 
+}
+
+static HTTPResponse generateResponse(const Data &d, const HTTPRequest &req)
+{
+	HTTPResponse res;
+
+	handler(d, req);
+
+	return res;
 }
