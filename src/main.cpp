@@ -15,7 +15,8 @@
 
 int main(int argc, char** argv)
 {
-
+	/* examples on how to use the HTTPResponse */
+	/*
 	HTTPResponse	resp;
 
 	resp.setVersion(1, 1);
@@ -31,7 +32,7 @@ int main(int argc, char** argv)
 	resp.setBody("<!DOCTYPE html><html><head><title>400 Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>");
 
 	std::cout<<resp<<std::endl;
-
+	*/
 
 	Data data;
 	if (argc != 2)
