@@ -50,10 +50,8 @@ int main(int argc, char** argv)
 	Data servers = data.get("server");
 
 	HTTPResponse res;
-
-	res.constructReply(data, 301);
-
-	std::cout << "res is <\n" << res << "\n>\n";
+	res.constructReply(data, i);
+	std::cout << "res is <\n" << res << ">\n";
 
 	// return 0;
 

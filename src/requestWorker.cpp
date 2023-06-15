@@ -41,7 +41,7 @@ std::string requestWorker(const Data &d, int socketFD, const std::string &rawReq
 	}
 	else
 	{
-		std::cout<<"Invalid request syntax"<< std::endl;
+		// std::cout<<"Invalid request syntax"<< std::endl;
 		res.constructReply(d, 400);
 	}
 

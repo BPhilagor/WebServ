@@ -14,6 +14,8 @@
 
 #define DEBUG_PRINT 0
 
+std::map<int, std::string> HTTPResponse::_reasonMap = _initialiseReasonMap();
+
 HTTPResponse::HTTPResponse()
 {
 	if (DEBUG_PRINT) std::cout << "HTTPResponse constructor" << std::endl;
@@ -87,17 +89,17 @@ void	HTTPResponse::setCode(int code)
 	_code = code;
 }
 
-void	HTTPResponse::setReason(std::string reason)
+void	HTTPResponse::setReason(const std::string &reason)
 {
 	_reason = reason;
 }
 
-void	HTTPResponse::setHeader(std::string name, std::string value)
+void	HTTPResponse::setHeader(const std::string &name, const std::string &value)
 {
 	_headers.insert(name, value);
 }
 
-void	HTTPResponse::setBody(std::string body)
+void	HTTPResponse::setBody(const std::string &body)
 {
 	_body = body;
 }
@@ -130,19 +132,20 @@ void HTTPResponse::constructReply(const Data &server, int code)
 {
 	setVersion(1, 1);
 	setDate();
-	if (code >= 100 && code < 200)
-		informationalResponse(server, code);
-	else if (code >= 200 && code < 300)
-		successfulResponse(server, code);
-	else if (code >= 300 && code < 400)
-		redirectionMessage(server, code);
-	else if (code >= 400 && code < 500)
-		clientErrorResponse(server, code);
-	else if (code >= 500 && code < 600)
-		clientErrorResponse(server, code);
-	else
-		std::cerr << "Stupid programmer, error code" << code << " is wack\n";
-
+	// if (code >= 100 && code < 200)
+	// 	informationalResponse(server, code);
+	// else if (code >= 200 && code < 300)
+	// 	successfulResponse(server, code);
+	// else if (code >= 300 && code < 400)
+	// 	redirectionMessage(server, code);
+	// else if (code >= 400 && code < 500)
+	// 	clientErrorResponse(server, code);
+	// else if (code >= 500 && code < 600)
+	// 	clientErrorResponse(server, code);
+	// else
+	// 	std::cerr << "Stupid programmer, error code" << code << " is wack\n";
+	(void)server;
+	setReason(_reasonMap[code]);
 	if (getReason() == "")
 		setCode(-1);
 	setCode(code);

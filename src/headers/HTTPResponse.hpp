@@ -11,6 +11,7 @@
 # define HTTP_RESPONSE_H
 
 # include <string>
+# include <map>
 
 # include "HTTPHeaders.hpp"
 # include "common-http-message.hpp"
@@ -34,9 +35,9 @@ class HTTPResponse
 		/* setters */
 		void			setVersion(int major, int minor);
 		void			setCode(int code);
-		void			setReason(std::string reason);
-		void			setHeader(std::string name, std::string value);
-		void			setBody(std::string body);
+		void			setReason(const std::string &reason);
+		void			setHeader(const std::string &name, const std::string &value);
+		void			setBody(const std::string &body);
 		void			setDate();
 
 		std::string	serialize() const;
@@ -63,6 +64,10 @@ class HTTPResponse
 
 		/* body */
 		std::string	_body;
+
+		/* error codes */
+		static std::map<int, std::string> _reasonMap;
+		static std::map<int, std::string> _initialiseReasonMap();
 };
 
 std::ostream&	operator<<(std::ostream& o, const HTTPResponse& h);
