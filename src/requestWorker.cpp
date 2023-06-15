@@ -21,6 +21,10 @@ std::string requestWorker(const Data &d, int socketFD, const std::string &rawReq
 
 	(void)d;
 
+	res.constructReply(d, 200);
+	return res.serialize();
+
+
 
 	if (req.getHasValidSyntax())
 	{
@@ -46,7 +50,6 @@ std::string requestWorker(const Data &d, int socketFD, const std::string &rawReq
 	}
 
 	return res.serialize();
-
 }
 
 static HTTPResponse generateResponse(const Data &d, const HTTPRequest &req)

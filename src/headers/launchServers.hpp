@@ -29,7 +29,7 @@
 #include "requestWorker.hpp"
 
 
-#define BUFFER_SIZE 1
+#define BUFFER_SIZE 32
 #define EVENTS_NBR 50
 
 #ifdef WSL_DISTRO_NAME
