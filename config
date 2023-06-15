@@ -6,6 +6,23 @@ server billy {
 	}
 }
 
+server billy {
+	listen = 192.168.1.1:8080
+	server_name = something www.something.com
+	location / {
+		root = html
+	}
+}
+
+server billy {
+	listen = kkkdh:8080
+	server_name = something www.something.com
+	location / {
+		root = html
+	}
+}
+
+
 not_server it's bad' {
 	listen = this that;
 	listen =

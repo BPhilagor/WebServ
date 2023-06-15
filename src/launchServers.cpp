@@ -8,19 +8,27 @@
 /* ************************************************************************** */
 
 #include "launchServers.hpp"
+#include "typedefs.hpp"
 
 typedef struct {
 	int fd;
 	struct sockaddr_in address;
 } socket_event;
 
-static void find_ports(const Data & servers, std::set<int> &ports)
+static void find_ports(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port)
 {
 	for (int i = 0; i < servers.count("server"); i++)
 	{
 		Data srv = servers.find("server", i);
 		for (int j = 0; j < srv.count("listen"); j++)
-			ports.insert(srv.find("listen", j).getInt());
+		{
+			pairIpPort ipPort = getIpPort(srv.find("listen", j).getContent());
+			if (ipPort.first.empty())
+				map_Port[ipPort.second].push_back(srv);
+			else
+				map_IpPort[ipPort].push_back(srv);
+			ports.insert(stoi(ipPort.second));
+		}
 	}
 }
 
@@ -219,10 +227,19 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 					std::cout << "Error when accepting request: " << std::strerror(errno) << std::endl;
 					return ;
 				}
+
+				// check the socket ip:port config
+				struct sockaddr_in addr;
+				socklen_t addrlen = sizeof(addr);
+				getsockname(new_fd, (struct sockaddr *)&addr, &addrlen);
+				std::string ipAddr(inet_ntoa(addr.sin_addr));
+				std::cout << "here:" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << "end\n";
+
 				EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
 				messages.insert(std::pair<int, std::string>(new_fd, ""));
 				std::cout << "Connection established" << std::endl;
+				exit(1);
 			}
 			else if (event->filter == EVFILT_READ)
 			{
@@ -230,13 +247,16 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 				int bytesRecv = read(event->ident, buff, BUFFER_SIZE);
 				std::cout << "Received : " << std::string(buff, 0, bytesRecv) << std::endl;
 				messages.find(event->ident)->second += std::string(buff, 0, bytesRecv);
+				goto jump;
 			}
 			else if (event->filter == EVFILT_WRITE)
 			{
+				jump:
 				Data fakeData;
 				std::map<int, std::string>::iterator message = messages.find(event->ident);
 				std::string response = requestWorker(fakeData, event->ident, message->second);
-				write(event->ident, message->second.c_str(), message->second.length());
+				// write(event->ident, message->second.c_str(), message->second.length());
+				write(event->ident, response.c_str(), response.length());
 				messages.erase(message);
 				close(event->ident);
 				std::cout << "Client " << event->ident << " closed" << std::endl;
@@ -258,7 +278,24 @@ void	launchServersMacOS(const Data & servers)
 
 	// Finds the ports that need to be opened
 	std::set<int> ports;
-	find_ports(servers, ports);
+	mapPort map_Port;
+	mapIpPort map_IpPort;
+	find_ports(servers, ports, map_IpPort, map_Port);
+
+	// Test
+	std::cout << "Unique Ip listen" << std::endl;
+	for(mapIpPort::const_iterator it = map_IpPort.begin();it != map_IpPort.end(); ++it)
+	{
+		std::cout << it->first.first << " , " << it->first.second << " / " << it->second.size() << std::endl;
+	}
+
+	// Test
+	std::cout << "All Ip listen" << std::endl;
+	for(mapPort::const_iterator it = map_Port.begin();it != map_Port.end(); ++it)
+	{
+		std::cout << it->first << " / " << it->second.size() << std::endl;
+	}
+
 	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
 	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
 

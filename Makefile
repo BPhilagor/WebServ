@@ -28,7 +28,7 @@ else
 LEAKS_CHECK = leaks -atExit --
 endif
 
-FILES	= main utils Data launchServers requestWorker handler \
+FILES	= main utils Data Server launchServers requestWorker handler \
 		HTTPRequest HTTPHeaders HTTPResponse \
 		HTTPResponse_informationalResponse \
 		HTTPResponse_successfulResponse \

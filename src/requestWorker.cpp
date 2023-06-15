@@ -22,28 +22,32 @@ std::string requestWorker(const Data &d, int socketFD, const std::string &rawReq
 	(void)d;
 
 
-	if (req.getHasValidSyntax())
-	{
-		std::cout << req << std::endl;
+	// if (req.getHasValidSyntax())
+	// {
+	// 	std::cout << req << std::endl;
 
-		// find the correct server for the request.
-		(void)socketFD;
+	// 	// find the correct server for the request.
+	// 	(void)socketFD;
 
-		if (1 /* server exists */)
-		{
-			//  give the data for only that server to the handler
-			res = generateResponse(d, req);
-		}
-		else
-		{
-			res.constructReply(d, 12312); // whatever the correct code for this is.
-		}
-	}
-	else
-	{
-		// std::cout<<"Invalid request syntax"<< std::endl;
-		res.constructReply(d, 400);
-	}
+	// 	if (1 /* server exists */)
+	// 	{
+	// 		//  give the data for only that server to the handler
+	// 		// res = generateResponse(d, req);
+	// 	}
+	// 	else
+	// 	{
+	// 		res.constructReply(d, 12312); // whatever the correct code for this is.
+	// 	}
+	// }
+	// else
+	// {
+	// 	// std::cout<<"Invalid request syntax"<< std::endl;
+	// 	res.constructReply(d, 400);
+	// }
+
+	(void)socketFD;
+	(void)generateResponse;
+	res.constructReply(d, 200);
 
 	return res.serialize();
 

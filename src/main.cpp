@@ -49,9 +49,9 @@ int main(int argc, char** argv)
 
 	Data servers = data.get("server");
 
-	HTTPResponse res;
-	res.constructReply(data, 500);
-	std::cout << "res is <\n" << res << ">\n";
+	// HTTPResponse res;
+	// res.constructReply(data, 500);
+	// std::cout << "res is <\n" << res << ">\n";
 
 	// return 0;
 

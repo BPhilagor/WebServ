@@ -74,3 +74,13 @@ std::string&	utils::sanitizeline(std::string& s)
 		s.replace(pos, 1, " ");
 	return (s);
 }
+
+pairIpPort getIpPort(const std::string &str)
+{
+	size_t tmp = str.find(':');
+
+	if (tmp == std::string::npos)
+		return pairIpPort("", str);
+	else
+		return pairIpPort(str.substr(0, tmp), str.substr(tmp + 1, str.size() - tmp));
+}
