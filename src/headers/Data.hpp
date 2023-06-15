@@ -62,6 +62,7 @@ public:
 	const std::string	getContent() const;
 	const dataObj & 	getObj(size_t index) const;
 	size_t				getObjSize() const;
+	const std::string &	getDefault(const std::string value) const;
 
 	// opperators and print functions
 	Data & operator=(const Data &other);

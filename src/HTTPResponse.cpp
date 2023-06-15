@@ -8,11 +8,14 @@
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
+#include "utils.hpp"
 
 #include <iostream>
 #include <sstream>
 
 #define DEBUG_PRINT 0
+
+std::map<int, std::string> HTTPResponse::_reasonMap = _initialiseReasonMap();
 
 HTTPResponse::HTTPResponse()
 {
@@ -87,19 +90,77 @@ void	HTTPResponse::setCode(int code)
 	_code = code;
 }
 
-void	HTTPResponse::setReason(std::string reason)
+void	HTTPResponse::setReason(const std::string &reason)
 {
 	_reason = reason;
 }
 
-void	HTTPResponse::setHeader(std::string name, std::string value)
+void	HTTPResponse::setHeader(const std::string &name, const std::string &value)
 {
 	_headers.insert(name, value);
 }
 
-void	HTTPResponse::setBody(std::string body)
+void	HTTPResponse::setBody(const std::string &body)
 {
 	_body = body;
+}
+
+/*
+RFC 7231 section 7.1.1.1.  Date/Time Formats
+	https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.1.1
+
+An example of the preferred format is
+	Sun, 06 Nov 1994 08:49:37 GMT    ; IMF-fixdate
+IMF-fixdate  = day-name "," SP date1 SP time-of-day SP GMT
+	; fixed length/zone/capitalization subset of the format
+	; see Section 3.3 of [RFC5322]
+*/
+void HTTPResponse::setDate()
+{
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer [30]; // i think it's never more than 20, .. but 10 bytes enh?
+
+	time (&rawtime);
+	timeinfo = localtime (&rawtime);
+
+	strftime (buffer,80,"%a, %m %R:%S GMT",timeinfo);
+
+	setHeader("Date", std::string(buffer));
+}
+
+std::string HTTPResponse::genErrorPage(int code) const
+{
+	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1></body></html>\n");
+	page.replace(page.find("EEE"), 3, SSTR(code));
+	page.replace(page.find("EEE"), 3, SSTR(code));
+	page.replace(page.find("RRR"), 3, _reasonMap[code]);
+	page.replace(page.find("RRR"), 3, _reasonMap[code]);
+	return page;
+}
+
+void HTTPResponse::constructReply(const Data &server, int code)
+{
+	setVersion(1, 1);
+	setDate();
+	// if (code >= 100 && code < 200)
+	// 	informationalResponse(server, code);
+	// else if (code >= 200 && code < 300)
+	// 	successfulResponse(server, code);
+	// else if (code >= 300 && code < 400)
+	// 	redirectionMessage(server, code);
+	// else if (code >= 400 && code < 500)
+	// 	clientErrorResponse(server, code);
+	// else if (code >= 500 && code < 600)
+	// 	clientErrorResponse(server, code);
+	// else
+	// 	std::cerr << "Stupid programmer, error code" << code << " is wack\n";
+	(void)server;
+	setReason(_reasonMap[code]);
+	setCode(code);
+	setHeader("host", "WebServ");
+	setBody(genErrorPage(code));
+	setHeader("content-length", SSTR(getBody().size()));
 }
 
 std::string	HTTPResponse::serialize() const

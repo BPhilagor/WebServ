@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
+#include <map>
 
 #include "utils.hpp"
 #include "Data.hpp"
@@ -177,6 +178,22 @@ int Data::getInt() const
 	if (ss.fail())
 		return 8080;
 	return ret;
+}
+
+const std::string &Data::getDefault(const std::string value) const
+{
+	// this might be an invalid approach, as the default should be
+	// taken from the last server spesified in the config folder
+	// according to the rules
+	// const std::map<std::string, std::string> defaultValues{
+	// 	{"listen", "8080"},
+	// 	{"allow", "GET, POST, DELETE"},
+	// 	{"location", "/"},
+	// 	{"", ""}
+	// };
+	(void)value;
+	static std::string salut =  "";
+	return salut;
 }
 
 const std::string Data::getContent() const { return _content; }
