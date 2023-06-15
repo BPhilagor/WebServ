@@ -8,6 +8,7 @@
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
+#include "utils.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -128,6 +129,16 @@ void HTTPResponse::setDate()
 	setHeader("Date", std::string(buffer));
 }
 
+std::string HTTPResponse::genErrorPage(int code) const
+{
+	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1></body></html>\n");
+	page.replace(page.find("EEE"), 3, SSTR(code));
+	page.replace(page.find("EEE"), 3, SSTR(code));
+	page.replace(page.find("RRR"), 3, _reasonMap[code]);
+	page.replace(page.find("RRR"), 3, _reasonMap[code]);
+	return page;
+}
+
 void HTTPResponse::constructReply(const Data &server, int code)
 {
 	setVersion(1, 1);
@@ -146,11 +157,11 @@ void HTTPResponse::constructReply(const Data &server, int code)
 	// 	std::cerr << "Stupid programmer, error code" << code << " is wack\n";
 	(void)server;
 	setReason(_reasonMap[code]);
-	if (getReason() == "")
-		setCode(-1);
 	setCode(code);
+	setHeader("host", "WebServ");
+	setBody(genErrorPage(code));
+	setHeader("content-length", SSTR(getBody().size()));
 }
-
 
 std::string	HTTPResponse::serialize() const
 {

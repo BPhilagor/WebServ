@@ -51,7 +51,7 @@ class HTTPResponse
 		void clientErrorResponse(const Data &server, int code);
 		void serverErrorResponse(const Data &server, int code);
 
-
+		std::string genErrorPage(int code) const;
 
 	private:
 		/* status line */
