@@ -9,6 +9,7 @@
 
 #include "launchServers.hpp"
 #include "typedefs.hpp"
+#include "HTTPParser.hpp"
 
 typedef struct {
 	int fd;
@@ -182,7 +183,7 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 	const size_t PORTS_NBR = tracked.size();
 	struct kevent events[EVENTS_NBR]; /* event that was triggered */
 	struct kevent newEv;
-	std::map<int, std::string> messages;
+	std::map<int, HTTPParser> messages;
 
 	while (true)
 	{
@@ -237,25 +238,42 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 
 				EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
-				messages.insert(std::pair<int, std::string>(new_fd, ""));
+				messages.insert(std::pair<int, HTTPParser>(new_fd, HTTPParser()));
 				std::cout << "Connection established" << std::endl;
 				exit(1);
 			}
 			else if (event->filter == EVFILT_READ)
 			{
-				char buff[BUFFER_SIZE];
+				/* read a chunk of the client's message into a buffer */
+				char buff[BUFFER_SIZE + 1];
 				int bytesRecv = read(event->ident, buff, BUFFER_SIZE);
-				std::cout << "Received : " << std::string(buff, 0, bytesRecv) << std::endl;
-				messages.find(event->ident)->second += std::string(buff, 0, bytesRecv);
-				goto jump;
+				buff[BUFFER_SIZE] = 0;
+
+
+				/*
+					Note that the effect of a CR (\r) char is to put the cursor at the start of the line,
+					which might explain weird output!
+				*/
+				std::cout<< "Number of bytes received: "<<bytesRecv<<std::endl;
+				std::cout << "String received: {" << std::string(buff, 0, bytesRecv) << "}" << std::endl << std::endl;
+
+				/*
+					Add the buffer to the HTTPParser, that stores the entire buffer.
+					We can then interrogate the HTTPParser to find out if we've received the entire message.
+				*/
+				messages.find(event->ident)->second.consumeBuffer(std::string(buff, 0, bytesRecv));
+				if (messages.find(event->ident)->second.isFinished())
+				{
+					std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
+					goto send_response;
+				}
 			}
 			else if (event->filter == EVFILT_WRITE)
 			{
-				jump:
+				send_response:
 				Data fakeData;
-				std::map<int, std::string>::iterator message = messages.find(event->ident);
-				std::string response = requestWorker(fakeData, event->ident, message->second);
-				// write(event->ident, message->second.c_str(), message->second.length());
+				std::map<int, HTTPParser>::iterator message = messages.find(event->ident);
+				std::string response = requestWorker(fakeData, event->ident, message->second.getBuffer());
 				write(event->ident, response.c_str(), response.length());
 				messages.erase(message);
 				close(event->ident);

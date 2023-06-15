@@ -16,7 +16,7 @@ CFLAGS	+= -std=c++98 -pedantic
 
 ifdef DEBUG
 CFLAGS	+= -g3 -fsanitize=address
-elses
+else
 ifdef DEBUGL
 CFLAGS += -g3
 endif
@@ -29,6 +29,7 @@ LEAKS_CHECK = leaks -atExit --
 endif
 
 FILES	= main utils Data Server launchServers requestWorker handler \
+		HTTPParser \
 		HTTPRequest HTTPHeaders HTTPResponse \
 		HTTPResponse_informationalResponse \
 		HTTPResponse_successfulResponse \
