@@ -16,6 +16,9 @@ typedef struct {
 	struct sockaddr_in address;
 } socket_event;
 
+void	readHandler(int fd, std::map<int, HTTPParser>& messages);
+void	writeHandler(int fd, std::map<int, HTTPParser>& messages);
+
 static void find_ports(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port)
 {
 	for (int i = 0; i < servers.count("server"); i++)
@@ -28,7 +31,7 @@ static void find_ports(const Data & servers, std::set<int> &ports, mapIpPort &ma
 				map_Port[ipPort.second].push_back(srv);
 			else
 				map_IpPort[ipPort].push_back(srv);
-			ports.insert(stoi(ipPort.second));
+			ports.insert(stoi(ipPort.second)); /* i think stoi is C++11 !*/
 		}
 	}
 }
@@ -180,9 +183,10 @@ void	launchServersWSL(const Data & servers)
 static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked, std::set<int> &socket_fds)
 {
 	const int ADDRLEN = sizeof(sockaddr_in);
-	const size_t PORTS_NBR = tracked.size();
+	//const size_t PORTS_NBR = tracked.size();
 	struct kevent events[EVENTS_NBR]; /* event that was triggered */
 	struct kevent newEv;
+
 	std::map<int, HTTPParser> messages;
 
 	while (true)
@@ -190,7 +194,7 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 		// new_event = kevent(/*int kq, const struct kevent *changelist, size_t nchanges,
 		// 	struct kevent *eventlist, size_t nevents,
 		// 	const struct timespec *timeout*/);
-		int event_number = kevent(kqfd, &tracked[0], PORTS_NBR, events, EVENTS_NBR, NULL);
+		int event_number = kevent(kqfd, &tracked[0], tracked.size(), events, EVENTS_NBR, NULL);
 		if (event_number < 0)
 		{
 			std::cout << "Error: with new_event in kq" << std::endl;
@@ -200,20 +204,17 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 		{
 			struct kevent *event = &events[i];
 
-			if (event->flags & EV_EOF)
+			if (event->flags & EV_EOF) /* Client disconnected */
 			{
 				std::cout << "Client " << event->ident << " Disconnected" << std::endl;
-				EV_SET(&newEv, event->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
-				EV_SET(&newEv, event->ident, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, NULL);
-				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
-			}
-			else if (event->flags & EV_ERROR)
-			{
-				std::cout << "Error with client" << std::endl;
 				close(event->ident);
 			}
-			else if (socket_fds.find(event->ident) != socket_fds.end())
+			else if (event->flags & EV_ERROR) /* An error occured with the client */
+			{
+				std::cout << "Error with client: " << std::strerror(event->data) << std::endl;
+				close(event->ident);
+			}
+			else if (socket_fds.find(event->ident) != socket_fds.end()) /* Incoming connection */
 			{
 				if (event->flags & EV_ERROR)
 				{
@@ -237,49 +238,69 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 				std::cout << "here:" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << "end\n";
 
 				EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-				kevent(kqfd, &newEv, 1, NULL, 0, NULL);
+				tracked.push_back(newEv);
+
+				EV_SET(&newEv, new_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+				tracked.push_back(newEv);
+
+				kevent(kqfd, &tracked[0], tracked.size(), NULL, 0, NULL); /* Subscribe to the event queue */
+
 				messages.insert(std::pair<int, HTTPParser>(new_fd, HTTPParser()));
 				std::cout << "Connection established" << std::endl;
-				exit(1);
 			}
-			else if (event->filter == EVFILT_READ)
+			else if (event->filter == EVFILT_READ) /* Socket is ready for reading */
 			{
-				/* read a chunk of the client's message into a buffer */
-				char buff[BUFFER_SIZE + 1];
-				int bytesRecv = read(event->ident, buff, BUFFER_SIZE);
-				buff[BUFFER_SIZE] = 0;
-
-
-				/*
-					Note that the effect of a CR (\r) char is to put the cursor at the start of the line,
-					which might explain weird output!
-				*/
-				std::cout<< "Number of bytes received: "<<bytesRecv<<std::endl;
-				std::cout << "String received: {" << std::string(buff, 0, bytesRecv) << "}" << std::endl << std::endl;
-
-				/*
-					Add the buffer to the HTTPParser, that stores the entire buffer.
-					We can then interrogate the HTTPParser to find out if we've received the entire message.
-				*/
-				messages.find(event->ident)->second.consumeBuffer(std::string(buff, 0, bytesRecv));
-				if (messages.find(event->ident)->second.isFinished())
-				{
-					std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
-					goto send_response;
-				}
+				readHandler(event->ident, messages);
 			}
-			else if (event->filter == EVFILT_WRITE)
+			else if (event->filter == EVFILT_WRITE)  /* Socket is ready for writing */
 			{
-				send_response:
-				Data fakeData;
-				std::map<int, HTTPParser>::iterator message = messages.find(event->ident);
-				std::string response = requestWorker(fakeData, event->ident, message->second.getBuffer());
-				write(event->ident, response.c_str(), response.length());
-				messages.erase(message);
-				close(event->ident);
-				std::cout << "Client " << event->ident << " closed" << std::endl;
+				writeHandler(event->ident, messages);
 			}
 		}
+	}
+}
+
+void	readHandler(int fd, std::map<int, HTTPParser>& messages)
+{
+	/* read a chunk of the client's message into a buffer */
+	char buff[BUFFER_SIZE + 1];
+	int bytesRecv = read(fd, buff, BUFFER_SIZE);
+	buff[BUFFER_SIZE] = 0;
+
+
+	/*
+		Note that the effect of a CR (\r) char is to put the cursor at the start of the line,
+		which might explain weird output!
+	*/
+	std::cout<< "Number of bytes received: "<<bytesRecv<<std::endl;
+	std::cout << "String received: {" << std::string(buff, 0, bytesRecv) << "}" << std::endl << std::endl;
+
+	/*
+		Add the buffer to the HTTPParser, that stores the entire buffer.
+		We can then interrogate the HTTPParser to find out if we've received the entire message.
+	*/
+	HTTPParser& parser = messages.find(fd)->second;
+	parser.consumeBuffer(std::string(buff, 0, bytesRecv));
+	if (parser.isFinished())
+	{
+		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
+	}
+}
+
+void	writeHandler(int fd, std::map<int, HTTPParser>& messages)
+{
+	std::cout << "Detected possibility to write on the socket" << std::endl;
+
+	Data fakeData;
+	HTTPParser& parser = messages.find(fd)->second;
+
+	if (parser.isFinished()) /* if we detected end of HTTPRequest, we can write the response */
+	{
+		std::string response = requestWorker(fakeData, fd, parser.getBuffer());
+		write(fd, response.c_str(), response.length());
+		messages.erase(messages.find(fd));
+		close(fd);
+		std::cout << "Client " << fd << " closed" << std::endl;
 	}
 }
 
@@ -326,17 +347,22 @@ void	launchServersMacOS(const Data & servers)
 	}
 
 	std::vector<struct kevent> tracked; /* event we want to monitor */
-	tracked.resize(PORTS_NBR);
+	tracked.resize(PORTS_NBR * 2);
 
 	std::set<int> socket_fds;
 
 	// Add events to tracked list
-	for (size_t i = 0; i < PORTS_NBR; ++i)
+	for (size_t i = 0; i < PORTS_NBR * 2; i += 2)
 	{
-		socket_fds.insert(socket_events[i].fd);
-		EV_SET(&tracked[i], socket_events[i].fd, EVFILT_READ, EV_ADD, 0, 0, &socket_events[i]);
+		socket_fds.insert(socket_events[i/2].fd);
+		EV_SET(&tracked[i], socket_events[i/2].fd, EVFILT_READ, EV_ADD, 0, 0, &socket_events[i/2]);
+		EV_SET(&tracked[i + 1], socket_events[i/2].fd, EVFILT_WRITE, EV_ADD, 0, 0, &socket_events[i/2]);
 	}
 
+	for (unsigned int i = 0; i < tracked.size(); i++)
+	{
+		std::cout << "( " <<tracked[i].filter <<", " << tracked[i].ident <<" )" << std::endl;
+	}
 	process_requests_MacOS(kqfd, tracked, socket_fds);
 }
 #endif
