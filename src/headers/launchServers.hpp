@@ -32,8 +32,8 @@
 #include "requestWorker.hpp"
 
 
-#define BUFFER_SIZE 32
-#define EVENTS_NBR 50
+#define BUFFER_SIZE	32
+#define MAX_EVENTS	10
 
 #ifdef WSL_DISTRO_NAME
 	void	launchServersWSL(const Data &servers);
