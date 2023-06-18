@@ -12,107 +12,30 @@
 #include "HTTPParser.hpp"
 #include "utils.hpp"
 
-typedef struct {
-	int fd;
-	struct sockaddr_in address;
-} socket_event;
-
 void	readHandler(int fd, std::map<int, HTTPParser>& messages);
 void	writeHandler(int fd, std::map<int, HTTPParser>& messages);
+void	printClientAddress(int fd);
+static void	find_ports(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port);
+static int	open_sockets(const std::set<int>& ports, std::set<int>& sockets);
 
-static void find_ports(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port)
+bool	isListenSocket(int fd, std::set<int>& listenSockets)
 {
-	for (int i = 0; i < servers.count("server"); i++)
-	{
-		Data srv = servers.find("server", i);
-		for (int j = 0; j < srv.count("listen"); j++)
-		{
-			pairIpPort ipPort = getIpPort(srv.find("listen", j).getContent());
-			if (ipPort.first.empty())
-				map_Port[ipPort.second].push_back(srv);
-			else
-				map_IpPort[ipPort].push_back(srv);
-			ports.insert(std::atoi(ipPort.second.c_str())); /* Should check if port is in valid range maybe? */
-		}
-	}
-}
-
-static socket_event* open_sockets(const std::set<int> ports)
-{
-	const int PORT_NUMBER = ports.size();;
-	socket_event* socket_events = (socket_event*) operator new[](sizeof(socket_event) * PORT_NUMBER); // TODO : manage memory error
-	size_t index = 0;
-
-	// we made our sockets
-	for (std::set<int>::iterator it = ports.begin(); it != ports.end(); ++it)
-	{
-		int socketFD = socket(AF_INET, SOCK_STREAM, 0);
-		if (socketFD < 0)
-		{
-			std::cout << "Error when creating socket: " << std::strerror(errno) << std::endl;
-			delete[] socket_events;
-			return 0;
-		}
-		// Adding event to the List
-		socket_events[index].fd = socketFD;
-
-		// Creating the sockaddr_in struct
-		memset((char *)&socket_events[index].address, 0, sizeof(socket_events[index].address));
-		socket_events[index].address.sin_family = AF_INET;
-		socket_events[index].address.sin_addr.s_addr = htonl(INADDR_ANY);
-		socket_events[index].address.sin_port = htons(*it);
-
-		//Binding the socket with the wanted port
-		if (bind(socketFD, (struct sockaddr *)&socket_events[index].address, sizeof(sockaddr_in))) {
-			std::cout << "Error when binding socket: " << std::strerror(errno) << std::endl;
-			delete[] socket_events;
-			return 0;
-		}
-
-		// Start listening
-		if (listen(socketFD, BACK_LOG) < 0) {
-			std::cout << "Error: when establishing a listen" << std::endl;
-			delete[] socket_events;
-			return 0;
-		}
-		++index;
-		std::cout << "Socket for port : " << *it  << " created" << std::endl;
-	}
-	return socket_events;
+	return (listenSockets.find(fd) != listenSockets.end());
 }
 
 #ifdef WSL_DISTRO_NAME
 
-bool	isListenSocket(int fd, const socket_event* sockets, size_t size)
-{
-	std::cout << "Sockets for listening: ";
-	for (unsigned int i = 0; i < size; i++)
-	{
-		std::cout << sockets[i].fd << " ";
-	}
-	std::cout << std::endl;
-	for (unsigned int i = 0; i < size; i++)
-	{
-		if (fd == sockets[i].fd)
-			return true;
-	}
-	return false;
-}
+int		addSocketToEventQueueLinux(int epoll_fd, int socket);
 
 void	launchServersWSL(const Data & servers)
 {
 	int epollfd;
-	const int ADDRLEN = sizeof(sockaddr_in);
 
 	// Finds the ports that need to be opened
 	std::set<int> ports;
 	mapPort map_Port;
 	mapIpPort map_IpPort;
 	find_ports(servers, ports, map_IpPort, map_Port);
-	
-	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
-	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
-
 
 	std::map<int, HTTPParser> messages;
 
@@ -125,23 +48,20 @@ void	launchServersWSL(const Data & servers)
 	}
 
 	// Creates the sockets to listen for new connections
-	socket_event* listening_sockets = open_sockets(ports);
-	if (listening_sockets == NULL)
-	{
-		std::cout << "Error: when creating sockets" << std::endl;
-		return ;
-	}
+	std::set<int> listening_sockets;
+	
+	open_sockets(ports, listening_sockets);
 
 	/* add listening sockets to event queue */
-	for (size_t i = 0; i < PORTS_NBR; ++i)
+	for (std::set<int>::iterator it = listening_sockets.begin(); it != listening_sockets.end(); ++it)
 	{
 		struct epoll_event	ev;
-
-		ev.events = EPOLLIN | EPOLLOUT;
-		ev.data.ptr = &listening_sockets[i];
-
-		if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listening_sockets[i].fd, &ev) == -1) {
+		ev.events = EPOLLIN;
+		ev.data.fd = *it;
+		if (epoll_ctl(epollfd, EPOLL_CTL_ADD, *it, &ev) == -1)
+		{
 			std::cout << "Error when adding event to epoll" << std::endl;
+			exit(1);
 		}
 	}
 
@@ -161,51 +81,57 @@ void	launchServersWSL(const Data & servers)
 		}
 		for (int i = 0; i < event_number; i++)
 		{
-			socket_event se = *(socket_event*) events[i].data.ptr;
-			std::cout << "Fd on which the event occured: " << se.fd << std::endl;
-			if (isListenSocket(se.fd, listening_sockets, PORTS_NBR))
+			std::cout << "Fd on which the event occured: " << events[i].data.fd << std::endl;
+			if (isListenSocket(events[i].data.fd, listening_sockets))
 			{
-				int new_socket = accept(se.fd, (struct sockaddr *)&se.address, (socklen_t*)&ADDRLEN);
-				if (new_socket < 0) {
+				int new_socket_fd = accept(events[i].data.fd, NULL, NULL);
+				if (new_socket_fd < 0)
+				{
 					std::cout << "Error when accepting request: " << std::strerror(errno) << std::endl;
 					return ;
 				}
 
+				printClientAddress(new_socket_fd);
+
 				/* add new socket to event filter */
-				
-				struct epoll_event ev;
-				se.fd = new_socket;
-				ev.events = EPOLLIN | EPOLLOUT;
-				ev.data.ptr = &se;
+				addSocketToEventQueueLinux(epollfd, new_socket_fd);
 
-				if (epoll_ctl(epollfd, EPOLL_CTL_ADD, se.fd, &ev) == -1) {
-					std::cout << "Error when adding event to epoll: " << std::strerror(errno) << std::endl;
-				}
-
-				messages.insert(std::pair<int, HTTPParser>(se.fd, HTTPParser()));
+				messages.insert(std::pair<int, HTTPParser>(new_socket_fd, HTTPParser()));
 
 				std::cout << "Connection established" << std::endl;
 			}
 			else if (events[i].events & EPOLLIN)
 			{
-				readHandler(se.fd, messages);
+				readHandler(events[i].data.fd, messages);
 			}
 			else if (events[i].events & EPOLLOUT)
 			{
-				writeHandler(se.fd, messages);
+				writeHandler(events[i].data.fd, messages);
 			}
 		}
 	}
 }
 
+int	addSocketToEventQueueLinux(int epoll_fd, int socket)
+{
+	struct epoll_event ev;
+	ev.events = EPOLLIN | EPOLLOUT;
+	ev.data.fd = socket;
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket, &ev) == -1)
+	{
+		std::cout << "Error when adding event to epoll: " << std::strerror(errno) << std::endl;
+		return (-1);
+	}
+	return (0);
+}
+
 #else
 
-static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked, std::set<int> &socket_fds)
+void	addSocketToEventQueueMacOS(int kqfd, int socket, std::vector<struct kevent>& tracked);
+
+static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked, std::set<int>& listening_sockets)
 {
-	const int ADDRLEN = sizeof(sockaddr_in);
-	//const size_t PORTS_NBR = tracked.size();
 	struct kevent events[MAX_EVENTS]; /* event that was triggered */
-	struct kevent newEv;
 
 	std::map<int, HTTPParser> messages;
 
@@ -214,7 +140,7 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 		int event_number = kevent(kqfd, &tracked[0], tracked.size(), events, MAX_EVENTS, NULL);
 		if (event_number < 0)
 		{
-			std::cout << "Error: with new_event in kq" << std::endl;
+			std::cout << "Error with kevent: " << std::strerror(errno) << std::endl;
 			return ;
 		}
 		for (int i = 0; i < event_number; i++)
@@ -225,37 +151,28 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 			{
 				std::cout << "Client " << event->ident << " Disconnected" << std::endl;
 				close(event->ident);
+				messages.erase(messages.find(fd));
 			}
 			else if (event->flags & EV_ERROR) /* An error occured with the client */
 			{
 				std::cout << "Error with client: " << std::strerror(event->data) << std::endl;
 				close(event->ident);
+				messages.erase(messages.find(fd));
 			}
-			else if (socket_fds.find(event->ident) != socket_fds.end()) /* Incoming connection */
+			else if (isListenSocket(event->ident, listening_sockets)) /* Incoming connection */
 			{
-				socket_event *se = (socket_event*) event->udata;
-				int new_fd = accept(se->fd, (struct sockaddr *)&se->address, (socklen_t*)&ADDRLEN);
-				if (new_fd < 0) {
+				int new_socket_fd = accept(event->ident, NULL, NULL);
+				if (new_socket_fd < 0)
+				{
 					std::cout << "Error when accepting request: " << std::strerror(errno) << std::endl;
 					return ;
 				}
 
-				// check the socket ip:port config
-				struct sockaddr_in addr;
-				socklen_t addrlen = sizeof(addr);
-				getsockname(new_fd, (struct sockaddr *)&addr, &addrlen);
-				std::string ipAddr(inet_ntoa(addr.sin_addr));
-				std::cout << "here:" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << "end\n";
-
-				/* Add the new socket to the event_queue */
-				EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-				tracked.push_back(newEv);
-				EV_SET(&newEv, new_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
-				tracked.push_back(newEv);
-				kevent(kqfd, &tracked[0], tracked.size(), NULL, 0, NULL);
+				printClientAddress(new_socket_fd);
+				addSocketToEventQueueMacOS(kqfd, new_socket_fd, tracked);
 
 				/* create an HTTPParser object for that socket */
-				messages.insert(std::pair<int, HTTPParser>(new_fd, HTTPParser()));
+				messages.insert(std::pair<int, HTTPParser>(new_socket_fd, HTTPParser()));
 				std::cout << "Connection established" << std::endl;
 			}
 			else if (event->filter == EVFILT_READ) /* Socket is ready for reading */
@@ -270,61 +187,47 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 	}
 }
 
+void	addSocketToEventQueueMacOS(int kqfd, int socket, std::vector<struct kevent>& tracked)
+{
+	struct kevent newEv;
+	
+	EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	tracked.push_back(newEv);
+	
+	EV_SET(&newEv, new_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+	tracked.push_back(newEv);
+	
+	kevent(kqfd, &tracked[0], tracked.size(), NULL, 0, NULL);
+}
+
 void	launchServersMacOS(const Data & servers)
 {
-
 	int kqfd;
-
 	if ((kqfd = kqueue()) == -1)
 	{
 		std::cout << "Error when starting kqueue: " << std::strerror(errno) << std::endl;
-		return ;
+		exit(1);
 	}
 
 	// Finds the ports that need to be opened
-	std::set<int> ports;
-	mapPort map_Port;
-	mapIpPort map_IpPort;
+	std::set<int>	ports;
+	mapPort			map_Port;
+	mapIpPort		map_IpPort; // those 2 maps unused yet
 	find_ports(servers, ports, map_IpPort, map_Port);
 
-	// Test
-	std::cout << "Unique Ip listen" << std::endl;
-	for(mapIpPort::const_iterator it = map_IpPort.begin(); it != map_IpPort.end(); ++it)
-	{
-		std::cout << it->first.first << " , " << it->first.second << " / " << it->second.size() << std::endl;
-	}
-
-	// Test
-	std::cout << "All Ip listen" << std::endl;
-	for(mapPort::const_iterator it = map_Port.begin();it != map_Port.end(); ++it)
-	{
-		std::cout << it->first << " / " << it->second.size() << std::endl;
-	}
-
-	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
-	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
-
-	// Creates the sockets
-	socket_event* socket_events = open_sockets(ports);
-	if (socket_events == 0)
-	{
-		std::cout << "Error when creating sockets: " << std::strerror(errno) << std::endl;
-		return ;
-	}
-
-	std::set<int> socket_fds; /* used to keep track of the listening sockets */
+	// Creates the sockets for listening
+	std::set<int> listening_sockets;
+	open_sockets(ports, listening_sockets);
 
 	/* setup list of events we want to monitor on the listening sockets */
 	std::vector<struct kevent> tracked;
-	tracked.resize(PORTS_NBR * 2);
-	for (size_t i = 0; i < PORTS_NBR * 2; i += 2)
+	for (std::set<int>::iterator it = listening_sockets.begin(); it != listening_sockets.end(); ++it)
 	{
-		socket_fds.insert(socket_events[i/2].fd);
-		EV_SET(&tracked[i], socket_events[i/2].fd, EVFILT_READ, EV_ADD, 0, 0, &socket_events[i/2]);
-		EV_SET(&tracked[i + 1], socket_events[i/2].fd, EVFILT_WRITE, EV_ADD, 0, 0, &socket_events[i/2]);
+		tracked.push_back({}); /* add empty struct kevent*/
+		EV_SET(&tracked.back(), *it, EVFILT_READ, 0, 0, NULL);
 	}
 
-	process_requests_MacOS(kqfd, tracked, socket_fds);
+	process_requests_MacOS(kqfd, tracked, listening_sockets);
 }
 #endif
 
@@ -335,6 +238,13 @@ void	readHandler(int fd, std::map<int, HTTPParser>& messages)
 	int bytesRecv = read(fd, buff, BUFFER_SIZE);
 	buff[BUFFER_SIZE] = 0;
 
+	if (bytesRecv <= 0)
+	{
+		std::cout << "Client " << fd << " closed" << std::endl;
+		close(fd);
+		messages.erase(messages.find(fd));
+		return ;
+	}
 
 	/*
 		Note that the effect of a CR (\r) char is to put the cursor at the start of the line,
@@ -366,8 +276,88 @@ void	writeHandler(int fd, std::map<int, HTTPParser>& messages)
 	{
 		std::string response = requestWorker(fakeData, fd, parser.getBuffer());
 		write(fd, response.c_str(), response.length());
-		messages.erase(messages.find(fd));
-		close(fd);
-		std::cout << "Client " << fd << " closed" << std::endl;
 	}
+}
+
+void	printClientAddress(int fd)
+{
+	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(addr);
+	getsockname(fd, (struct sockaddr *)&addr, &addrlen);
+	std::cout << "Received connection from: " << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
+}
+
+static void find_ports(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port)
+{
+	for (int i = 0; i < servers.count("server"); i++)
+	{
+		Data srv = servers.find("server", i);
+		for (int j = 0; j < srv.count("listen"); j++)
+		{
+			pairIpPort ipPort = getIpPort(srv.find("listen", j).getContent());
+			if (ipPort.first.empty())
+				map_Port[ipPort.second].push_back(srv);
+			else
+				map_IpPort[ipPort].push_back(srv);
+			ports.insert(std::atoi(ipPort.second.c_str())); /* Should check if port is in valid range maybe? */
+		}
+	}
+
+	// Test
+	std::cout << "Unique Ip listen" << std::endl;
+	for(mapIpPort::const_iterator it = map_IpPort.begin(); it != map_IpPort.end(); ++it)
+	{
+		std::cout << it->first.first << " , " << it->first.second << " / " << it->second.size() << std::endl;
+	}
+
+	// Test
+	std::cout << "All Ip listen" << std::endl;
+	for(mapPort::const_iterator it = map_Port.begin();it != map_Port.end(); ++it)
+	{
+		std::cout << it->first << " / " << it->second.size() << std::endl;
+	}
+
+	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
+	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
+}
+
+static int	open_sockets(const std::set<int>& ports, std::set<int>& sockets)
+{
+	//const int PORT_NUMBER = ports.size();
+
+	// we made our sockets
+	for (std::set<int>::iterator it = ports.begin(); it != ports.end(); ++it)
+	{
+		int socketFD = socket(AF_INET, SOCK_STREAM, 0);
+		if (socketFD < 0)
+		{
+			std::cout << "Error when creating socket: " << std::strerror(errno) << std::endl;
+			exit(1);
+		}
+		
+		sockets.insert(socketFD);
+
+		// Creating the sockaddr_in struct
+		struct sockaddr_in	addr;
+		memset(&addr, 0, sizeof(addr));
+		addr.sin_family = AF_INET;
+		addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		addr.sin_port = htons(*it);
+
+		//Binding the socket with the wanted port
+		if (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
+		{
+			std::cout << "Error when binding socket: " << std::strerror(errno) << std::endl;
+			exit(1);
+		}
+
+		// Start listening
+		if (listen(socketFD, BACK_LOG) < 0)
+		{
+			std::cout << "Error when establishing a listen: "<<std::strerror(errno) << std::endl;
+			exit(1);
+		}
+		std::cout << "Socket for port : " << *it  << " created" << std::endl;
+	}
+	return (0);
 }
