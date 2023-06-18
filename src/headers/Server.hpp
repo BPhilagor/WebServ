@@ -11,27 +11,33 @@
 # define SERVER_HPP
 
 # include "Data.hpp"
-
-typedef std::pair<std::string, std::string> listenObj;
+# include <typedefs.hpp>
 
 class Server
 {
 public:
-	Server();
 	Server(const Data &data);
 	Server(const Server &other);
 	~Server();
-	Server & operator=(const Server &other);
 
 	// property getter
 	const Data &getData() const;
-	std::vector<listenObj> getListen() const;
+	const std::vector<pairIpPort> &getIpPort() const;
+	const std::vector<int> &getPort() const;
 
-
-	// std::map<std::string, std::string>
+	// property interrogation
+	int isIpPortMatch(const std::string &ipPort) const;
 
 private:
+	Server();
+	Server & operator=(const Server &other);
+
+	void _initListen();
 	const Data _data;
+	std::vector<pairIpPort> _ipPort;
+	std::vector<int> _port;
 };
+
+std::ostream &operator<<(std::ostream &os, const Server &s);
 
 #endif /* SERVER_HPP */

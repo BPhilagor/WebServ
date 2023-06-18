@@ -75,7 +75,7 @@ std::string&	utils::sanitizeline(std::string& s)
 	return (s);
 }
 
-pairIpPort getIpPort(const std::string &str)
+pairIpPort utils::getIpPort(const std::string &str)
 {
 	size_t tmp = str.find(':');
 

@@ -49,7 +49,7 @@ void	launchServersWSL(const Data & servers)
 
 	// Creates the sockets to listen for new connections
 	std::set<int> listening_sockets;
-	
+
 	open_sockets(ports, listening_sockets);
 
 	/* add listening sockets to event queue */
@@ -190,13 +190,13 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 void	addSocketToEventQueueMacOS(int kqfd, int socket, std::vector<struct kevent>& tracked)
 {
 	struct kevent newEv;
-	
+
 	EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 	tracked.push_back(newEv);
-	
+
 	EV_SET(&newEv, new_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
 	tracked.push_back(newEv);
-	
+
 	kevent(kqfd, &tracked[0], tracked.size(), NULL, 0, NULL);
 }
 
@@ -294,7 +294,7 @@ static void find_ports(const Data & servers, std::set<int> &ports, mapIpPort &ma
 		Data srv = servers.find("server", i);
 		for (int j = 0; j < srv.count("listen"); j++)
 		{
-			pairIpPort ipPort = getIpPort(srv.find("listen", j).getContent());
+			pairIpPort ipPort = utils::getIpPort(srv.find("listen", j).getContent());
 			if (ipPort.first.empty())
 				map_Port[ipPort.second].push_back(srv);
 			else
@@ -334,7 +334,7 @@ static int	open_sockets(const std::set<int>& ports, std::set<int>& sockets)
 			std::cout << "Error when creating socket: " << std::strerror(errno) << std::endl;
 			exit(1);
 		}
-		
+
 		sockets.insert(socketFD);
 
 		// Creating the sockaddr_in struct

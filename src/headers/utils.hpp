@@ -28,7 +28,6 @@
 int send_to_socket(const std::string &message, int socket_fd);
 int send_file_to_socket(const std::string &filename, int socket_fd);
 void trim_outside_whitespace(std::string &line);
-pairIpPort getIpPort(const std::string &str);
 
 #define LINEAR_WHITESPACE " \t\v\f"
 
@@ -36,6 +35,8 @@ namespace utils
 {
 	std::string&	trim(std::string& s, const char *t = LINEAR_WHITESPACE);
 	std::string&	sanitizeline(std::string& s);
+
+	pairIpPort getIpPort(const std::string &str);
 }
 
 #endif
