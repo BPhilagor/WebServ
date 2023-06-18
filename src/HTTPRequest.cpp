@@ -174,7 +174,7 @@ std::ostream &operator<<(std::ostream &o, const HTTPRequest &req)
 std::istream &operator>>(std::istream &is, char const *s)
 {
 
-	if (s == nullptr)
+	if (s == NULL)
 		return is;
 
 	if (is.flags() & std::ios::skipws)

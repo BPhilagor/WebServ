@@ -124,7 +124,7 @@ void HTTPResponse::setDate()
 	time (&rawtime);
 	timeinfo = localtime (&rawtime);
 
-	strftime (buffer,80,"%a, %m %R:%S GMT",timeinfo);
+	strftime (buffer,80,"%a, %m %H:%M:%S GMT",timeinfo);
 
 	setHeader("Date", std::string(buffer));
 }

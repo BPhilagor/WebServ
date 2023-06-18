@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
 	// return 0;
 
-  #ifdef WSL_DISTRO_NAME
+	#ifdef WSL_DISTRO_NAME
 		launchServersWSL(servers);
 	#else
 		launchServersMacOS(servers);

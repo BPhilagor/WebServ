@@ -38,9 +38,9 @@ Data &Data::operator=(const Data &other)
 
 void Data::readFile(Data &n, const char *path)
 {
-	std::ifstream file(path);
 	if (path)
 	{
+		std::ifstream file(path);
 		if (!file.is_open())
 		{
 			std::cerr << "can't read config file: " << path << std::endl;
