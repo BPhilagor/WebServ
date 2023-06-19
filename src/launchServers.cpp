@@ -12,6 +12,12 @@
 #include "HTTPParser.hpp"
 #include "utils.hpp"
 
+#ifdef WSL_DISTRO_NAME
+# define SEND_FLAGS MSG_NOSIGNAL
+#else
+# define SEND_FLAGS 0
+#endif
+
 void	readHandler(int fd, std::map<int, HTTPParser>& messages);
 void	writeHandler(int fd, std::map<int, HTTPParser>& messages);
 void	printClientAddress(int fd);
@@ -49,7 +55,7 @@ void	launchServersWSL(const Data & servers)
 
 	// Creates the sockets to listen for new connections
 	std::set<int> listening_sockets;
-	
+
 	open_sockets(ports, listening_sockets);
 
 	/* add listening sockets to event queue */
@@ -135,9 +141,11 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 
 	std::map<int, HTTPParser> messages;
 
+	kevent(kqfd, &tracked[0], tracked.size(), NULL, 0, NULL);
+
 	while (true)
 	{
-		int event_number = kevent(kqfd, &tracked[0], tracked.size(), events, MAX_EVENTS, NULL);
+		int event_number = kevent(kqfd, NULL, 0, events, MAX_EVENTS, NULL);
 		if (event_number < 0)
 		{
 			std::cout << "Error with kevent: " << std::strerror(errno) << std::endl;
@@ -147,25 +155,21 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 		{
 			struct kevent *event = &events[i];
 
-			if (event->flags & EV_EOF) /* Client disconnected */
-			{
-				std::cout << "Client " << event->ident << " Disconnected" << std::endl;
-				close(event->ident);
-				messages.erase(messages.find(fd));
-			}
-			else if (event->flags & EV_ERROR) /* An error occured with the client */
-			{
-				std::cout << "Error with client: " << std::strerror(event->data) << std::endl;
-				close(event->ident);
-				messages.erase(messages.find(fd));
-			}
-			else if (isListenSocket(event->ident, listening_sockets)) /* Incoming connection */
+			if (isListenSocket(event->ident, listening_sockets)) /* Incoming connection */
 			{
 				int new_socket_fd = accept(event->ident, NULL, NULL);
 				if (new_socket_fd < 0)
 				{
 					std::cout << "Error when accepting request: " << std::strerror(errno) << std::endl;
 					return ;
+				}
+
+				/* suppress SIGPIPE on the socket */
+				int set = 1;
+				if (setsockopt(new_socket_fd, SOL_SOCKET, SO_NOSIGPIPE, &(set), sizeof(int)) != 0)
+				{
+					std::cout << "Error with setsockopt: " << std::strerror(errno) << std::endl;
+					exit(1);
 				}
 
 				printClientAddress(new_socket_fd);
@@ -190,13 +194,13 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 void	addSocketToEventQueueMacOS(int kqfd, int socket, std::vector<struct kevent>& tracked)
 {
 	struct kevent newEv;
-	
-	EV_SET(&newEv, new_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+
+	EV_SET(&newEv, socket, EVFILT_READ, EV_ADD, 0, 0, NULL);
 	tracked.push_back(newEv);
-	
-	EV_SET(&newEv, new_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+
+	EV_SET(&newEv, socket, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
 	tracked.push_back(newEv);
-	
+
 	kevent(kqfd, &tracked[0], tracked.size(), NULL, 0, NULL);
 }
 
@@ -223,8 +227,10 @@ void	launchServersMacOS(const Data & servers)
 	std::vector<struct kevent> tracked;
 	for (std::set<int>::iterator it = listening_sockets.begin(); it != listening_sockets.end(); ++it)
 	{
-		tracked.push_back({}); /* add empty struct kevent*/
-		EV_SET(&tracked.back(), *it, EVFILT_READ, 0, 0, NULL);
+		struct kevent	kev;
+		EV_SET(&kev, *it, EVFILT_READ, EV_ADD, 0, 0, NULL);
+		tracked.push_back(kev); /* add empty struct kevent*/
+
 	}
 
 	process_requests_MacOS(kqfd, tracked, listening_sockets);
@@ -241,8 +247,9 @@ void	readHandler(int fd, std::map<int, HTTPParser>& messages)
 	if (bytesRecv <= 0)
 	{
 		std::cout << "Client " << fd << " closed" << std::endl;
+		std::cout<< fcntl(fd, F_GETFD) << std::endl;
 		close(fd);
-		messages.erase(messages.find(fd));
+		//messages.erase(messages.find(fd)); /* this line can segfault if not found */
 		return ;
 	}
 
@@ -275,7 +282,7 @@ void	writeHandler(int fd, std::map<int, HTTPParser>& messages)
 	if (parser.isFinished()) /* if we detected end of HTTPRequest, we can write the response */
 	{
 		std::string response = requestWorker(fakeData, fd, parser.getBuffer());
-		write(fd, response.c_str(), response.length());
+		send(fd, response.c_str(), response.length(), SEND_FLAGS);
 	}
 }
 
@@ -334,7 +341,7 @@ static int	open_sockets(const std::set<int>& ports, std::set<int>& sockets)
 			std::cout << "Error when creating socket: " << std::strerror(errno) << std::endl;
 			exit(1);
 		}
-		
+
 		sockets.insert(socketFD);
 
 		// Creating the sockaddr_in struct
