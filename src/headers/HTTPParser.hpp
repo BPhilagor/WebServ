@@ -26,6 +26,8 @@ class HTTPParser
 			virtual const char*	what() const throw();
 		};
 
+		std::string					response_buffer;
+
 	private:
 		bool						_finished;
 		bool						_finishedHeaders;

@@ -52,8 +52,8 @@ void	launchServers(const Data& config);
 
 void	addSocketToEventQueue(int eqfd, int socket_fd);
 void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets);
-void	readHandler(int fd, std::map<int, HTTPParser>& messages);
-void	writeHandler(int fd, std::map<int, HTTPParser>& messages);
+void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages);
+void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages);
 void	printClientAddress(int fd);
 void	findPorts(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port);
 int		openSockets(const std::set<int>& ports, std::set<int>& sockets);

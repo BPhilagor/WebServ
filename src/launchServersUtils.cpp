@@ -8,14 +8,13 @@ void	addSocketToEventQueue(int eqfd, int socket_fd)
 {
 	#ifdef LINUX
 	struct epoll_event ev;
-	ev.events = EPOLLIN | EPOLLOUT;
+	ev.events = EPOLLIN;
 	ev.data.fd = socket_fd;
 	int res = epoll_ctl(eqfd, EPOLL_CTL_ADD, socket_fd, &ev);
 	#else
-	struct kevent ev[2];
-	EV_SET(&ev[0], socket_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	EV_SET(&ev[1], socket_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
-	int res = kevent(eqfd, ev, 2, NULL, 0, NULL);
+	struct kevent ev;
+	EV_SET(&ev, socket_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	int res = kevent(eqfd, &ev, 1, NULL, 0, NULL);
 	#endif
 	if (res < 0)
 	{
@@ -47,7 +46,7 @@ void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets)
 	}
 }
 
-void	readHandler(int fd, std::map<int, HTTPParser>& messages)
+void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 {
 	/* read a chunk of the client's message into a buffer */
 	char buff[BUFFER_SIZE + 1];
@@ -78,20 +77,65 @@ void	readHandler(int fd, std::map<int, HTTPParser>& messages)
 	if (parser.isFinished())
 	{
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
+		#ifdef LINUX
+			struct epoll_event ev;
+			ev.events = EPOLLIN;
+			ev.data.fd = socket_fd;
+			epoll_ctl(eqfd, EPOLL_CTL_DEL, fd, &ev); /* handle error here */
+			ev.events = EPOLLOUT;
+			ev.data.fd = socket_fd;
+			epoll_ctl(eqfd, EPOLL_CTL_ADD, fd, &ev);
+		#else
+			struct kevent ev[2];
+			EV_SET(&ev[0], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+			EV_SET(&ev[1], fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+			kevent(eqfd, ev, 2, NULL, 0, NULL);
+		#endif
 	}
 }
 
-void	writeHandler(int fd, std::map<int, HTTPParser>& messages)
+/* writeable_size is the amount of bytes that we can write */
+void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 {
-	std::cout << "Detected possibility to write on the socket" << std::endl;
+	std::cout << "Detected possibility to write the socket" << std::endl;
 
 	Data fakeData;
 	HTTPParser& parser = messages.find(fd)->second;
 
-	if (parser.isFinished()) /* if we detected end of HTTPRequest, we can write the response */
+	/* handle partial write */
+	std::string& response = parser.response_buffer;
+	if (parser.isFinished() && response.length() > 0) /* if we detected end of HTTPRequest, we can write the response */
 	{
-		std::string response = requestWorker(fakeData, fd, parser.getBuffer());
-		send(fd, response.c_str(), response.length(), SEND_FLAGS);
+		std::cout << "writing..." << std::endl;
+		int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
+		if (writtenBytes < 0)
+		{
+			std::cout << "send() failed: " << std::strerror(errno) << std::endl;
+		}
+		else
+		{
+			std::cout<<"Written bytes: " << writtenBytes << std::endl;
+			response = response.substr(writtenBytes, response.length() - writtenBytes);
+		}
+		if (writtenBytes < 0 || response.length() == 0)
+		{
+			messages[fd] = HTTPParser(); /* reset the pending request */
+
+			#ifdef LINUX
+				struct epoll_event ev;
+				ev.events = EPOLLIN;
+				ev.data.fd = socket_fd;
+				epoll_ctl(eqfd, EPOLL_CTL_ADD, fd, &ev); /* handle error here */
+				ev.events = EPOLLOUT;
+				ev.data.fd = socket_fd;
+				epoll_ctl(eqfd, EPOLL_CTL_DEL, fd, &ev);
+			#else
+				struct kevent ev[2];
+				EV_SET(&ev[0], fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+				EV_SET(&ev[1], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+				kevent(eqfd, ev, 2, NULL, 0, NULL);
+			#endif
+		}
 	}
 }
 

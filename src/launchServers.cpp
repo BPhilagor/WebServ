@@ -61,11 +61,11 @@ void launchServers(const Data &config)
 			}
 			else if (read_ev)
 			{
-				readHandler(ev_fd, messages);
+				readHandler(ev_fd, eqfd, messages);
 			}
 			else if (write_ev)
 			{
-				writeHandler(ev_fd, messages);
+				writeHandler(ev_fd, eqfd, messages);
 			}
 		}
 	}
