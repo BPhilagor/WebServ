@@ -11,56 +11,61 @@
 #include "HTTPResponse.hpp"
 #include "handler.hpp"
 #include "requestWorker.hpp"
+#include "Server.hpp"
 
-static HTTPResponse generateResponse(const Data &d, const HTTPRequest &req);
-
-std::string requestWorker(const Data &d, int socketFD, const std::string &rawRequest)
+static HTTPResponse getMethode()
 {
-	HTTPRequest req(rawRequest);
-	HTTPResponse res;
+	HTTPResponse result;
 
-	(void)d;
-
-	res.constructReply(d, 200);
-	return res.serialize();
-
-
-
-	// if (req.getHasValidSyntax())
-	// {
-	// 	std::cout << req << std::endl;
-
-	// 	// find the correct server for the request.
-	// 	(void)socketFD;
-
-	// 	if (1 /* server exists */)
-	// 	{
-	// 		//  give the data for only that server to the handler
-	// 		// res = generateResponse(d, req);
-	// 	}
-	// 	else
-	// 	{
-	// 		res.constructReply(d, 12312); // whatever the correct code for this is.
-	// 	}
-	// }
-	// else
-	// {
-	// 	// std::cout<<"Invalid request syntax"<< std::endl;
-	// 	res.constructReply(d, 400);
-	// }
-
-	(void)socketFD;
-	(void)generateResponse;
-	res.constructReply(d, 200);
-
-	return res.serialize();
+	return result;
 }
 
-static HTTPResponse generateResponse(const Data &d, const HTTPRequest &req)
+static HTTPResponse postMethode()
 {
-	HTTPResponse res;
+	HTTPResponse result;
 
-	handler(d, req);
-
-	return res;
+	return result;
 }
+
+static HTTPResponse deleteMethode()
+{
+	HTTPResponse result;
+
+	return result;
+}
+
+std::string resolveMethod(const Server& server, const HTTPRequest &request)
+{
+	HTTPResponse result;
+
+
+	(void) server;
+	// Identify request
+	const std::string& methode = request.getMethod();
+	if (methode.compare("GET"))
+	{
+		result = getMethode();
+	} else if (methode.compare("POST"))
+	{
+		result = postMethode();
+	} else if (methode.compare("DELETE"))
+	{
+		result = deleteMethode();
+	} else
+	{
+		// Manage Error
+		;
+	}
+	
+	// Construct HTTPResponse
+	
+	return result.serialize();
+}
+
+// std::string requestWorker(const SuperServeur& superServer, const HTTPRequest &request)
+// {
+// 	// Check HTTP Request
+// 	// Find Server
+// 	const Server& server = superServer.find(/*...*/);
+// 	resolveMethod(server, request);
+// }

@@ -31,12 +31,7 @@ endif
 FILES	= main utils Data Server  requestWorker handler \
 		HTTPParser \
 		HTTPRequest HTTPHeaders HTTPResponse \
-		HTTPResponse_informationalResponse \
-		HTTPResponse_successfulResponse \
-		HTTPResponse_redirectionMessage \
-		HTTPResponse_clientErrorResponse \
-		HTTPResponse_serverErrorResponse \
-		HTTPResponse_reason
+		HTTPResponse_reason SuperServer
 
 OBJS_PATH = objs/
 SRCS_PATH = src/

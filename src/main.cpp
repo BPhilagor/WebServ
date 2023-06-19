@@ -13,6 +13,7 @@
 #include "launchServers.hpp"
 #include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
+#include "SuperServer.hpp"
 
 int main(int argc, char** argv)
 {
@@ -48,20 +49,10 @@ int main(int argc, char** argv)
 	Data::print(data, 2);
 	std::cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
 
-	Data servers = data.get("server");
-
-	std::vector<Server> servers = Server::extractServers(data);
-
-	Server srv(servers.find("server",1));
-
-	std::cout << srv.getIpPort().at(0) << "\n";
-	std::cout << srv.getPort().at(0) << "\n";
-
-	// HTTPResponse res;
-	// res.constructReply(data, 500);
-	// std::cout << "res is <\n" << res << ">\n";
-
+	SuperServer webServ(data);
 	// return 0;
+
+	std::cout << webServ << "\n";
 
 	// #ifdef WSL_DISTRO_NAME
 	// 	launchServersWSL(servers);

@@ -79,8 +79,18 @@ pairIpPort utils::getIpPort(const std::string &str)
 {
 	size_t tmp = str.find(':');
 
-	if (tmp == std::string::npos)
-		return pairIpPort("", str);
-	else
-		return pairIpPort(str.substr(0, tmp), str.substr(tmp + 1, str.size() - tmp));
+	std::stringstream sHost(str.substr(0, tmp));
+	std::stringstream sPort(str.substr(tmp + 1, str.size() - tmp));
+
+	int host, port;
+
+	sHost >> host;
+	sPort >> port;
+
+	if (sHost.fail())
+		host = 0;
+	if (sPort.fail())
+		port = 8080;
+
+	return pairIpPort(host, port);
 }

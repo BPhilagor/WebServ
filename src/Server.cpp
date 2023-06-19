@@ -11,22 +11,15 @@
 #include "utils.hpp"
 #include <cstdlib>
 
-/* use it variable to itterate */
-#define FOREACH_VECTOR(type, thing) \
-for(std::vector<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
-
-/* use it variable to itterate */
-#define FOREACH_MAP(type, thing) \
-for(std::map<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
-
-
 Server::Server() : _data(Data()) {}
 Server::Server(const Data &data) : _data(data)
 {
 	_initListen();
 }
 
-Server::Server(const Server &other) : _data(other._data) {}
+Server::Server(const Server &other) 
+	: _data(other._data), _ipPort(other._ipPort), _port(other._port) {}
+
 Server::~Server() { }
 Server &Server::operator=(const Server &other)
 {
@@ -36,8 +29,8 @@ Server &Server::operator=(const Server &other)
 }
 
 const Data &Server::getData() const { return _data; }
-const std::vector<pairIpPort> &Server::getIpPort() const { return _ipPort; }
-const std::vector<int> &Server::getPort() const { return _port; }
+const std::vector<pairIpPort> &Server::getIpPorts() const { return _ipPort; }
+const std::vector<int> &Server::getPorts() const { return _port; }
 
 /*
 	returns the level of match found for the ip/port
@@ -55,14 +48,14 @@ int Server::isIpPortMatch(const std::string &ipPort) const
 	ss >> n;
 	if (ss.fail() && (n < 1/*min*/ || n > 10000/*max*/))
 	{
-		std::cerr << "port can't be a non digit\n";
+		std::cerr << "port can't be a non lkjlk digit\n";
 		n = 8080;
 	}
 
 	for(std::vector<pairIpPort>::const_iterator it = _ipPort.begin(); it != _ipPort.end(); ++it)
 		if (it->first == ipp.first && it->second == ipp.second)
 			return 2;
-	if (ipp.first.empty())
+	if (ipp.first == 0)
 		for (std::vector<int>::const_iterator it = _port.begin(); it != _port.end(); ++it)
 			if (*it == n)
 				return 1;
@@ -74,18 +67,7 @@ void Server::_initListen()
 	for (int j = 0; j < _data.count("listen"); j++)
 	{
 		pairIpPort ipPort = utils::getIpPort(_data.find("listen", j).getContent());
-		int n;
-		std::stringstream ss(ipPort.second);
-		ss >> n;
-		if (ss.fail() && (n < 1/*min*/ || n > 10000/*max*/))
-		{
-			std::cerr << "port can't be a non digit\n";
-			n = 8080;
-		}
-		if (ipPort.first.empty())
-			_port.push_back(n);
-		else
-			_ipPort.push_back(ipPort);
+		_ipPort.push_back(ipPort);
 	}
 }
 
@@ -93,38 +75,28 @@ void Server::_initListen()
 /* static class functions                                                     */
 /* ************************************************************************** */
 
-std::vector<Server> Server::extractServers(const Data &d)
-{
-	std::vector<Server> servers;
+// std::set<int> Server::extractPortsSet(const std::vector<Server> &servers)
+// {
+// 	std::set<int> ports;
+// 	FOREACH_VECTOR(Server, servers)
+// 	{
+// 		std::vector<int> tmp = it->getPorts();
+// 		FOREACH_VECTOR(int, tmp)
+// 		{
+// 			ports.insert()
+// 		}
+// 	}
+// }
 
-	Data srvs = d.get("server");
-	for (int i = 0; i < srvs.count("server"); i++)
-		servers.push_back(Server(srvs.find("server", i)));
-	return servers;
-}
+// mapIpPort Server::extractIpPortsMap(const std::vector<Server> &servers)
+// {
+// 	return mapIpPort();
+// }
 
-std::set<int> Server::extractPortsSet(const std::vector<Server> &servers)
-{
-	std::set<int> ports;
-	FOREACH_VECTOR(Server, servers)
-	{
-		std::vector<int> tmp = it->getPort();
-		FOREACH_VECTOR(int, tmp)
-		{
-			ports.insert()
-		}
-	}
-}
-
-mapIpPort Server::extractIpPortsMap(const std::vector<Server> &servers)
-{
-	return mapIpPort();
-}
-
-mapPort Server::extractPortsMap(const std::vector<Server> &servers)
-{
-	return mapPort();
-}
+// mapPort Server::extractPortsMap(const std::vector<Server> &servers)
+// {
+// 	return mapPort();
+// }
 
 /* ************************************************************************** */
 /* stream overloads                                                           */
@@ -132,12 +104,12 @@ mapPort Server::extractPortsMap(const std::vector<Server> &servers)
 std::ostream &operator<<(std::ostream &os, const Server &s)
 {
 	os << "\nIP/Port =  ";
-	FOREACH_VECTOR(pairIpPort, s.getIpPort())
-		os << *it << " ";
+	FOREACH_VECTOR(pairIpPort, s.getIpPorts())
+		os << *it << ", ";
 
 	os << "\n   Port = ";
-	FOREACH_VECTOR(int, s.getPort())
-		os << *it << " ";
+	FOREACH_VECTOR(int, s.getPorts())
+		os << *it << ", ";
 
 	return os;
 }

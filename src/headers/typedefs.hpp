@@ -14,10 +14,11 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "Data.hpp"
+#include <set>
 
-typedef std::pair<std::string, std::string> pairIpPort;
-typedef std::map< pairIpPort, std::vector<Data> > mapIpPort;
-typedef std::map< std::string, std::vector<Data> > mapPort;
+class Server;
+
+typedef std::pair<int, int> pairIpPort;
+typedef std::map< pairIpPort, std::vector<Server> > mapIpPort;
 
 #endif /* TYPEDEFS_HPP */

@@ -139,8 +139,9 @@ std::string HTTPResponse::genErrorPage(int code) const
 	return page;
 }
 
-void HTTPResponse::constructReply(const Data &server, int code)
+void HTTPResponse::constructReply(const Data &server, const std::string &body, int code)
 {
+	(void) body;
 	setVersion(1, 1);
 	setDate();
 	// if (code >= 100 && code < 200)
@@ -159,7 +160,11 @@ void HTTPResponse::constructReply(const Data &server, int code)
 	setReason(_reasonMap[code]);
 	setCode(code);
 	setHeader("host", "WebServ");
-	setBody(genErrorPage(code));
+	// if error
+	// 	if error file in config 
+	// 		setBody(genErrorPage(code));
+	// else
+
 	setHeader("content-length", SSTR(getBody().size()));
 }
 

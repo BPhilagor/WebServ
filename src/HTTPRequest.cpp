@@ -63,10 +63,10 @@ HTTPRequest &HTTPRequest::operator=(const HTTPRequest &rhs)
 }
 
 /* getters */
-bool					HTTPRequest::getHasValidSyntax() const { return _hasValidSyntax; }
+bool					HTTPRequest::hasValidSyntax() const { return _hasValidSyntax; }
 t_version				HTTPRequest::getVersion() const { return _version; }
 std::string				HTTPRequest::getURI() const { return _uri; }
-std::string				HTTPRequest::getMethod() const { return _method; }
+const std::string&		HTTPRequest::getMethod() const { return _method; }
 const HTTPHeaders&		HTTPRequest::getHeaders() const { return _headers; } /* should not be like that in the future */
 std::string				HTTPRequest::getBody() const { return _body; }
 

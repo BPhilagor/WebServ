@@ -14,6 +14,14 @@
 # include <typedefs.hpp>
 # include <set>
 
+/* use it variable to itterate */
+#define FOREACH_VECTOR(type, thing) \
+for(std::vector<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+
+/* use it variable to itterate */
+#define FOREACH_MAP(type, thing) \
+for(std::map<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+
 class Server
 {
 public:
@@ -23,8 +31,8 @@ public:
 
 	// property getter
 	const Data &getData() const;
-	const std::vector<pairIpPort> &getIpPort() const;
-	const std::vector<int> &getPort() const;
+	const std::vector<pairIpPort> &getIpPorts() const;
+	const std::vector<int> &getPorts() const;
 
 	// property interrogation
 	int isIpPortMatch(const std::string &ipPort) const;
@@ -33,7 +41,6 @@ public:
 	static std::vector<Server> extractServers(const Data &d);
 	static std::set<int> extractPortsSet(const std::vector<Server> &servers);
 	static mapIpPort extractIpPortsMap(const std::vector<Server> &servers);
-	static mapPort extractPortsMap(const std::vector<Server> &servers);
 
 private:
 	Server();
