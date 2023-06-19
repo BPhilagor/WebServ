@@ -7,9 +7,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstdlib>
+
 #include "Server.hpp"
 #include "utils.hpp"
-#include <cstdlib>
+
+const Data Server::_defaultServer = utils::constructDefaultServer();
 
 Server::Server() : _data(Data()) {}
 Server::Server(const Data &data) : _data(data)
@@ -17,7 +20,7 @@ Server::Server(const Data &data) : _data(data)
 	_initListen();
 }
 
-Server::Server(const Server &other) 
+Server::Server(const Server &other)
 	: _data(other._data), _hostPort(other._hostPort) {}
 
 Server::~Server() { }
@@ -28,8 +31,82 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
+
+/* ************************************************************************** */
+/* getters                                                                    */
+/* ************************************************************************** */
+
 const Data &Server::getData() const { return _data; }
 const std::vector<pairHostPort> &Server::getHostPorts() const { return _hostPort; }
+const std::vector<std::string> &Server::getMethodds() const { return _methods; }
+
+const std::string &Server::getDefault(const std::string &prop) const
+{
+	if (_defaultServer.getObj(0).second.count("prop") == 0)
+	{
+		std::cerr << "default property \"" << prop << "\" not set\n";
+		exit(42);
+	}
+	return _defaultServer.getObj(0).second.find(prop).getContentRef();
+}
+
+int Server::getBodyLimit() const
+{
+	int x = 0;
+
+	if ((x =_data.count("body_limit")) == 0)
+	{
+		std::cout << x << "12321\n";;
+		return utils::toInt(getDefault("body_limit"));
+	}
+	else
+		return utils::toInt(_data.find("body_limit").getContentRef());
+}
+
+const std::string &Server::getServerName() const
+{
+	int x = 0;
+
+	if ((x =_data.count("server_name")) == 0)
+		return getDefault("server_name");
+	else
+		return _data.find("server_name").getContentRef();
+}
+
+const std::string &Server::getErrorDir() const
+{
+	int x = 0;
+
+	if ((x =_data.count("error_dir")) == 0)
+		return getDefault("error_dir");
+	else
+		return _data.find("error_dir").getContentRef();
+}
+
+const std::string &Server::getUploadDir() const
+{
+	int x = 0;
+
+	if ((x =_data.count("upload_dir")) == 0)
+		return getDefault("upload_dir");
+	else
+		return _data.find("upload_dir").getContentRef();
+}
+
+bool Server::getDirListing() const
+{
+	int x = 0;
+
+	if ((x =_data.count("upload_dir")) == 0)
+		return getDefault("upload_dir") == "true" ? true : false;
+	else
+		return _data.find(
+			"upload_dir").getContentRef() == "true" ? true : false;
+}
+
+/* ************************************************************************** */
+/* property interrogators                                                     */
+/* ************************************************************************** */
 
 /*
 	returns the level of match found for the ip/port
@@ -61,6 +138,11 @@ int Server::isHostPortMatch(const std::string &hostPort) const
 	return 0;
 }
 
+
+/* ************************************************************************** */
+/* initialisation helper functions                                            */
+/* ************************************************************************** */
+
 void Server::_initListen()
 {
 	for (int j = 0; j < _data.count("listen"); j++)
@@ -70,32 +152,7 @@ void Server::_initListen()
 	}
 }
 
-/* ************************************************************************** */
-/* static class functions                                                     */
-/* ************************************************************************** */
 
-// std::set<int> Server::extractPortsSet(const std::vector<Server> &servers)
-// {
-// 	std::set<int> ports;
-// 	FOREACH_VECTOR(Server, servers)
-// 	{
-// 		std::vector<int> tmp = it->getPorts();
-// 		FOREACH_VECTOR(int, tmp)
-// 		{
-// 			ports.insert()
-// 		}
-// 	}
-// }
-
-// mapHostPort Server::extractHostPortsMap(const std::vector<Server> &servers)
-// {
-// 	return mapHostPort();
-// }
-
-// mapPort Server::extractPortsMap(const std::vector<Server> &servers)
-// {
-// 	return mapPort();
-// }
 
 /* ************************************************************************** */
 /* stream overloads                                                           */

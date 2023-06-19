@@ -13,7 +13,7 @@ server sally {
 	location / {
 		root = html
 	}
-	size_limit = 9999999
+	client_body_size_limit = 9999999
 	methods = GET DELETE
 }
 
@@ -24,7 +24,7 @@ server ?sally_is_my_server_name {
 		root = html
 	}
 	error_dir = /error
-	size_limit = 9999999
+	body_lim = 9999999
 	?methods = POST GET
 	?http_redirection = /something
 	?directory_listing = false

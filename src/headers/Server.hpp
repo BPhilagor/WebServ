@@ -29,11 +29,20 @@ public:
 	Server(const Server &other);
 	~Server();
 
-	// property getter
+	/* property getters */
 	const Data &getData() const;
 	const std::vector<pairHostPort> &getHostPorts() const;
+	const std::vector<std::string> &getMethodds() const;
 
-	// property interrogation
+	/* getters from datat */
+	const std::string &getDefault(const std::string &prop) const;
+	int getBodyLimit() const;
+	const std::string &getServerName() const;
+	const std::string &getErrorDir() const;
+	const std::string &getUploadDir() const;
+	bool getDirListing() const;
+
+	/* property interrogation */
 	int isHostPortMatch(const std::string &hostPort) const;
 
 private:
@@ -43,6 +52,8 @@ private:
 	void _initListen();
 	const Data _data;
 	std::vector<pairHostPort> _hostPort;
+	std::vector<std::string> _methods;
+	static const Data _defaultServer;
 };
 
 std::ostream &operator<<(std::ostream &os, const Server &s);

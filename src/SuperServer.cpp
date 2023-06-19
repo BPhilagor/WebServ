@@ -26,26 +26,21 @@ SuperServer::SuperServer(const Data& data) //TODO : Tester
 	}
 }
 
-// Copy constructor
-SuperServer::SuperServer(const SuperServer &other)
-{
-	*this = other;
-}
+SuperServer::SuperServer(const SuperServer &other) { *this = other; }
+SuperServer::~SuperServer() {}
+SuperServer &SuperServer::operator=(const SuperServer &other){ (void)other; return *this; }
 
-// Destructor
-SuperServer::~SuperServer()
-{
-}
 
-// Copy assignment operator
-SuperServer &SuperServer::operator=(const SuperServer &other)
-{
-	(void)other;
-	// TODO: insert return statement here
-	return *this;
-}
+/* ************************************************************************** */
+/* getters                                                                    */
+/* ************************************************************************** */
 
 const std::vector<Server> &SuperServer::getServers() const { return servers; }
+
+
+/* ************************************************************************** */
+/* stream overloads                                                           */
+/* ************************************************************************** */
 
 std::ostream &operator<<(std::ostream &os, const SuperServer &s)
 {
@@ -63,4 +58,3 @@ std::ostream &operator<<(std::ostream &os, const SuperServer &s)
 
 	return os;
 }
-

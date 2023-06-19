@@ -20,7 +20,9 @@
 # include <sstream>
 # include <string>
 # include <vector>
+
 # include "typedefs.hpp"
+# include "Data.hpp"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -37,6 +39,10 @@ namespace utils
 	std::string&	sanitizeline(std::string& s);
 
 	pairHostPort getHostPort(const std::string &str);
+
+	Data constructDefaultServer();
+
+	int toInt(const std::string &s);
 }
 
 #endif

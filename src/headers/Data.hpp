@@ -54,15 +54,17 @@ public:
 	// parse in config file
 	static void readFile(Data &n, const char *path);
 
+	void setProp(const std::string &ident, const std::string &content);
+
 	// accessors
 	const Data &		find(const std::string &type, int n = 0) const;
 	Data				get(const std::string &type, int depth = 0) const;
 	int 				count(const std::string &type) const;
 	int					getInt() const;
 	const std::string	getContent() const;
+	const std::string	&getContentRef() const;
 	const dataObj & 	getObj(size_t index) const;
 	size_t				getObjSize() const;
-	const std::string &	getDefault(const std::string value) const;
 
 	// opperators and print functions
 	Data & operator=(const Data &other);

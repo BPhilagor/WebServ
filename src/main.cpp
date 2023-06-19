@@ -45,12 +45,14 @@ int main(int argc, char** argv)
 	}
 	else
 		Data::readFile(data, argv[1]);
+
 	std::cout << "\nconfig:\n";
 	Data::print(data, 2);
 	std::cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
 
 	SuperServer webServ(data);
-	// return 0;
+
+	std::cout << webServ.getServers()[0].getBodyLimit() << "\n";
 
 	std::cout << webServ << "\n";
 

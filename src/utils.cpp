@@ -8,6 +8,7 @@
 /* ************************************************************************** */
 
 #include "utils.hpp"
+#include "Server.hpp"
 
 int send_to_socket(const std::string &message, int socket_fd) {
 	return write(socket_fd, message.c_str(), message.length());
@@ -93,4 +94,37 @@ pairHostPort utils::getHostPort(const std::string &str)
 		port = 8080;
 
 	return pairHostPort(host, port);
+}
+
+/*
+	this needs to be the most complete config possible,
+	not values should be missing, we will access  with
+	the assumption that everything needed is here.
+	if segv or we throw some thing.
+*/
+Data utils::constructDefaultServer()
+{
+	Data d;
+
+	d.setProp("listen", "0:8080");
+	d.setProp("server_name", "WebServ");
+	d.setProp("methods", "GET, POST, DELETE");
+	d.setProp("body_limit", "1048576");
+	d.setProp("error_pages", "");
+	d.setProp("error_dir", "");
+	d.setProp("upload_dir", "");
+	d.setProp("directory_listing", "true");
+	/* etc */
+	return d;
+}
+
+int utils::toInt(const std::string &s)
+{
+	int ret = 0;
+	std::stringstream ss(s);
+
+	ss >> ret;
+	if (ss.fail())
+		return 0;
+	return ret;
 }
