@@ -178,6 +178,7 @@ static void process_requests_MacOS(int kqfd, std::vector<struct kevent> &tracked
 			else if (event->filter == EVFILT_READ) /* Socket is ready for reading */
 			{
 				readHandler(event->ident, messages);
+				messages.erase()
 			}
 			else if (event->filter == EVFILT_WRITE)  /* Socket is ready for writing */
 			{

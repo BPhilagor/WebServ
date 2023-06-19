@@ -50,6 +50,8 @@ int main(int argc, char** argv)
 
 	Data servers = data.get("server");
 
+	std::vector<Server> servers = Server::extractServers(data);
+
 	Server srv(servers.find("server",1));
 
 	std::cout << srv.getIpPort().at(0) << "\n";

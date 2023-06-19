@@ -12,6 +12,7 @@
 
 # include "Data.hpp"
 # include <typedefs.hpp>
+# include <set>
 
 class Server
 {
@@ -27,6 +28,12 @@ public:
 
 	// property interrogation
 	int isIpPortMatch(const std::string &ipPort) const;
+
+	// static utility functions
+	static std::vector<Server> extractServers(const Data &d);
+	static std::set<int> extractPortsSet(const std::vector<Server> &servers);
+	static mapIpPort extractIpPortsMap(const std::vector<Server> &servers);
+	static mapPort extractPortsMap(const std::vector<Server> &servers);
 
 private:
 	Server();

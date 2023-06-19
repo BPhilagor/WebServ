@@ -89,6 +89,46 @@ void Server::_initListen()
 	}
 }
 
+/* ************************************************************************** */
+/* static class functions                                                     */
+/* ************************************************************************** */
+
+std::vector<Server> Server::extractServers(const Data &d)
+{
+	std::vector<Server> servers;
+
+	Data srvs = d.get("server");
+	for (int i = 0; i < srvs.count("server"); i++)
+		servers.push_back(Server(srvs.find("server", i)));
+	return servers;
+}
+
+std::set<int> Server::extractPortsSet(const std::vector<Server> &servers)
+{
+	std::set<int> ports;
+	FOREACH_VECTOR(Server, servers)
+	{
+		std::vector<int> tmp = it->getPort();
+		FOREACH_VECTOR(int, tmp)
+		{
+			ports.insert()
+		}
+	}
+}
+
+mapIpPort Server::extractIpPortsMap(const std::vector<Server> &servers)
+{
+	return mapIpPort();
+}
+
+mapPort Server::extractPortsMap(const std::vector<Server> &servers)
+{
+	return mapPort();
+}
+
+/* ************************************************************************** */
+/* stream overloads                                                           */
+/* ************************************************************************** */
 std::ostream &operator<<(std::ostream &os, const Server &s)
 {
 	os << "\nIP/Port =  ";
