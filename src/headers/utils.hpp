@@ -36,7 +36,7 @@ namespace utils
 	std::string&	trim(std::string& s, const char *t = LINEAR_WHITESPACE);
 	std::string&	sanitizeline(std::string& s);
 
-	pairIpPort getIpPort(const std::string &str);
+	pairHostPort getHostPort(const std::string &str);
 }
 
 #endif

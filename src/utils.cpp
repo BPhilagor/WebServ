@@ -75,7 +75,7 @@ std::string&	utils::sanitizeline(std::string& s)
 	return (s);
 }
 
-pairIpPort utils::getIpPort(const std::string &str)
+pairHostPort utils::getHostPort(const std::string &str)
 {
 	size_t tmp = str.find(':');
 
@@ -92,5 +92,5 @@ pairIpPort utils::getIpPort(const std::string &str)
 	if (sPort.fail())
 		port = 8080;
 
-	return pairIpPort(host, port);
+	return pairHostPort(host, port);
 }

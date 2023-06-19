@@ -18,7 +18,7 @@ Server::Server(const Data &data) : _data(data)
 }
 
 Server::Server(const Server &other) 
-	: _data(other._data), _ipPort(other._ipPort), _port(other._port) {}
+	: _data(other._data), _hostPort(other._hostPort) {}
 
 Server::~Server() { }
 Server &Server::operator=(const Server &other)
@@ -29,8 +29,7 @@ Server &Server::operator=(const Server &other)
 }
 
 const Data &Server::getData() const { return _data; }
-const std::vector<pairIpPort> &Server::getIpPorts() const { return _ipPort; }
-const std::vector<int> &Server::getPorts() const { return _port; }
+const std::vector<pairHostPort> &Server::getHostPorts() const { return _hostPort; }
 
 /*
 	returns the level of match found for the ip/port
@@ -38,9 +37,9 @@ const std::vector<int> &Server::getPorts() const { return _port; }
 	1 port match
 	2 ip and port match
 */
-int Server::isIpPortMatch(const std::string &ipPort) const
+int Server::isHostPortMatch(const std::string &hostPort) const
 {
-	pairIpPort ipp = utils::getIpPort(ipPort);
+	pairHostPort ipp = utils::getHostPort(hostPort);
 
 	/* this is just duplicated from the init code, something smells */
 	int n;
@@ -52,13 +51,13 @@ int Server::isIpPortMatch(const std::string &ipPort) const
 		n = 8080;
 	}
 
-	for(std::vector<pairIpPort>::const_iterator it = _ipPort.begin(); it != _ipPort.end(); ++it)
+	for(std::vector<pairHostPort>::const_iterator it = _hostPort.begin(); it != _hostPort.end(); ++it)
 		if (it->first == ipp.first && it->second == ipp.second)
 			return 2;
-	if (ipp.first == 0)
-		for (std::vector<int>::const_iterator it = _port.begin(); it != _port.end(); ++it)
-			if (*it == n)
-				return 1;
+	// if (ipp.first == 0)
+	// 	for (std::vector<int>::const_iterator it = _port.begin(); it != _port.end(); ++it)
+	// 		if (*it == n)
+	// 			return 1;
 	return 0;
 }
 
@@ -66,8 +65,8 @@ void Server::_initListen()
 {
 	for (int j = 0; j < _data.count("listen"); j++)
 	{
-		pairIpPort ipPort = utils::getIpPort(_data.find("listen", j).getContent());
-		_ipPort.push_back(ipPort);
+		pairHostPort hostPort = utils::getHostPort(_data.find("listen", j).getContent());
+		_hostPort.push_back(hostPort);
 	}
 }
 
@@ -88,9 +87,9 @@ void Server::_initListen()
 // 	}
 // }
 
-// mapIpPort Server::extractIpPortsMap(const std::vector<Server> &servers)
+// mapHostPort Server::extractHostPortsMap(const std::vector<Server> &servers)
 // {
-// 	return mapIpPort();
+// 	return mapHostPort();
 // }
 
 // mapPort Server::extractPortsMap(const std::vector<Server> &servers)
@@ -103,19 +102,15 @@ void Server::_initListen()
 /* ************************************************************************** */
 std::ostream &operator<<(std::ostream &os, const Server &s)
 {
-	os << "\nIP/Port =  ";
-	FOREACH_VECTOR(pairIpPort, s.getIpPorts())
-		os << *it << ", ";
-
-	os << "\n   Port = ";
-	FOREACH_VECTOR(int, s.getPorts())
+	os << "\nHost/Port =  ";
+	FOREACH_VECTOR(pairHostPort, s.getHostPorts())
 		os << *it << ", ";
 
 	return os;
 }
 
 
-std::ostream &operator<<(std::ostream &os, const pairIpPort &o)
+std::ostream &operator<<(std::ostream &os, const pairHostPort &o)
 {
 	os << o.first << ":" << o.second;
 	return os;

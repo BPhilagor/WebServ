@@ -31,16 +31,10 @@ public:
 
 	// property getter
 	const Data &getData() const;
-	const std::vector<pairIpPort> &getIpPorts() const;
-	const std::vector<int> &getPorts() const;
+	const std::vector<pairHostPort> &getHostPorts() const;
 
 	// property interrogation
-	int isIpPortMatch(const std::string &ipPort) const;
-
-	// static utility functions
-	static std::vector<Server> extractServers(const Data &d);
-	static std::set<int> extractPortsSet(const std::vector<Server> &servers);
-	static mapIpPort extractIpPortsMap(const std::vector<Server> &servers);
+	int isHostPortMatch(const std::string &hostPort) const;
 
 private:
 	Server();
@@ -48,11 +42,10 @@ private:
 
 	void _initListen();
 	const Data _data;
-	std::vector<pairIpPort> _ipPort;
-	std::vector<int> _port;
+	std::vector<pairHostPort> _hostPort;
 };
 
 std::ostream &operator<<(std::ostream &os, const Server &s);
-std::ostream &operator<<(std::ostream &os, const pairIpPort &o);
+std::ostream &operator<<(std::ostream &os, const pairHostPort &o);
 
 #endif /* SERVER_HPP */

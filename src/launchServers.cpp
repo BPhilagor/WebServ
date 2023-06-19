@@ -15,7 +15,7 @@
 void	readHandler(int fd, std::map<int, HTTPParser>& messages);
 void	writeHandler(int fd, std::map<int, HTTPParser>& messages);
 void	printClientAddress(int fd);
-static void	find_ports(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port);
+static void	find_ports(const Data & servers, std::set<int> &ports, mapHostPort &map_HostPort, mapPort &map_Port);
 static int	open_sockets(const std::set<int>& ports, std::set<int>& sockets);
 
 bool	isListenSocket(int fd, std::set<int>& listenSockets)
@@ -34,8 +34,8 @@ void	launchServersWSL(const Data & servers)
 	// Finds the ports that need to be opened
 	std::set<int> ports;
 	mapPort map_Port;
-	mapIpPort map_IpPort;
-	find_ports(servers, ports, map_IpPort, map_Port);
+	mapHostPort map_HostPort;
+	find_ports(servers, ports, map_HostPort, map_Port);
 
 	std::map<int, HTTPParser> messages;
 
@@ -213,8 +213,8 @@ void	launchServersMacOS(const Data & servers)
 	// Finds the ports that need to be opened
 	std::set<int>	ports;
 	mapPort			map_Port;
-	mapIpPort		map_IpPort; // those 2 maps unused yet
-	find_ports(servers, ports, map_IpPort, map_Port);
+	mapHostPort		map_HostPort; // those 2 maps unused yet
+	find_ports(servers, ports, map_HostPort, map_Port);
 
 	// Creates the sockets for listening
 	std::set<int> listening_sockets;
@@ -288,25 +288,25 @@ void	printClientAddress(int fd)
 	std::cout << "Received connection from: " << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 }
 
-// static void find_ports(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port)
+// static void find_ports(const Data & servers, std::set<int> &ports, mapHostPort &map_HostPort, mapPort &map_Port)
 // {
 // 	for (int i = 0; i < servers.count("server"); i++)
 // 	{
 // 		Data srv = servers.find("server", i);
 // 		for (int j = 0; j < srv.count("listen"); j++)
 // 		{
-// 			pairIpPort ipPort = utils::getIpPorts(srv.find("listen", j).getContent());
-// 			if (ipPort.first.empty())
-// 				map_Port[ipPort.second].push_back(srv);
+// 			pairHostPort hostPort = utils::getHostPorts(srv.find("listen", j).getContent());
+// 			if (hostPort.first.empty())
+// 				map_Port[hostPort.second].push_back(srv);
 // 			else
-// 				map_IpPort[ipPort].push_back(srv);
-// 			ports.insert(std::atoi(ipPort.second.c_str())); /* Should check if port is in valid range maybe? */
+// 				map_HostPort[hostPort].push_back(srv);
+// 			ports.insert(std::atoi(hostPort.second.c_str())); /* Should check if port is in valid range maybe? */
 // 		}
 // 	}
 
 // 	// Test
 // 	std::cout << "Unique Ip listen" << std::endl;
-// 	for(mapIpPort::const_iterator it = map_IpPort.begin(); it != map_IpPort.end(); ++it)
+// 	for(mapHostPort::const_iterator it = map_HostPort.begin(); it != map_HostPort.end(); ++it)
 // 	{
 // 		std::cout << it->first.first << " , " << it->first.second << " / " << it->second.size() << std::endl;
 // 	}

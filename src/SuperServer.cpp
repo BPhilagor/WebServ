@@ -17,11 +17,12 @@ SuperServer::SuperServer(const Data& data) //TODO : Tester
 	for (int i = 0; i < srvs.count("server"); i++)
 	{
 		Server newServer = Server(srvs.find("server", i));
-		const std::vector<int> &ports = newServer.getPorts();
 		servers.push_back(newServer);
-		std::copy(ports.begin(), ports.end(), std::inserter(opened_ports, opened_ports.end()));
-		FOREACH_VECTOR(pairIpPort, newServer.getIpPorts())
-			map_IpPort[*it].push_back(newServer);
+		FOREACH_VECTOR(pairHostPort, newServer.getHostPorts())
+		{
+			opened_ports.insert(it->second);
+			map_HostPort[*it].push_back(newServer);
+		}
 	}
 }
 

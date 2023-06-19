@@ -18,7 +18,7 @@ class SuperServer
 private:
 	std::vector<Server>	servers;
 	std::set<int>		opened_ports;
-	mapIpPort			map_IpPort;
+	mapHostPort			map_HostPort;
 public:
 // Default constructor
 	SuperServer(const Data& data);
