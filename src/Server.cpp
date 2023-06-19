@@ -11,6 +11,15 @@
 #include "utils.hpp"
 #include <cstdlib>
 
+/* use it variable to itterate */
+#define FOREACH_VECTOR(type, thing) \
+for(std::vector<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+
+/* use it variable to itterate */
+#define FOREACH_MAP(type, thing) \
+for(std::map<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+
+
 Server::Server() : _data(Data()) {}
 Server::Server(const Data &data) : _data(data)
 {
@@ -82,5 +91,20 @@ void Server::_initListen()
 
 std::ostream &operator<<(std::ostream &os, const Server &s)
 {
-	os << s.getData();
+	os << "\nIP/Port =  ";
+	FOREACH_VECTOR(pairIpPort, s.getIpPort())
+		os << *it << " ";
+
+	os << "\n   Port = ";
+	FOREACH_VECTOR(int, s.getPort())
+		os << *it << " ";
+
+	return os;
+}
+
+
+std::ostream &operator<<(std::ostream &os, const pairIpPort &o)
+{
+	os << o.first << ":" << o.second;
+	return os;
 }

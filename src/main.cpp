@@ -9,6 +9,7 @@
 
 #include "utils.hpp"
 #include "Data.hpp"
+#include "Server.hpp"
 #include "launchServers.hpp"
 #include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
@@ -49,16 +50,21 @@ int main(int argc, char** argv)
 
 	Data servers = data.get("server");
 
+	Server srv(servers.find("server",1));
+
+	std::cout << srv.getIpPort().at(0) << "\n";
+	std::cout << srv.getPort().at(0) << "\n";
+
 	// HTTPResponse res;
 	// res.constructReply(data, 500);
 	// std::cout << "res is <\n" << res << ">\n";
 
 	// return 0;
 
-	#ifdef WSL_DISTRO_NAME
-		launchServersWSL(servers);
-	#else
-		launchServersMacOS(servers);
-	#endif
+	// #ifdef WSL_DISTRO_NAME
+	// 	launchServersWSL(servers);
+	// #else
+	// 	launchServersMacOS(servers);
+	// #endif
 	return 0;
 }

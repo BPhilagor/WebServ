@@ -39,5 +39,6 @@ private:
 };
 
 std::ostream &operator<<(std::ostream &os, const Server &s);
+std::ostream &operator<<(std::ostream &os, const pairIpPort &o);
 
 #endif /* SERVER_HPP */
