@@ -108,7 +108,8 @@ Data utils::constructDefaultServer()
 
 	d.setProp("listen", "0:8080");
 	d.setProp("listen", "0:4242");
-	d.setProp("server_name", "WebServ");
+	d.setProp("server_name", "WebServ foo bar");
+	d.setProp("host_name", "foo www.foo.com");
 	d.setProp("methods", "GET POST DELETE");
 	d.setProp("body_limit", "1048576");
 	d.setProp("error_pages", "");

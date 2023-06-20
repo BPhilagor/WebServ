@@ -9,6 +9,7 @@
 
 #ifndef SUPERSERVER_HPP
 # define SUPERSERVER_HPP
+
 # include "typedefs.hpp"
 # include "Data.hpp"
 # include "Server.hpp"
@@ -21,14 +22,21 @@ public:
 	~SuperServer();
 	SuperServer & operator=(const SuperServer &other);
 
+	/* propery getters */
 	const std::vector<Server> &getServers() const;
 	const std::set<int> &getPorts() const;
+
+	/* propery interrogators */
+	bool isMatchHostPort(const pairHostPort &match) const;
+
+	const Server *getServerForHostPortAndHostName(const pairHostPort &match, const std::string &hostName) const;
+
+	const Server *getServerForHostPort(const pairHostPort &match) const;
 
 private:
 	std::vector<Server>	_servers;
 	std::set<int>		_ports;
-	mapHostPort			_map_HostPort;
-
+	mapHostPort			_mapHostPort;
 };
 
 std::ostream &operator<<(std::ostream &os, const SuperServer &s);

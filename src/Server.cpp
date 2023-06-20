@@ -19,10 +19,15 @@ Server::Server(const Data &data) : _data(data)
 {
 	_initListen();
 	_initMethod();
+	_initServerNames();
 }
 
 Server::Server(const Server &other)
-	: _data(other._data), _hostPort(other._hostPort), _methods(other._methods){}
+	: _data(other._data),
+	_hostPort(other._hostPort),
+	_methods(other._methods),
+	_serverNames(other._serverNames)
+	{}
 
 Server::~Server() { }
 
@@ -33,14 +38,14 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-
 /* ************************************************************************** */
 /* getters                                                                    */
 /* ************************************************************************** */
 
 const Data &Server::getData() const { return _data; }
 const std::vector<pairHostPort> &Server::getHostPorts() const { return _hostPort; }
-const std::vector<std::string> &Server::getMethods() const { return _methods; }
+const std::set<std::string> &Server::getMethods() const { return _methods; }
+const std::set<std::string> &Server::getServerNames() const { return _serverNames; }
 
 const std::string &Server::getDefault(const std::string &prop) const
 {
@@ -58,11 +63,6 @@ int Server::getBodyLimit() const
 		return utils::toInt(getDefault("body_limit"));
 	else
 		return utils::toInt(_data.find("body_limit").getContentRef());
-}
-
-const std::string &Server::getServerName() const
-{
-	return getPropOrDefaultStr("server_name");
 }
 
 const std::string &Server::getErrorDir() const
@@ -118,6 +118,12 @@ int Server::isHostPortMatch(const std::string &hostPort) const
 	return 0;
 }
 
+bool Server::isNameMatch(const std::string &name) const
+{
+	return _serverNames.count(name);
+}
+
+
 const std::string &Server::getPropOrDefaultStr(const std::string &prop) const
 {
 	if (_data.count(prop) == 0)
@@ -125,7 +131,6 @@ const std::string &Server::getPropOrDefaultStr(const std::string &prop) const
 	else
 		return _data.find(prop).getContentRef();
 }
-
 
 /* ************************************************************************** */
 /* initialisation helper functions                                            */
@@ -140,21 +145,38 @@ void Server::_initListen()
 	}
 }
 
-
 void Server::_initMethod()
 {
-	std::string methods = getPropOrDefaultStr("methods");
+	std::string str = getPropOrDefaultStr("methods");
 
 	// std::cout << "methods : " << methods << "\n";
 
-	while(!methods.empty())
+	while(!str.empty())
 	{
 		std::string s1;
 		std::string s2;
-		utils::split_around_first_c(' ', methods, s1, s2);
+		utils::split_around_first_c(' ', str, s1, s2);
 		trim_outside_whitespace(s1);
-		_methods.push_back(s1);
-		methods = s2;
+		_methods.insert(s1);
+		str = s2;
+	}
+	// std::cout << getMethods()[0] << "asd\n";
+}
+
+void Server::_initServerNames()
+{
+	std::string str = getPropOrDefaultStr("server_name");
+
+	std::cout << "names : " << str << "\n";
+
+	while(!str.empty())
+	{
+		std::string s1;
+		std::string s2;
+		utils::split_around_first_c(' ', str, s1, s2);
+		trim_outside_whitespace(s1);
+		_serverNames.insert(s1);
+		str = s2;
 	}
 	// std::cout << getMethods()[0] << "asd\n";
 }
@@ -167,7 +189,7 @@ std::ostream &operator<<(std::ostream &os, const Server &s)
 {
 	// std::cout << "srver data is: " <<  s.getData() << "\n";
 
-	os << "\nHost/Port =  ";
+	os << "\n     Host/Port =  ";
 	FOREACH_VECTOR(pairHostPort, s.getHostPorts())
 	{
 		os << *it;
@@ -180,12 +202,19 @@ std::ostream &operator<<(std::ostream &os, const Server &s)
 
 	// std::cout  << "\n methods size: " << s.getMethods().size() << " \n";
 
-	os << "\n  Methods =  ";
-	FOREACH_VECTOR(std::string, s.getMethods())
+	os << "\n       Methods =  ";
+	FOREACH_SET(std::string, s.getMethods())
 	{
 		os << *it;
-		if (it != s.getMethods().end() - 1)
-			os << ", ";
+		if (it != s.getMethods().end())
+			os << " ";
+	}
+	os << "\n  Server Names =  ";
+	FOREACH_SET(std::string, s.getServerNames())
+	{
+		os << *it;
+		if (it != s.getServerNames().end())
+			os << " ";
 	}
 	os << "\n";
 	return os;

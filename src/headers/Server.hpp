@@ -19,6 +19,10 @@
 for(std::vector<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
 
 /* use it variable to itterate */
+#define FOREACH_SET(type, thing) \
+for(std::set<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+
+/* use it variable to itterate */
 #define FOREACH_MAP(type, thing) \
 for(std::map<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
 
@@ -32,18 +36,20 @@ public:
 	/* property getters */
 	const Data &getData() const;
 	const std::vector<pairHostPort> &getHostPorts() const;
-	const std::vector<std::string> &getMethods() const;
+	const std::set<std::string> &getMethods() const;
+	const std::set<std::string> &getServerNames() const;
 
 	/* getters from data */
 	const std::string &getDefault(const std::string &prop) const;
+
 	int getBodyLimit() const;
-	const std::string &getServerName() const;
 	const std::string &getErrorDir() const;
 	const std::string &getUploadDir() const;
 	bool getDirListing() const;
 
 	/* property interrogation */
 	int isHostPortMatch(const std::string &hostPort) const;
+	bool isNameMatch(const std::string &name) const;
 
 private:
 	Server();
@@ -52,9 +58,11 @@ private:
 	const std::string &getPropOrDefaultStr(const std::string &prop) const;
 	void _initListen();
 	void _initMethod();
+	void _initServerNames();
 	const Data _data;
 	std::vector<pairHostPort> _hostPort;
-	std::vector<std::string> _methods;
+	std::set<std::string> _methods;
+	std::set<std::string> _serverNames;
 	static const Data _defaultServer;
 };
 

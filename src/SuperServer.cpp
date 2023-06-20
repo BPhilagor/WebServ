@@ -21,7 +21,7 @@ SuperServer::SuperServer(const Data& data) //TODO : Tester
 		FOREACH_VECTOR(pairHostPort, newServer.getHostPorts())
 		{
 			_ports.insert(it->second);
-			_map_HostPort[*it].push_back(newServer);
+			_mapHostPort[*it].push_back(newServer);
 		}
 	}
 }
@@ -39,6 +39,35 @@ const std::vector<Server> &SuperServer::getServers() const { return _servers; }
 const std::set<int> &SuperServer::getPorts() const { return _ports; }
 
 /* ************************************************************************** */
+/* propery interrogators                                                      */
+/* ************************************************************************** */
+
+const Server *SuperServer::getServerForHostPortAndHostName(const pairHostPort &match, const std::string &hostName) const
+{
+	mapHostPort::const_iterator foo = _mapHostPort.find(match);
+	if (foo != _mapHostPort.end())
+		FOREACH_VECTOR(Server, foo->second)
+			if (it->isNameMatch(hostName))
+				return &(*it);
+
+	pairHostPort zeroMatch = match;
+	zeroMatch.first = 0;
+
+	mapHostPort::const_iterator bar = _mapHostPort.find(zeroMatch);
+	if (bar != _mapHostPort.end())
+		FOREACH_VECTOR(Server, bar->second)
+			if (it->isNameMatch(hostName))
+				return &(*it);
+
+	if (foo != _mapHostPort.end())
+		return &foo->second[0];
+	if (bar != _mapHostPort.end())
+		return &bar->second[0];
+	return NULL;
+}
+
+
+/* ************************************************************************** */
 /* stream overloads                                                           */
 /* ************************************************************************** */
 
@@ -46,9 +75,9 @@ std::ostream &operator<<(std::ostream &os, const SuperServer &s)
 {
 	FOREACH_VECTOR(Server, s.getServers())
 	{
-		os << "\n<server " << it->getServerName() << ">";
+		os << "\n<server>";
 		os << *it << " ";
-		os << "</server " << it->getServerName() << ">";
+		os << "</server>";
 	}
 	// os << "\n   Port = ";
 	// FOREACH_VECTOR(int, s.getPorts())

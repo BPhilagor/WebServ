@@ -35,6 +35,9 @@ int main(int argc, char** argv)
 
 	std::cout << config << "\n";
 
+	pairHostPort foo(0, 4242);
+	std::cout << "found this server: " << *config.getServerForHostPortAndHostName(foo, "asd") << "\n";
+
 	launchServers(config);
 
 	return 0;
