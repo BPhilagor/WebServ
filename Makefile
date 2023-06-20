@@ -30,6 +30,7 @@ endif
 
 FILES	= main utils Data Server  requestWorker handler \
 		HTTPParser \
+		launchServersUtils \
 		HTTPRequest HTTPHeaders HTTPResponse \
 		HTTPResponse_reason SuperServer
 

@@ -15,24 +15,19 @@
 
 class SuperServer
 {
-private:
-	std::vector<Server>	_servers;
-	std::set<int>		_opened_ports;
-	mapHostPort			_map_HostPort;
 public:
-// Default constructor
 	SuperServer(const Data& data);
-
-// Copy constructor
 	SuperServer(const SuperServer &other);
-
-// Destructor
 	~SuperServer();
-
-// Copy assignment operator
 	SuperServer & operator=(const SuperServer &other);
 
 	const std::vector<Server> &getServers() const;
+	const std::set<int> &getPorts() const;
+
+private:
+	std::vector<Server>	_servers;
+	std::set<int>		_ports;
+	mapHostPort			_map_HostPort;
 
 };
 

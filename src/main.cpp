@@ -17,25 +17,6 @@
 
 int main(int argc, char** argv)
 {
-	/* examples on how to use the HTTPResponse */
-	/*
-	HTTPResponse	resp;
-
-	resp.setVersion(1, 1);
-	resp.setCode(200);
-	resp.setReason("OK");
-
-	std::cout<<resp<<std::endl;
-
-	resp.setCode(400);
-	resp.setReason("Bad Request");
-	resp.setHeader("host", "hello world");
-	resp.setHeader("content-length", "109");
-	resp.setBody("<!DOCTYPE html><html><head><title>400 Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>");
-
-	std::cout<<resp<<std::endl;
-	*/
-
 	Data data;
 	if (argc != 2)
 	{
@@ -50,19 +31,11 @@ int main(int argc, char** argv)
 	Data::print(data, 2);
 	std::cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
 
-	SuperServer webServ(data);
+	SuperServer config(data);
 
-	std::cout << webServ << "\n";
+	std::cout << config << "\n";
 
-	// std::cout << webServ.getServers()[0].getBodyLimit() << "\n";
+	// launchServers(config);
 
-	// std::cout << webServ << "\n";
-	// std::cout << webServ.getServers()[0] << "\n";
-
-	// #ifdef WSL_DISTRO_NAME
-	// 	launchServersWSL(servers);
-	// #else
-	// 	launchServersMacOS(servers);
-	// #endif
 	return 0;
 }

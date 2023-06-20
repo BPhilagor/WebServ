@@ -20,7 +20,7 @@ SuperServer::SuperServer(const Data& data) //TODO : Tester
 		_servers.push_back(newServer);
 		FOREACH_VECTOR(pairHostPort, newServer.getHostPorts())
 		{
-			_opened_ports.insert(it->second);
+			_ports.insert(it->second);
 			_map_HostPort[*it].push_back(newServer);
 		}
 	}
@@ -36,7 +36,7 @@ SuperServer &SuperServer::operator=(const SuperServer &other){ (void)other; retu
 /* ************************************************************************** */
 
 const std::vector<Server> &SuperServer::getServers() const { return _servers; }
-
+const std::set<int> &SuperServer::getPorts() const { return _ports; }
 
 /* ************************************************************************** */
 /* stream overloads                                                           */
