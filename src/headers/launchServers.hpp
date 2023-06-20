@@ -46,6 +46,12 @@
 #  define SEND_FLAGS 0
 # endif
 
+#define EVENT_FILTER_READ	0
+#define EVENT_FILTER_WRITE	1
+
+#define EVENT_ACTION_ADD	2
+#define EVENT_ACTION_DELETE	3
+
 
 /* launchServers.hpp */
 
@@ -58,9 +64,9 @@ void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets);
 void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages);
 void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages);
 void	printClientAddress(int fd);
-// void	findPorts(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port);
 int		openSockets(const std::set<int>& ports, std::set<int>& sockets);
 bool	isListenSocket(int fd, std::set<int>& listenSockets);
 void	establishConnection(int ev_fd, std::map<int, HTTPParser> &messages, int eqfd);
+void	setFilter(int eqfd, int socket_fd, int event, int action);
 
 #endif /* LAUNCHSERVERS_HPP */

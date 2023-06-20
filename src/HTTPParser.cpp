@@ -65,7 +65,7 @@ void	HTTPParser::consumeBuffer(const std::string& s)
 	{
 		/* process body here */
 		_finished = true;
-		response_buffer = std::string("HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-length: 80\r\n\r\nHello world. I've short-circuited the requestWorker() because it's under construction");
+		response_buffer = std::string("HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-length: 85\r\n\r\nHello world. I've short-circuited the requestWorker() because it's under construction");
 	}
 }
 
