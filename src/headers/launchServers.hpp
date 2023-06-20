@@ -12,7 +12,7 @@
 
 # define BACK_LOG 10 /* is this used??*/
 
-# ifdef WSL_DISTRO_NAME
+# ifdef __linux__
 #  include <sys/epoll.h>
 # else
 #  include <sys/event.h>
@@ -40,7 +40,7 @@
 # define MAX_EVENTS	10
 
 
-# ifdef WSL_DISTRO_NAME
+# ifdef __linux__
 #  define SEND_FLAGS MSG_NOSIGNAL
 # else
 #  define SEND_FLAGS 0

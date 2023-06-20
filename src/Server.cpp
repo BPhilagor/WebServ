@@ -99,14 +99,14 @@ int Server::isHostPortMatch(const std::string &hostPort) const
 	pairHostPort ipp = utils::getHostPort(hostPort);
 
 	/* this is just duplicated from the init code, something smells */
-	int n;
-	std::stringstream ss(ipp.second);
-	ss >> n;
-	if (ss.fail() && (n < 1/*min*/ || n > 10000/*max*/))
-	{
-		std::cerr << "port can't be a non lkjlk digit\n";
-		n = 8080;
-	}
+	// int n;
+	// std::stringstream ss(ipp.second);
+	// ss >> n;
+	// if (ss.fail() && (n < 1/*min*/ || n > 10000/*max*/))
+	// {
+	// 	std::cerr << "port can't be a non lkjlk digit\n";
+	// 	n = 8080;
+	// }
 
 	for(std::vector<pairHostPort>::const_iterator it = _hostPort.begin(); it != _hostPort.end(); ++it)
 		if (it->first == ipp.first && it->second == ipp.second)

@@ -15,7 +15,7 @@
 
 void	addSocketToEventQueue(int eqfd, int socket_fd)
 {
-	#ifdef LINUX
+	#ifdef __linux__
 	struct epoll_event ev;
 	ev.events = EPOLLIN;
 	ev.data.fd = socket_fd;
@@ -37,7 +37,7 @@ void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets)
 	for (std::set<int>::iterator it = listeningSockets.begin(); it != listeningSockets.end(); ++it)
 	{
 		int	res;
-		#ifdef LINUX
+		#ifdef __linux__
 			struct epoll_event ev;
 			ev.events = EPOLLIN;
 			ev.data.fd = *it;
@@ -86,7 +86,7 @@ void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 	if (parser.isFinished())
 	{
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
-		#ifdef LINUX
+		#ifdef __linux__
 			struct epoll_event ev;
 			ev.events = EPOLLIN;
 			ev.data.fd = socket_fd;
@@ -130,7 +130,7 @@ void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 		{
 			messages[fd] = HTTPParser(); /* reset the pending request */
 
-			#ifdef LINUX
+			#ifdef __linux__
 				struct epoll_event ev;
 				ev.events = EPOLLIN;
 				ev.data.fd = socket_fd;
@@ -155,40 +155,6 @@ void	printClientAddress(int fd)
 	getsockname(fd, (struct sockaddr *)&addr, &addrlen);
 	std::cout << "Received connection from: " << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 }
-
-// void findPorts(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port)
-// {
-// 	for (int i = 0; i < servers.count("server"); i++)
-// 	{
-// 		Data srv = servers.find("server", i);
-// 		for (int j = 0; j < srv.count("listen"); j++)
-// 		{
-// 			pairIpPort ipPort = getIpPort(srv.find("listen", j).getContent());
-// 			if (ipPort.first.empty())
-// 				map_Port[ipPort.second].push_back(srv);
-// 			else
-// 				map_IpPort[ipPort].push_back(srv);
-// 			ports.insert(std::atoi(ipPort.second.c_str())); /* Should check if port is in valid range maybe? */
-// 		}
-// 	}
-
-// 	// Test
-// 	std::cout << "Unique Ip listen" << std::endl;
-// 	for(mapIpPort::const_iterator it = map_IpPort.begin(); it != map_IpPort.end(); ++it)
-// 	{
-// 		std::cout << it->first.first << " , " << it->first.second << " / " << it->second.size() << std::endl;
-// 	}
-
-// 	// Test
-// 	std::cout << "All Ip listen" << std::endl;
-// 	for(mapPort::const_iterator it = map_Port.begin();it != map_Port.end(); ++it)
-// 	{
-// 		std::cout << it->first << " / " << it->second.size() << std::endl;
-// 	}
-
-// 	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
-// 	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
-// }
 
 int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
 {
@@ -243,7 +209,7 @@ void establishConnection(int ev_fd, std::map<int, HTTPParser> &messages, int eqf
 		exit(1); /* This might not be fatal! Better error handling needed. */
 	}
 
-#ifndef LINUX
+#ifndef __linux__
 	/* suppress SIGPIPE on the socket */
 	int set = 1;
 	if (setsockopt(new_socket_fd, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(int)) != 0)

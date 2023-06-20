@@ -13,7 +13,7 @@
 void launchServers(const SuperServer &config)
 {
 	int eqfd;
-#ifdef LINUX
+#ifdef __linux__
 	eqfd = epoll_create(42);
 #else
 	eqfd = kqueue();
@@ -30,7 +30,7 @@ void launchServers(const SuperServer &config)
 
 	std::map<int, HTTPParser> messages;
 
-#ifdef LINUX
+#ifdef __linux__
 	epoll_event events[MAX_EVENTS];
 #else
 	struct kevent events[MAX_EVENTS];
@@ -38,7 +38,7 @@ void launchServers(const SuperServer &config)
 	while (true)
 	{
 		int ev_count;
-#ifdef LINUX
+#ifdef __linux__
 		ev_count = epoll_wait(eqfd, events, MAX_EVENTS, -1);
 #else
 		ev_count = kevent(eqfd, 0, 0, events, MAX_EVENTS, 0);
@@ -50,7 +50,7 @@ void launchServers(const SuperServer &config)
 		}
 		for (int i = 0; i < ev_count; i++)
 		{
-#ifdef LINUX
+#ifdef __linux__
 			int ev_fd = events[i].data.fd;
 			bool read_ev = events[i].events & EPOLLIN;
 			bool write_ev = events[i].events & EPOLLOUT;
