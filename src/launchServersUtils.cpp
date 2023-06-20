@@ -8,9 +8,6 @@
 /* ************************************************************************** */
 
 #include "launchServers.hpp"
-#include "typedefs.hpp"
-#include "HTTPParser.hpp"
-#include "utils.hpp"
 
 
 void	addSocketToEventQueue(int eqfd, int socket_fd)
@@ -26,7 +23,7 @@ void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets)
 	}
 }
 
-void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
+void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 {
 	/* read a chunk of the client's message into a buffer */
 	char buff[BUFFER_SIZE + 1];
@@ -52,9 +49,9 @@ void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 		Add the buffer to the HTTPParser, that stores the entire buffer.
 		We can then interrogate the HTTPParser to find out if we've received the entire message.
 	*/
-	HTTPParser& parser = messages.find(fd)->second;
-	parser.consumeBuffer(std::string(buff, 0, bytesRecv));
-	if (parser.isFinished())
+	BufferManager& buff_man = messages.find(fd)->second;
+	buff_man.addInputBuffer(std::string(buff, 0, bytesRecv));
+	if (buff_man.isFinished())
 	{
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
 		setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE);
@@ -63,18 +60,18 @@ void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 }
 
 /* writeable_size is the amount of bytes that we can write */
-void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
+void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config)
 {
 	std::cout << "Detected possibility to write the socket" << std::endl;
 
-	Data fakeData;
-	HTTPParser& parser = messages.find(fd)->second;
+	BufferManager& buff_man = messages.find(fd)->second;
 
 	/* handle partial write */
-	std::string& response = parser.response_buffer;
-	if (parser.isFinished() && response.length() > 0) /* if we detected end of HTTPRequest, we can write the response */
+	std::string& response = buff_man.output_buffer;
+	if (response.length() > 0)
 	{
 		std::cout << "writing..." << std::endl;
+		/* should we set send() to be non-blocking ? */
 		int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
 		if (writtenBytes < 0)
 		{
@@ -87,7 +84,10 @@ void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 		}
 		if (writtenBytes < 0 || response.length() == 0)
 		{
-			messages[fd] = HTTPParser(); /* reset the pending request */
+			std::string remaining_buffer = buff_man.input_buffer;
+			buff_man = BufferManager(config); /* reset the buffer manager */
+			buff_man.addInputBuffer(remaining_buffer);
+
 			setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE);
 			setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
 		}
@@ -146,7 +146,7 @@ bool	isListenSocket(int fd, std::set<int>& listenSockets)
 	return (listenSockets.find(fd) != listenSockets.end());
 }
 
-void establishConnection(int ev_fd, std::map<int, HTTPParser> &messages, int eqfd)
+void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int eqfd, const SuperServer& config)
 {
 	int new_socket_fd = accept(ev_fd, NULL, NULL);
 	if (new_socket_fd < 0)
@@ -169,7 +169,7 @@ void establishConnection(int ev_fd, std::map<int, HTTPParser> &messages, int eqf
 	addSocketToEventQueue(eqfd, new_socket_fd);
 
 	/* create an HTTPParser instance for that connection */
-	messages.insert(std::pair<int, HTTPParser>(new_socket_fd, HTTPParser()));
+	messages.insert(std::pair<int, BufferManager>(new_socket_fd, BufferManager(config)));
 	std::cout << "Connection established on socket " << new_socket_fd << std::endl;
 }
 

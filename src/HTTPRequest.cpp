@@ -17,28 +17,27 @@
 
 std::istream &operator>>(std::istream &is, char const *s);
 
-HTTPRequest::HTTPRequest(const std::string &input)
+HTTPRequest::HTTPRequest():
+	_valid_syntax(true),
+	_method(""),
+	_uri(""),
+	_headers(),
+	_body(""),
+	_state(0),
+	_current_line("")
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest constructor" << std::endl;
-
-	_hasValidSyntax = true;
-	try
-	{
-		parse(input);
-	}
-	catch (BadRequestException& e)
-	{
-		_hasValidSyntax = false;
-	}
+	if (DEBUG_PRINT) std::cout << "HTTPRequest default constructor" << std::endl;
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest &cpy):
-	_hasValidSyntax(cpy._hasValidSyntax),
+	_valid_syntax(cpy._valid_syntax),
 	_method(cpy._method),
 	_uri(cpy._uri),
 	_version(cpy._version),
 	_headers(cpy._headers),
-	_body(cpy._body)
+	_body(cpy._body),
+	_state(cpy._state),
+	_current_line(cpy._current_line)
 {
 	if (DEBUG_PRINT) std::cout << "HTTPRequest copy constructor" << std::endl;
 }
@@ -52,23 +51,80 @@ HTTPRequest &HTTPRequest::operator=(const HTTPRequest &rhs)
 {
 	if (DEBUG_PRINT) std::cout << "HTTPRequest assignment operator" << std::endl;
 
-	_hasValidSyntax = rhs._hasValidSyntax;
+	_valid_syntax = rhs._valid_syntax;
 	_method = rhs._method;
 	_uri = rhs._uri;
 	_version = rhs._version;
 	_headers = rhs._headers;
 	_body = rhs._body;
+	_state = rhs._state;
+	_current_line = rhs._current_line;
 
 	return (*this);
 }
 
 /* getters */
-bool					HTTPRequest::hasValidSyntax() const { return _hasValidSyntax; }
-t_version				HTTPRequest::getVersion() const { return _version; }
-std::string				HTTPRequest::getURI() const { return _uri; }
-const std::string&		HTTPRequest::getMethod() const { return _method; }
-const HTTPHeaders&		HTTPRequest::getHeaders() const { return _headers; } /* should not be like that in the future */
-std::string				HTTPRequest::getBody() const { return _body; }
+
+bool					HTTPRequest::hasValidSyntax() const
+{
+	return _valid_syntax;
+}
+
+t_version				HTTPRequest::getVersion() const
+{
+	return _version;
+}
+
+std::string				HTTPRequest::getURI() const
+{
+	return _uri;
+}
+
+const std::string&		HTTPRequest::getMethod() const
+{
+	return _method;
+}
+
+const HTTPHeaders&		HTTPRequest::getHeaders() const
+{
+	return _headers;
+}
+
+std::string				HTTPRequest::getBody() const
+{
+	return _body;
+}
+
+bool					HTTPRequest::isParsingFinished() const
+{
+	return (!_valid_syntax || _state == 2);
+}
+
+/* setters */
+void	HTTPRequest::addChar(char c)
+{
+	if (c == '\n')
+	{
+		utils::sanitizeline(_current_line);
+		if (_current_line == "") /* empty line found */
+		{
+			/* state 2 means headers finished, might need to add a body */
+			_state = 2;
+		}
+		else
+		{
+			if (parseLine(_current_line) != 0)
+			{
+				_valid_syntax = false;
+			}
+			_current_line = "";
+		}
+	}
+	else
+	{
+		_current_line += c;
+	}
+}
 
 /* serialize */
 std::string	HTTPRequest::serialize() const
@@ -82,79 +138,62 @@ std::string	HTTPRequest::serialize() const
 	return (output.str());
 }
 
-
-/* bad request exception */
-const char *HTTPRequest::BadRequestException::what() const throw()
-{
-	return ("Bad HTTP request");
-}
-
 /* parser */
 
-#include <vector>
-#include <string>
-
-void HTTPRequest::parse(const std::string &input)
-{
-	std::istringstream	iss(input);
-	std::string			line;
-
-	std::getline(iss, line);
-	utils::sanitizeline(line); /* need to do these to operations in one line for the sake of elegance! */
-
-	parseRequestLine(line);
-
-	std::vector<std::string>	header_lines;
-	std::getline(iss, line);
-	utils::sanitizeline(line);
-
-	while (line != "")
-	{
-		if (iss.eof())
-			throw BadRequestException();
-		header_lines.push_back(line);
-		std::getline(iss, line);
-		utils::sanitizeline(line);
-	}
-	parseHeaders(header_lines);
-
-
-
-	/* what remains is the body */
-	//std::cout<<iss.tellg()<<std::endl;
-	if (!iss.fail())
-		_body = std::string(iss.str().substr(iss.tellg()));
-}
-
-void	HTTPRequest::parseRequestLine(std::string line)
+int	HTTPRequest::parseRequestLine(const std::string& line)
 {
 	std::istringstream input(line);
-
 	input >> _method >> _uri >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
 
 	if (input.fail())
-		throw BadRequestException();
+		return (-1);
+
+	std::string remaining;
+	std::getline(input, remaining);
+	utils::trim(remaining);
+	if (remaining != "")
+		return (-1);
+
+	return (0);
 }
 
-void	HTTPRequest::parseHeaders(std::vector<std::string> lines)
+int	HTTPRequest::parseHeader(const std::string& line)
 {
-	for (unsigned int i = 0; i < lines.size(); i++)
+	std::string	fieldname;
+	std::string	fieldvalue;
+
+	size_t pos = line.find(':');
+	if (pos == std::string::npos)
+		return (-1);
+
+	fieldname = line.substr(0, pos);
+	/* reject if there is whitespace in the fieldname */
+	if (fieldname.find_first_of(LINEAR_WHITESPACE) != std::string::npos)
+		return (-1);
+
+	/* trim right and left optional whitespace */
+	fieldvalue = line.substr(pos + 1, line.size() - pos - 1);
+	utils::trim(fieldvalue);
+	_headers.insert(fieldname, fieldvalue);
+	return (0);
+}
+
+int	HTTPRequest::parseLine(const std::string& line)
+{
+	if (_state == 0)
 	{
-		std::string	fieldname;
-		std::string	fieldvalue;
-
-		size_t pos = lines[i].find(':');
-		if (pos == std::string::npos)
-			throw BadRequestException();
-
-		fieldname = lines[i].substr(0, pos);
-		if (fieldname.find_first_of(LINEAR_WHITESPACE) != std::string::npos) /* reject if there is whitespace in the fieldname */
-			throw BadRequestException();
-
-		fieldvalue = lines[i].substr(pos + 1, lines[i].size() - pos - 1); /* trim right and left optional whitespace */
-		utils::trim(fieldvalue);
-
-		_headers.insert(fieldname, fieldvalue);
+		_state = 1;
+		return parseRequestLine(line);
+	}
+	else if (_state == 1)
+	{
+		return parseHeader(line);
+	}
+	else
+	{
+		std::cout << "You stupid programmer" << std::endl;
+		exit(1);
+		return (-1);
 	}
 }
 

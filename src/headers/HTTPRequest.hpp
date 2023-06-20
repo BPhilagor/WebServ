@@ -22,7 +22,7 @@ class HTTPRequest
 {
 	public:
 
-		HTTPRequest(const std::string& input);
+		HTTPRequest();
 		HTTPRequest(const HTTPRequest& cpy);
 		~HTTPRequest();
 		HTTPRequest&	operator=(const HTTPRequest& rhs);
@@ -35,19 +35,17 @@ class HTTPRequest
 		const HTTPHeaders&	getHeaders() const;
 		std::string			getBody() const;
 
+		bool				isParsingFinished() const;
+
+		/* setters */
+		void				addChar(char c);
+
 		/* serialize */
 		std::string	serialize() const;
 
-		/* bad request exception */
-		class BadRequestException: public std::exception
-		{
-			virtual const char	*what() const throw();
-		};
-
 	private:
 
-		/* was there a parse error ? */
-		bool		_hasValidSyntax;
+		bool		_valid_syntax;
 
 		/* request line */
 		std::string	_method;
@@ -60,13 +58,14 @@ class HTTPRequest
 		/* body */
 		std::string	_body; /* this may contain binary data! */
 
-		/* default constructor */
-		HTTPRequest();
+		/* used internally to parse and know what we have to do next */
+		int			_state;
+		std::string	_current_line;
 
 		/* parser */
-		void		parse(const std::string& input);
-		void		parseRequestLine(std::string line);
-		void		parseHeaders(std::vector<std::string> lines);
+		int		parseLine(const std::string& line);
+		int		parseRequestLine(const std::string& line);
+		int		parseHeader(const std::string& line);
 };
 
 std::ostream&	operator<<(std::ostream& o, const HTTPRequest& req);

@@ -21,7 +21,7 @@ ifdef DEBUGL
 CFLAGS += -g3
 endif
 endif
-ifdef WSL_DISTRO_NAME
+ifdef __linux__
 LEAKS_CHECK = valgrind
 # CFLAGS	+= -Wno-unknown-pragmas -DWSL_DISTRO_NAME=Ubuntu # todo: detele if useless
 else
@@ -29,7 +29,7 @@ LEAKS_CHECK = leaks -atExit --
 endif
 
 FILES	= main utils Data Server  requestWorker handler \
-		HTTPParser \
+		BufferManager \
 		launchServers \
 		launchServersUtils \
 		HTTPRequest HTTPHeaders HTTPResponse \
