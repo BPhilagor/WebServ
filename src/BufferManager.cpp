@@ -66,25 +66,38 @@ void	BufferManager::addInputBuffer(const std::string& s)
 
 void	BufferManager::constructResponse()
 {
+
+	std::cout << "Constructing reply for request:" << std::endl;
+	std::cout << _req << std::endl;
+
 	/* when do we process the body ? */
 
-	const std::string host = _req.getHeader("Host");
+	const Server*	virtual_server = NULL;
+	std::string		host;
+
+	if (!_req.hasValidSyntax())
+	{
+		std::cout << "Parse error" << std::endl;
+		_resp.constructErrorReply(400);
+		goto generate_output;
+	}
+
+	host = _req.getHeader("Host");
 	if (host == "")
 	{
-		/* bad request */
-		output_buffer = "Bad";
-		return ;
+		std::cout << "Host header not set" << std::endl;
+		_resp.constructErrorReply(400);
+		goto generate_output;
 	}
-
-	const Server* virtual_server = _config.getServerForHostPortAndHostName(
-		utils::fd_to_HostPort(_fd), host);
-
+	virtual_server = _config.getServerForHostPortAndHostName(utils::fd_to_HostPort(_fd), host);
 	if (virtual_server == NULL)
 	{
-		/* bad request */
-		output_buffer = "BAD";
-		return ;
+		std::cout << "Virtual server not found" << std::endl;
+		_resp.constructErrorReply(400);
+		goto generate_output;
 	}
+	requestWorker(*virtual_server, _req, _resp);
 
-	output_buffer = requestWorker(*virtual_server, _req);
+generate_output:
+	output_buffer = _resp.serialize();
 }

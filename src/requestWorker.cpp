@@ -37,31 +37,28 @@ void deleteMethod(HTTPResponse &res, const HTTPRequest &req, const Server& serve
 	(void)server;
 }
 
-std::string requestWorker(const Server &server, const HTTPRequest &request)
+std::string requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response)
 {
-	HTTPResponse res;
-
 	// Identify request
 	const std::string& method = request.getMethod();
 
 	if (method == "GET")
 	{
-		getMethod(res, request, server);
+		getMethod(response, request, server);
 	}
 	else if (method == "POST")
 	{
-		postMethod(res, request, server);
+		postMethod(response, request, server);
 	}
 	else if (method == "DELETE")
 	{
-		deleteMethod(res, request, server);
+		deleteMethod(response, request, server);
 	}
 	else
 	{
-		// Manage Error
-		;
+		response.constructErrorReply(501);
 	}
 
 	// Construct HTTPResponse
-	return res.serialize();
+	return response.serialize();
 }

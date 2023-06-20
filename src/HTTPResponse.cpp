@@ -148,11 +148,23 @@ void HTTPResponse::constructReply(const Server &server, const std::string &body,
 	setReason(_reasonMap[code]);
 	setCode(code);
 	setHeader("Server", "WebServ");
-	setHeader("Content-Type:", "html");
+	setHeader("Content-type", "text/html");
 
 	setBody(genErrorPage(code));
 
 	setHeader("content-length", SSTR(getBody().size()));
+}
+
+void	HTTPResponse::constructErrorReply(int code)
+{
+	setVersion(1, 1);
+	setCode(code);
+	setReason(_reasonMap[code]);
+	setDate();
+	setHeader("Server", "Webserv");
+	setHeader("Content-type", "text/html");
+	setBody(genErrorPage(code));
+	setHeader("Content-length", SSTR(getBody().size()));
 }
 
 std::string	HTTPResponse::serialize() const
