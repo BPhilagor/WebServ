@@ -107,8 +107,9 @@ Data utils::constructDefaultServer()
 	Data d;
 
 	d.setProp("listen", "0:8080");
+	d.setProp("listen", "0:4242");
 	d.setProp("server_name", "WebServ");
-	d.setProp("methods", "GET, POST, DELETE");
+	d.setProp("methods", "GET POST DELETE");
 	d.setProp("body_limit", "1048576");
 	d.setProp("error_pages", "");
 	d.setProp("error_dir", "");
@@ -127,4 +128,19 @@ int utils::toInt(const std::string &s)
 	if (ss.fail())
 		return 0;
 	return ret;
+}
+
+void utils::split_around_first_c(char c, const std::string src, std::string &s1, std::string &s2)
+{
+	size_t x = src.find_first_of(c);
+	if ( x == std::string::npos)
+	{
+		s1 = src;
+		s2 = "";
+	}
+	else
+	{
+		s1 = src.substr(0, x);
+		s2 = src.substr(x + 1, src.length());
+	}
 }

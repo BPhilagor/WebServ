@@ -16,9 +16,9 @@
 class SuperServer
 {
 private:
-	std::vector<Server>	servers;
-	std::set<int>		opened_ports;
-	mapHostPort			map_HostPort;
+	std::vector<Server>	_servers;
+	std::set<int>		_opened_ports;
+	mapHostPort			_map_HostPort;
 public:
 // Default constructor
 	SuperServer(const Data& data);

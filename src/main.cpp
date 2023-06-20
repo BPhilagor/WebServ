@@ -52,9 +52,12 @@ int main(int argc, char** argv)
 
 	SuperServer webServ(data);
 
-	std::cout << webServ.getServers()[0].getBodyLimit() << "\n";
-
 	std::cout << webServ << "\n";
+
+	// std::cout << webServ.getServers()[0].getBodyLimit() << "\n";
+
+	// std::cout << webServ << "\n";
+	// std::cout << webServ.getServers()[0] << "\n";
 
 	// #ifdef WSL_DISTRO_NAME
 	// 	launchServersWSL(servers);

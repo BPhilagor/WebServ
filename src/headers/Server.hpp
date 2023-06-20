@@ -32,9 +32,9 @@ public:
 	/* property getters */
 	const Data &getData() const;
 	const std::vector<pairHostPort> &getHostPorts() const;
-	const std::vector<std::string> &getMethodds() const;
+	const std::vector<std::string> &getMethods() const;
 
-	/* getters from datat */
+	/* getters from data */
 	const std::string &getDefault(const std::string &prop) const;
 	int getBodyLimit() const;
 	const std::string &getServerName() const;
@@ -49,7 +49,9 @@ private:
 	Server();
 	Server & operator=(const Server &other);
 
+	const std::string &getPropOrDefaultStr(const std::string &prop) const;
 	void _initListen();
+	void _initMethod();
 	const Data _data;
 	std::vector<pairHostPort> _hostPort;
 	std::vector<std::string> _methods;

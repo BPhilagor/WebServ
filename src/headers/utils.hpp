@@ -43,6 +43,8 @@ namespace utils
 	Data constructDefaultServer();
 
 	int toInt(const std::string &s);
+	void split_around_first_c(char c, const std::string src, std::string &s1, std::string &s2);
+
 }
 
 #endif

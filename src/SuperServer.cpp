@@ -17,11 +17,11 @@ SuperServer::SuperServer(const Data& data) //TODO : Tester
 	for (int i = 0; i < srvs.count("server"); i++)
 	{
 		Server newServer = Server(srvs.find("server", i));
-		servers.push_back(newServer);
+		_servers.push_back(newServer);
 		FOREACH_VECTOR(pairHostPort, newServer.getHostPorts())
 		{
-			opened_ports.insert(it->second);
-			map_HostPort[*it].push_back(newServer);
+			_opened_ports.insert(it->second);
+			_map_HostPort[*it].push_back(newServer);
 		}
 	}
 }
@@ -35,7 +35,7 @@ SuperServer &SuperServer::operator=(const SuperServer &other){ (void)other; retu
 /* getters                                                                    */
 /* ************************************************************************** */
 
-const std::vector<Server> &SuperServer::getServers() const { return servers; }
+const std::vector<Server> &SuperServer::getServers() const { return _servers; }
 
 
 /* ************************************************************************** */
@@ -46,11 +46,9 @@ std::ostream &operator<<(std::ostream &os, const SuperServer &s)
 {
 	FOREACH_VECTOR(Server, s.getServers())
 	{
-		os << "\n<servers>";
+		os << "\n<server " << it->getServerName() << ">";
 		os << *it << " ";
-		os << "\n</servers>\n";
-		os << it->getData();
-		os << "\n";
+		os << "</server " << it->getServerName() << ">";
 	}
 	// os << "\n   Port = ";
 	// FOREACH_VECTOR(int, s.getPorts())
