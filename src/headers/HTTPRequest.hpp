@@ -16,6 +16,7 @@
 # include <ostream>
 # include <exception>
 # include <map>
+# include <cstdlib>
 
 class HTTPRequest
 {

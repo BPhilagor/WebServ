@@ -15,10 +15,11 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <stdint.h>
 
 class Server;
 
-typedef std::pair<u_int32_t, u_int32_t> pairHostPort;
+typedef std::pair<uint32_t, uint32_t> pairHostPort;
 typedef std::map< pairHostPort, std::vector<Server> > mapHostPort;
 
 typedef struct
