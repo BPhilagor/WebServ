@@ -59,7 +59,6 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 	}
 }
 
-/* writeable_size is the amount of bytes that we can write */
 void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config)
 {
 	std::cout << "Detected possibility to write the socket" << std::endl;
