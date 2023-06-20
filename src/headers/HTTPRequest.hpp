@@ -31,7 +31,7 @@ class HTTPRequest
 		t_version			getVersion() const;
 		std::string			getURI() const;
 		const std::string&	getMethod() const;
-		const HTTPHeaders&	getHeaders() const;
+		std::string			getHeader(const std::string& name) const;
 		std::string			getBody() const;
 
 		bool				isParsingFinished() const;

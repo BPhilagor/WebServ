@@ -1,9 +1,10 @@
 #include "BufferManager.hpp"
 #include "utils.hpp"
 
-BufferManager::BufferManager(const SuperServer& config):
+BufferManager::BufferManager(const SuperServer& config, int fd):
 	input_buffer(""),
 	output_buffer(""),
+	_fd(fd),
 	_config(config),
 	_req(),
 	_resp(),
@@ -15,6 +16,7 @@ BufferManager::BufferManager(const SuperServer& config):
 BufferManager::BufferManager(const BufferManager& h):
 	input_buffer(h.input_buffer),
 	output_buffer(h.output_buffer),
+	_fd(h._fd),
 	_config(h._config),
 	_req(h._req),
 	_resp(h._resp),
@@ -32,6 +34,7 @@ BufferManager& BufferManager::operator=(const BufferManager& h)
 {
 	input_buffer = h.input_buffer;
 	output_buffer = h.output_buffer;
+	_fd = h._fd;
 	/* _config is const ! */
 	_req = h._req;
 	_resp = h._resp;
@@ -63,19 +66,25 @@ void	BufferManager::addInputBuffer(const std::string& s)
 
 void	BufferManager::constructResponse()
 {
-	if (_req.hasValidSyntax())
+	/* when do we process the body ? */
+
+	const std::string host = _req.getHeader("Host");
+	if (host == "")
 	{
-		_resp.setVersion(1, 1);
-		_resp.setCode(200);
-		_resp.setReason("Ok");
-		_resp.setHeader("Content-length", "11");
-		_resp.setBody("Hello world");
+		/* bad request */
+		output_buffer = "Bad";
+		return ;
 	}
-	else
+
+	const Server* virtual_server = _config.getServerForHostPortAndHostName(
+		utils::fd_to_HostPort(_fd), host);
+
+	if (virtual_server == NULL)
 	{
-		_resp.setVersion(1, 1);
-		_resp.setCode(400);
-		_resp.setReason("Bad request");
+		/* bad request */
+		output_buffer = "BAD";
+		return ;
 	}
-	output_buffer = _resp.serialize();
+
+	output_buffer = requestWorker(*virtual_server, _req);
 }

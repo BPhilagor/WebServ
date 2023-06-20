@@ -86,7 +86,7 @@ void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, cons
 		if (writtenBytes < 0 || response.length() == 0)
 		{
 			std::string remaining_buffer = buff_man.input_buffer;
-			buff_man = BufferManager(config); /* reset the buffer manager */
+			buff_man = BufferManager(config, fd); /* reset the buffer manager */
 			buff_man.addInputBuffer(remaining_buffer);
 
 			setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE);
@@ -170,7 +170,7 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 	addSocketToEventQueue(eqfd, new_socket_fd);
 
 	/* create an HTTPParser instance for that connection */
-	messages.insert(std::pair<int, BufferManager>(new_socket_fd, BufferManager(config)));
+	messages.insert(std::pair<int, BufferManager>(new_socket_fd, BufferManager(config, new_socket_fd)));
 	std::cout << "Connection established on socket " << new_socket_fd << std::endl;
 }
 

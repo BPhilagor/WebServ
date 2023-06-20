@@ -4,6 +4,7 @@
 #include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
 #include "SuperServer.hpp"
+#include "requestWorker.hpp"
 
 #include <vector>
 #include <string>
@@ -12,7 +13,7 @@
 class BufferManager
 {
 	public:
-		BufferManager(const SuperServer& config);
+		BufferManager(const SuperServer& config, int fd);
 		BufferManager(const BufferManager& h);
 		~BufferManager();
 		BufferManager&	operator=(const BufferManager& h);
@@ -28,6 +29,8 @@ class BufferManager
 		std::string					output_buffer;
 
 	private:
+
+		int							_fd;
 
 		const SuperServer&			_config;
 

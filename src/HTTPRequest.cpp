@@ -85,9 +85,9 @@ const std::string&		HTTPRequest::getMethod() const
 	return _method;
 }
 
-const HTTPHeaders&		HTTPRequest::getHeaders() const
+std::string				HTTPRequest::getHeader(const std::string& name) const
 {
-	return _headers;
+	return _headers.get(name);
 }
 
 std::string				HTTPRequest::getBody() const
@@ -132,7 +132,7 @@ std::string	HTTPRequest::serialize() const
 	std::ostringstream	output;
 
 	output << getMethod() << " " << getURI() << " HTTP/" << getVersion().major << "." <<getVersion().minor << "\r\n";
-	output << getHeaders().serialize();
+	output << _headers.serialize();
 	output << getBody();
 
 	return (output.str());

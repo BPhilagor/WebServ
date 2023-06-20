@@ -23,6 +23,7 @@ class HTTPHeaders
 		~HTTPHeaders();
 		HTTPHeaders&	operator=(const HTTPHeaders& h);
 
+		std::string	get(const std::string& name) const;
 		void		insert(const std::string& name, const std::string& value);
 		std::string	serialize() const;
 
