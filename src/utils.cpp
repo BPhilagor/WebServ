@@ -150,6 +150,11 @@ Data utils::constructDefaultServer()
 	d.setProp("error_dir", "");
 	d.setProp("upload_dir", "");
 	d.setProp("directory_listing", "true");
+
+	dataObj location;
+	location.first = "/";
+	location.second.setProp("root", "basic_site");
+	d.pushBack(location);
 	/* etc */
 	return d;
 }

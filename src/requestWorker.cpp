@@ -13,24 +13,27 @@
 #include "requestWorker.hpp"
 #include "Server.hpp"
 
-void getMethod(HTTPResponse &res, const Server& server)
+void getMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)
 {
 	// res.setDate();
 	// res.setHeader("Host Name", )
-	(void)server;
 	res.constructReply(server, "", 200);
-	std::cout << "bar {" <<  res.serialize() << "} foo \n";
+	(void)req;
+	// std::cout << "uri is : " << req.getURI() << "\n";
+	// std::cout << req << "\n";
 }
 
-void postMethod(HTTPResponse &res, const Server& server)
+void postMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)
 {
 	(void)res;
+	(void)req;
 	(void)server;
 }
 
-void deleteMethod(HTTPResponse &res, const Server& server)
+void deleteMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)
 {
 	(void)res;
+	(void)req;
 	(void)server;
 }
 
@@ -41,19 +44,17 @@ std::string requestWorker(const Server &server, const HTTPRequest &request)
 	// Identify request
 	const std::string& method = request.getMethod();
 
-	std::cout << method << "skdlfj\n";
-
 	if (method == "GET")
 	{
-		getMethod(res, server);
+		getMethod(res, request, server);
 	}
 	else if (method == "POST")
 	{
-		postMethod(res, server);
+		postMethod(res, request, server);
 	}
 	else if (method == "DELETE")
 	{
-		deleteMethod(res, server);
+		deleteMethod(res, request, server);
 	}
 	else
 	{

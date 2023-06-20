@@ -75,7 +75,6 @@ void launchServers(const SuperServer &config)
 				if (s)
 				{
 					parser.response_buffer = requestWorker(*s, *parser.getHTTPRequest());
-					std::cout << "printer <" << parser.response_buffer << "> \n";
 				}
 
 			/* handle partial write */

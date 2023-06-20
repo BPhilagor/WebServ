@@ -147,7 +147,8 @@ void HTTPResponse::constructReply(const Server &server, const std::string &body,
 	(void)server;
 	setReason(_reasonMap[code]);
 	setCode(code);
-	setHeader("host", "WebServ");
+	setHeader("Server", "WebServ");
+	setHeader("Content-Type:", "html");
 
 	setBody(genErrorPage(code));
 

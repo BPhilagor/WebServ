@@ -44,7 +44,6 @@ private:
 
 	// parse in config file
 	static void read_ifstream(Data &n, std::ifstream &file);
-	void pushBack(dataObj &o);
 
 public:
 	Data();
@@ -55,6 +54,7 @@ public:
 	static void readFile(Data &n, const char *path);
 
 	void setProp(const std::string &ident, const std::string &content);
+	void pushBack(dataObj &o);
 
 	// accessors
 	const Data &		find(const std::string &type, int n = 0) const;
