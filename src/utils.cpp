@@ -9,6 +9,9 @@
 
 #include "utils.hpp"
 #include "Server.hpp"
+#include <arpa/inet.h>
+
+#define LOCALHOST_UI32 16777343
 
 int send_to_socket(const std::string &message, int socket_fd) {
 	return write(socket_fd, message.c_str(), message.length());
@@ -76,20 +79,50 @@ std::string&	utils::sanitizeline(std::string& s)
 	return (s);
 }
 
+std::string utils::addrIntToString(u_int32_t addr_int)
+{
+	struct in_addr tmp;
+
+	tmp.s_addr = addr_int;
+	return std::string(inet_ntoa(tmp));
+}
+
+u_int32_t utils::addrStringToInt(const std::string &addr_string)
+{
+	struct in_addr tmp;
+
+	if (addr_string == "localhost")
+		return LOCALHOST_UI32;
+
+	if (!inet_aton(addr_string.c_str(), &tmp))
+		std::cout << "Warning, wrong adress was converted to 0" << std::endl;
+	return tmp.s_addr;
+}
+
 pairHostPort utils::getHostPort(const std::string &str)
 {
 	size_t tmp = str.find(':');
 
-	std::stringstream sHost(str.substr(0, tmp));
-	std::stringstream sPort(str.substr(tmp + 1, str.size() - tmp));
+	u_int32_t host, port;
+	if (tmp == std::string::npos)
+	{
+		host = 0;
+		tmp = 0;
+	}
+	else
+	{
+		std::string sHost = str.substr(0, tmp);
+		std::cout << "Origine : " << sHost;
+		host = addrStringToInt(sHost);
+		tmp += 1;
+	}
 
-	int host, port;
-
-	sHost >> host;
+	std::stringstream sPort(str.substr(tmp, str.size() - tmp));
 	sPort >> port;
 
-	if (sHost.fail())
-		host = 0;
+	std::string addr_string = addrIntToString(host);
+	std::cout << " Conversion : " << host << " Reconversion : " << addr_string << std::endl;
+
 	if (sPort.fail())
 		port = 8080;
 

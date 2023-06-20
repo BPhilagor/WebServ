@@ -12,6 +12,8 @@
 #include "Server.hpp"
 #include "utils.hpp"
 
+#define DEFAULT_LISTEN "0:8080"
+
 const Data Server::_defaultServer = utils::constructDefaultServer();
 
 Server::Server() : _data(Data()) {}
@@ -138,7 +140,14 @@ const std::string &Server::getPropOrDefaultStr(const std::string &prop) const
 
 void Server::_initListen()
 {
-	for (int j = 0; j < _data.count("listen"); j++)
+	int nbr = _data.count("listen");
+	if (nbr == 0)
+	{
+		pairHostPort hostPort = utils::getHostPort(DEFAULT_LISTEN);
+		_hostPort.push_back(hostPort);
+		return ;
+	}
+	for (int j = 0; j < nbr; j++)
 	{
 		pairHostPort hostPort = utils::getHostPort(_data.find("listen", j).getContent());
 		_hostPort.push_back(hostPort);
@@ -222,7 +231,7 @@ std::ostream &operator<<(std::ostream &os, const Server &s)
 
 std::ostream &operator<<(std::ostream &os, const pairHostPort &o)
 {
-	os << o.first << ":" << o.second;
+	os << utils::addrIntToString(o.first) << ":" << o.second;
 	return os;
 }
 

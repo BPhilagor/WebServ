@@ -18,7 +18,7 @@
 
 class Server;
 
-typedef std::pair<int, int> pairHostPort;
+typedef std::pair<u_int32_t, u_int32_t> pairHostPort;
 typedef std::map< pairHostPort, std::vector<Server> > mapHostPort;
 
 #endif /* TYPEDEFS_HPP */
