@@ -46,6 +46,7 @@ namespace utils
 	void split_around_first_c(char c, const std::string src, std::string &s1, std::string &s2);
 	std::string addrIntToString(u_int32_t addr_int);
 	u_int32_t addrStringToInt(const std::string &addr_string);
+	pairHostPort fd_to_HostPort(int fd);
 }
 
 #endif

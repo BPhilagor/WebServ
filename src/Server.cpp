@@ -231,7 +231,7 @@ std::ostream &operator<<(std::ostream &os, const Server &s)
 
 std::ostream &operator<<(std::ostream &os, const pairHostPort &o)
 {
-	os << utils::addrIntToString(o.first) << ":" << o.second;
+	os << utils::addrIntToString(o.first) << ":" << ntohs(o.second);
 	return os;
 }
 

@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
 	std::cout << config << "\n";
 
-	pairHostPort foo(utils::addrStringToInt("127.0.0.1"), 4242);
+	pairHostPort foo(utils::addrStringToInt("127.0.0.1"), htons(4242));
 	std::cout << "found this server: " << *config.getServerForHostPortAndHostName(foo, "asd") << "\n";
 
 	launchServers(config);

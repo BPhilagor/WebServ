@@ -83,6 +83,7 @@ void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 		else
 		{
 			std::cout<<"Written bytes: " << writtenBytes << std::endl;
+			std::cout << "wrote : " << response << "\n";
 			response = response.substr(writtenBytes, response.length() - writtenBytes);
 		}
 		if (writtenBytes < 0 || response.length() == 0)
@@ -121,7 +122,7 @@ int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		addr.sin_port = htons(*it);
+		addr.sin_port = *it;
 
 		//Binding the socket with the wanted port
 		if (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
@@ -136,7 +137,7 @@ int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
 			std::cout << "Error when establishing a listen: "<<std::strerror(errno) << std::endl;
 			exit(1);
 		}
-		std::cout << "Socket for port : " << *it  << " created" << std::endl;
+		std::cout << "Socket for port : " << ntohs(*it)  << " created" << std::endl;
 	}
 	return (0);
 }

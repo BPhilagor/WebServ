@@ -16,6 +16,7 @@
 # include "HTTPHeaders.hpp"
 # include "common-http-message.hpp"
 # include "Data.hpp"
+# include "Server.hpp"
 
 class HTTPResponse
 {
@@ -43,7 +44,7 @@ class HTTPResponse
 		std::string	serialize() const;
 
 		/* constructors */
-		void constructReply(const Data &server, const std::string &body, int code);
+		void constructReply(const Server &server, const std::string &body, int code);
 
 		std::string genErrorPage(int code) const;
 

@@ -126,6 +126,7 @@ pairHostPort utils::getHostPort(const std::string &str)
 	if (sPort.fail())
 		port = 8080;
 
+	port = htons(port);
 	return pairHostPort(host, port);
 }
 
@@ -177,4 +178,17 @@ void utils::split_around_first_c(char c, const std::string src, std::string &s1,
 		s1 = src.substr(0, x);
 		s2 = src.substr(x + 1, src.length());
 	}
+}
+
+
+pairHostPort utils::fd_to_HostPort(int fd)
+{
+	pairHostPort ret;
+	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(addr);
+	getsockname(fd, (struct sockaddr *)&addr, &addrlen);
+	// std::cout << "Received connection from: " << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
+	ret.first = addr.sin_addr.s_addr;
+	ret.second = addr.sin_port;
+	return ret;
 }

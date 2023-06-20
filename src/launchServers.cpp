@@ -69,6 +69,16 @@ void launchServers(const SuperServer &config)
 			}
 			else if (write_ev)
 			{
+
+				HTTPParser& parser = messages.find(ev_fd)->second;
+				const Server *s = config.getServerForHostPortAndHostName(utils::fd_to_HostPort(ev_fd), "bar");
+				if (s)
+				{
+					parser.response_buffer = requestWorker(*s, *parser.getHTTPRequest());
+					std::cout << "printer <" << parser.response_buffer << "> \n";
+				}
+
+			/* handle partial write */
 				writeHandler(ev_fd, eqfd, messages);
 			}
 		}

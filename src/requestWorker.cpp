@@ -13,59 +13,54 @@
 #include "requestWorker.hpp"
 #include "Server.hpp"
 
-static HTTPResponse getMethode()
+void getMethod(HTTPResponse &res, const Server& server)
 {
-	HTTPResponse result;
-
-	return result;
+	// res.setDate();
+	// res.setHeader("Host Name", )
+	(void)server;
+	res.constructReply(server, "", 200);
+	std::cout << "bar {" <<  res.serialize() << "} foo \n";
 }
 
-static HTTPResponse postMethode()
+void postMethod(HTTPResponse &res, const Server& server)
 {
-	HTTPResponse result;
-
-	return result;
+	(void)res;
+	(void)server;
 }
 
-static HTTPResponse deleteMethode()
+void deleteMethod(HTTPResponse &res, const Server& server)
 {
-	HTTPResponse result;
-
-	return result;
+	(void)res;
+	(void)server;
 }
 
-std::string resolveMethod(const Server& server, const HTTPRequest &request)
+std::string requestWorker(const Server &server, const HTTPRequest &request)
 {
-	HTTPResponse result;
+	HTTPResponse res;
 
-
-	(void) server;
 	// Identify request
-	const std::string& methode = request.getMethod();
-	if (methode.compare("GET"))
+	const std::string& method = request.getMethod();
+
+	std::cout << method << "skdlfj\n";
+
+	if (method == "GET")
 	{
-		result = getMethode();
-	} else if (methode.compare("POST"))
+		getMethod(res, server);
+	}
+	else if (method == "POST")
 	{
-		result = postMethode();
-	} else if (methode.compare("DELETE"))
+		postMethod(res, server);
+	}
+	else if (method == "DELETE")
 	{
-		result = deleteMethode();
-	} else
+		deleteMethod(res, server);
+	}
+	else
 	{
 		// Manage Error
 		;
 	}
-	
-	// Construct HTTPResponse
-	
-	return result.serialize();
-}
 
-// std::string requestWorker(const SuperServeur& superServer, const HTTPRequest &request)
-// {
-// 	// Check HTTP Request
-// 	// Find Server
-// 	const Server& server = superServer.find(/*...*/);
-// 	resolveMethod(server, request);
-// }
+	// Construct HTTPResponse
+	return res.serialize();
+}

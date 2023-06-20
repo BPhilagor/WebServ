@@ -139,31 +139,17 @@ std::string HTTPResponse::genErrorPage(int code) const
 	return page;
 }
 
-void HTTPResponse::constructReply(const Data &server, const std::string &body, int code)
+void HTTPResponse::constructReply(const Server &server, const std::string &body, int code)
 {
 	(void) body;
 	setVersion(1, 1);
 	setDate();
-	// if (code >= 100 && code < 200)
-	// 	informationalResponse(server, code);
-	// else if (code >= 200 && code < 300)
-	// 	successfulResponse(server, code);
-	// else if (code >= 300 && code < 400)
-	// 	redirectionMessage(server, code);
-	// else if (code >= 400 && code < 500)
-	// 	clientErrorResponse(server, code);
-	// else if (code >= 500 && code < 600)
-	// 	clientErrorResponse(server, code);
-	// else
-	// 	std::cerr << "Stupid programmer, error code" << code << " is wack\n";
 	(void)server;
 	setReason(_reasonMap[code]);
 	setCode(code);
 	setHeader("host", "WebServ");
-	// if error
-	// 	if error file in config 
-	// 		setBody(genErrorPage(code));
-	// else
+
+	setBody(genErrorPage(code));
 
 	setHeader("content-length", SSTR(getBody().size()));
 }
