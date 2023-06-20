@@ -15,43 +15,14 @@
 
 void	addSocketToEventQueue(int eqfd, int socket_fd)
 {
-	#ifdef LINUX
-	struct epoll_event ev;
-	ev.events = EPOLLIN;
-	ev.data.fd = socket_fd;
-	int res = epoll_ctl(eqfd, EPOLL_CTL_ADD, socket_fd, &ev);
-	#else
-	struct kevent ev;
-	EV_SET(&ev, socket_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	int res = kevent(eqfd, &ev, 1, NULL, 0, NULL);
-	#endif
-	if (res < 0)
-	{
-		std::cout << "Error when adding socket events to kernel queue: " << strerror(errno) << std::endl;
-		exit(1);
-	}
+	setFilter(eqfd, socket_fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
 }
 
 void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets)
 {
 	for (std::set<int>::iterator it = listeningSockets.begin(); it != listeningSockets.end(); ++it)
 	{
-		int	res;
-		#ifdef LINUX
-			struct epoll_event ev;
-			ev.events = EPOLLIN;
-			ev.data.fd = *it;
-			res = epoll_ctl(eqfd, EPOLL_CTL_ADD, *it, &ev);
-		#else
-			struct kevent ev;
-			EV_SET(&ev, *it, EVFILT_READ, EV_ADD, 0, 0, 0);
-			res = kevent(eqfd, &ev, 1, 0, 0, 0);
-		#endif
-		if (res < 0)
-		{
-			std::cout << "Error when adding passive socket to queue: " << std::strerror(errno) << std::endl;
-			exit(1);
-		}
+		setFilter(eqfd, *it, EVENT_FILTER_READ, EVENT_ACTION_ADD);
 	}
 }
 
@@ -86,20 +57,8 @@ void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 	if (parser.isFinished())
 	{
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
-		#ifdef LINUX
-			struct epoll_event ev;
-			ev.events = EPOLLIN;
-			ev.data.fd = socket_fd;
-			epoll_ctl(eqfd, EPOLL_CTL_DEL, fd, &ev); /* handle error here */
-			ev.events = EPOLLOUT;
-			ev.data.fd = socket_fd;
-			epoll_ctl(eqfd, EPOLL_CTL_ADD, fd, &ev);
-		#else
-			struct kevent ev[2];
-			EV_SET(&ev[0], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-			EV_SET(&ev[1], fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
-			kevent(eqfd, ev, 2, NULL, 0, NULL);
-		#endif
+		setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE);
+		setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD);
 	}
 }
 
@@ -129,21 +88,8 @@ void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages)
 		if (writtenBytes < 0 || response.length() == 0)
 		{
 			messages[fd] = HTTPParser(); /* reset the pending request */
-
-			#ifdef LINUX
-				struct epoll_event ev;
-				ev.events = EPOLLIN;
-				ev.data.fd = socket_fd;
-				epoll_ctl(eqfd, EPOLL_CTL_ADD, fd, &ev); /* handle error here */
-				ev.events = EPOLLOUT;
-				ev.data.fd = socket_fd;
-				epoll_ctl(eqfd, EPOLL_CTL_DEL, fd, &ev);
-			#else
-				struct kevent ev[2];
-				EV_SET(&ev[0], fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-				EV_SET(&ev[1], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-				kevent(eqfd, ev, 2, NULL, 0, NULL);
-			#endif
+			setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE);
+			setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
 		}
 	}
 }
@@ -155,40 +101,6 @@ void	printClientAddress(int fd)
 	getsockname(fd, (struct sockaddr *)&addr, &addrlen);
 	std::cout << "Received connection from: " << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 }
-
-// void findPorts(const Data & servers, std::set<int> &ports, mapIpPort &map_IpPort, mapPort &map_Port)
-// {
-// 	for (int i = 0; i < servers.count("server"); i++)
-// 	{
-// 		Data srv = servers.find("server", i);
-// 		for (int j = 0; j < srv.count("listen"); j++)
-// 		{
-// 			pairIpPort ipPort = getIpPort(srv.find("listen", j).getContent());
-// 			if (ipPort.first.empty())
-// 				map_Port[ipPort.second].push_back(srv);
-// 			else
-// 				map_IpPort[ipPort].push_back(srv);
-// 			ports.insert(std::atoi(ipPort.second.c_str())); /* Should check if port is in valid range maybe? */
-// 		}
-// 	}
-
-// 	// Test
-// 	std::cout << "Unique Ip listen" << std::endl;
-// 	for(mapIpPort::const_iterator it = map_IpPort.begin(); it != map_IpPort.end(); ++it)
-// 	{
-// 		std::cout << it->first.first << " , " << it->first.second << " / " << it->second.size() << std::endl;
-// 	}
-
-// 	// Test
-// 	std::cout << "All Ip listen" << std::endl;
-// 	for(mapPort::const_iterator it = map_Port.begin();it != map_Port.end(); ++it)
-// 	{
-// 		std::cout << it->first << " / " << it->second.size() << std::endl;
-// 	}
-
-// 	const size_t PORTS_NBR = ports.size(); // TODO : Check si PORTS_NBR > 0 ?
-// 	std::cout << "Ports detected : " << PORTS_NBR << std::endl;
-// }
 
 int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
 {
@@ -259,4 +171,23 @@ void establishConnection(int ev_fd, std::map<int, HTTPParser> &messages, int eqf
 	/* create an HTTPParser instance for that connection */
 	messages.insert(std::pair<int, HTTPParser>(new_socket_fd, HTTPParser()));
 	std::cout << "Connection established on socket " << new_socket_fd << std::endl;
+}
+
+void	setFilter(int eqfd, int socket_fd, int event, int action)
+{
+#ifdef LINUX
+	struct epoll_event ev;
+	ev.events = (event == EVENT_FILTER_READ) ? EPOLLIN : EPOLLOUT;
+	ev.data.fd = socket_fd;
+	int res = epoll_ctl(eqfd, (action == EVENT_ACTION_ADD) ? EPOLL_CTL_ADD : EPOLL_CTL_DEL, socket_fd, &ev);
+#else
+	struct kevent ev;
+	EV_SET(&ev, socket_fd, (event == EVENT_FILTER_READ) ? EVFILT_READ : EVFILT_WRITE, (action == EVENT_ACTION_ADD) ? EV_ADD : EV_DELETE, 0, 0, NULL);
+	int res = kevent(eqfd, &ev, 1, NULL, 0, NULL);
+#endif
+	if (res < 0)
+	{
+		std::cout << "Error when adding event filter to queue: " << std::strerror(errno) << std::endl;
+		exit(1);
+	}
 }
