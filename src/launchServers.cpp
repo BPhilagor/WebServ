@@ -8,7 +8,6 @@
 /* ************************************************************************** */
 
 #include "launchServers.hpp"
-#include "SuperServer.hpp"
 
 void launchServers(const SuperServer &config)
 {
@@ -28,7 +27,7 @@ void launchServers(const SuperServer &config)
 	openSockets(config.getPorts(), listeningSockets);
 	addPassiveSocketsToQueue(eqfd, listeningSockets);
 
-	std::map<int, HTTPParser> messages;
+	std::map<int, BufferManager> buffer_managers;
 
 #ifdef __linux__
 	epoll_event events[MAX_EVENTS];
@@ -61,24 +60,15 @@ void launchServers(const SuperServer &config)
 #endif
 			if (isListenSocket(ev_fd, listeningSockets))
 			{
-				establishConnection(ev_fd, messages, eqfd);
+				establishConnection(ev_fd, buffer_managers, eqfd, config);
 			}
 			else if (read_ev)
 			{
-				readHandler(ev_fd, eqfd, messages);
+				readHandler(ev_fd, eqfd, buffer_managers);
 			}
 			else if (write_ev)
 			{
-
-				HTTPParser& parser = messages.find(ev_fd)->second;
-				const Server *s = config.getServerForHostPortAndHostName(utils::fd_to_HostPort(ev_fd), "bar");
-				if (s)
-				{
-					parser.response_buffer = requestWorker(*s, *parser.getHTTPRequest());
-				}
-
-			/* handle partial write */
-				writeHandler(ev_fd, eqfd, messages);
+				writeHandler(ev_fd, eqfd, buffer_managers, config);
 			}
 		}
 	}

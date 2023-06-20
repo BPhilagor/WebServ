@@ -31,10 +31,8 @@
 # include "Data.hpp"
 # include "SuperServer.hpp"
 # include "HTTPRequest.hpp"
-# include "HTTPParser.hpp"
+# include "BufferManager.hpp"
 # include "requestWorker.hpp"
-
-
 
 # define BUFFER_SIZE	32
 # define MAX_EVENTS	10
@@ -61,12 +59,12 @@ void	launchServers(const SuperServer &config);
 
 void	addSocketToEventQueue(int eqfd, int socket_fd);
 void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets);
-void	readHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages);
-void	writeHandler(int fd, int eqfd, std::map<int, HTTPParser>& messages);
+void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages);
+void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config);
+void	establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int eqfd, const SuperServer& config);
 void	printClientAddress(int fd);
 int		openSockets(const std::set<int>& ports, std::set<int>& sockets);
 bool	isListenSocket(int fd, std::set<int>& listenSockets);
-void	establishConnection(int ev_fd, std::map<int, HTTPParser> &messages, int eqfd);
 void	setFilter(int eqfd, int socket_fd, int event, int action);
 
 #endif /* LAUNCHSERVERS_HPP */
