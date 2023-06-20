@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
 	std::cout << config << "\n";
 
-	// launchServers(config);
+	launchServers(config);
 
 	return 0;
 }
