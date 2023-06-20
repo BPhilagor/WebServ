@@ -11,8 +11,7 @@
 # define HTTP_REQUEST_H
 
 # include "HTTPHeaders.hpp"
-# include "common-http-message.hpp"
-
+# include "typedefs.hpp"
 # include <string>
 # include <ostream>
 # include <exception>
