@@ -28,20 +28,16 @@ else
 LEAKS_CHECK = leaks -atExit --
 endif
 
-FILES	= main utils Data Server launchServers requestWorker handler \
+FILES	= main utils Data Server  requestWorker handler \
 		HTTPParser \
+		launchServers \
 		launchServersUtils \
 		HTTPRequest HTTPHeaders HTTPResponse \
-		HTTPResponse_informationalResponse \
-		HTTPResponse_successfulResponse \
-		HTTPResponse_redirectionMessage \
-		HTTPResponse_clientErrorResponse \
-		HTTPResponse_serverErrorResponse \
-		HTTPResponse_reason
+		HTTPResponse_reason SuperServer
 
 OBJS_PATH = objs/
 SRCS_PATH = src/
-INCS_PATH = $(SRCS_PATH)/headers/
+INCS_PATH = $(SRCS_PATH)headers/
 
 SRCS	= $(addprefix $(SRCS_PATH), $(addsuffix .cpp, $(FILES)))
 OBJS	= $(addprefix $(OBJS_PATH), $(addsuffix .o, $(FILES)))

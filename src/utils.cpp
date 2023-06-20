@@ -8,6 +8,7 @@
 /* ************************************************************************** */
 
 #include "utils.hpp"
+#include "Server.hpp"
 
 int send_to_socket(const std::string &message, int socket_fd) {
 	return write(socket_fd, message.c_str(), message.length());
@@ -75,12 +76,71 @@ std::string&	utils::sanitizeline(std::string& s)
 	return (s);
 }
 
-pairIpPort getIpPort(const std::string &str)
+pairHostPort utils::getHostPort(const std::string &str)
 {
 	size_t tmp = str.find(':');
 
-	if (tmp == std::string::npos)
-		return pairIpPort("", str);
+	std::stringstream sHost(str.substr(0, tmp));
+	std::stringstream sPort(str.substr(tmp + 1, str.size() - tmp));
+
+	int host, port;
+
+	sHost >> host;
+	sPort >> port;
+
+	if (sHost.fail())
+		host = 0;
+	if (sPort.fail())
+		port = 8080;
+
+	return pairHostPort(host, port);
+}
+
+/*
+	this needs to be the most complete config possible,
+	not values should be missing, we will access  with
+	the assumption that everything needed is here.
+	if segv or we throw some thing.
+*/
+Data utils::constructDefaultServer()
+{
+	Data d;
+
+	d.setProp("listen", "0:8080");
+	d.setProp("listen", "0:4242");
+	d.setProp("server_name", "WebServ");
+	d.setProp("methods", "GET POST DELETE");
+	d.setProp("body_limit", "1048576");
+	d.setProp("error_pages", "");
+	d.setProp("error_dir", "");
+	d.setProp("upload_dir", "");
+	d.setProp("directory_listing", "true");
+	/* etc */
+	return d;
+}
+
+int utils::toInt(const std::string &s)
+{
+	int ret = 0;
+	std::stringstream ss(s);
+
+	ss >> ret;
+	if (ss.fail())
+		return 0;
+	return ret;
+}
+
+void utils::split_around_first_c(char c, const std::string src, std::string &s1, std::string &s2)
+{
+	size_t x = src.find_first_of(c);
+	if ( x == std::string::npos)
+	{
+		s1 = src;
+		s2 = "";
+	}
 	else
-		return pairIpPort(str.substr(0, tmp), str.substr(tmp + 1, str.size() - tmp));
+	{
+		s1 = src.substr(0, x);
+		s2 = src.substr(x + 1, src.length());
+	}
 }

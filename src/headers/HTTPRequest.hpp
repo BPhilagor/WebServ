@@ -28,10 +28,10 @@ class HTTPRequest
 		HTTPRequest&	operator=(const HTTPRequest& rhs);
 
 		/* getters */
-		bool				getHasValidSyntax() const;
+		bool				hasValidSyntax() const;
 		t_version			getVersion() const;
 		std::string			getURI() const;
-		std::string			getMethod() const;
+		const std::string&	getMethod() const;
 		const HTTPHeaders&	getHeaders() const;
 		std::string			getBody() const;
 

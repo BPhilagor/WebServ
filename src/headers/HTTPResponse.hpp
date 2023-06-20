@@ -43,13 +43,7 @@ class HTTPResponse
 		std::string	serialize() const;
 
 		/* constructors */
-		void constructReply(const Data &server, int code);
-
-		void informationalResponse(const Data &server, int code);
-		void successfulResponse(const Data &server, int code);
-		void redirectionMessage(const Data &server, int code);
-		void clientErrorResponse(const Data &server, int code);
-		void serverErrorResponse(const Data &server, int code);
+		void constructReply(const Data &server, const std::string &body, int code);
 
 		std::string genErrorPage(int code) const;
 

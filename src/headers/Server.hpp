@@ -11,27 +11,54 @@
 # define SERVER_HPP
 
 # include "Data.hpp"
+# include <typedefs.hpp>
+# include <set>
 
-typedef std::pair<std::string, std::string> listenObj;
+/* use it variable to itterate */
+#define FOREACH_VECTOR(type, thing) \
+for(std::vector<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+
+/* use it variable to itterate */
+#define FOREACH_MAP(type, thing) \
+for(std::map<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
 
 class Server
 {
 public:
-	Server();
 	Server(const Data &data);
 	Server(const Server &other);
 	~Server();
-	Server & operator=(const Server &other);
 
-	// property getter
+	/* property getters */
 	const Data &getData() const;
-	std::vector<listenObj> getListen() const;
+	const std::vector<pairHostPort> &getHostPorts() const;
+	const std::vector<std::string> &getMethods() const;
 
+	/* getters from data */
+	const std::string &getDefault(const std::string &prop) const;
+	int getBodyLimit() const;
+	const std::string &getServerName() const;
+	const std::string &getErrorDir() const;
+	const std::string &getUploadDir() const;
+	bool getDirListing() const;
 
-	// std::map<std::string, std::string>
+	/* property interrogation */
+	int isHostPortMatch(const std::string &hostPort) const;
 
 private:
+	Server();
+	Server & operator=(const Server &other);
+
+	const std::string &getPropOrDefaultStr(const std::string &prop) const;
+	void _initListen();
+	void _initMethod();
 	const Data _data;
+	std::vector<pairHostPort> _hostPort;
+	std::vector<std::string> _methods;
+	static const Data _defaultServer;
 };
+
+std::ostream &operator<<(std::ostream &os, const Server &s);
+std::ostream &operator<<(std::ostream &os, const pairHostPort &o);
 
 #endif /* SERVER_HPP */

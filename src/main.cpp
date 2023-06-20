@@ -9,9 +9,11 @@
 
 #include "utils.hpp"
 #include "Data.hpp"
+#include "Server.hpp"
 #include "launchServers.hpp"
 #include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
+#include "SuperServer.hpp"
 
 int main(int argc, char** argv)
 {
@@ -24,13 +26,16 @@ int main(int argc, char** argv)
 	}
 	else
 		Data::readFile(data, argv[1]);
+
 	std::cout << "\nconfig:\n";
 	Data::print(data, 2);
 	std::cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
 
-	Data servers = data.get("server");
+	SuperServer config(data);
 
-	launchServers(servers);
+	std::cout << config << "\n";
+
+	launchServers(config);
 
 	return 0;
 }

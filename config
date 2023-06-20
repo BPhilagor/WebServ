@@ -1,45 +1,34 @@
 server billy {
 	listen = 8080
+	listen = 0:8080
 	server_name = something www.something.com
 	location / {
 		root = html
 	}
-}
-
-server billy {
-	listen = 192.168.1.1:8080
-	server_name = something www.something.com
-	location / {
-		root = html
-	}
-}
-
-server billy {
-	listen = kkkdh:8080
-	server_name = something www.something.com
-	location / {
-		root = html
-	}
-}
-
-
-not_server it's bad' {
-	listen = this that;
-	listen =
 }
 
 server sally {
-	listen = 4242
-	server_name = foo www.foo.com
+	listen = 127.0.0.1:8080
+	listen = localhost:8080
 	location / {
 		root = html
 	}
+	client_body_size_limit = 9999999
+	methods = GET DELETE
 }
 
-not_server2 it {
-	sdlkfj = 123
-}
-
-server empty config {
-	test = 1
+server ?sally_is_my_server_name {
+	listen = 127.0.0.1:4242
+	listen = localhost:8080
+	location / {
+		root = html
+	}
+	error_dir = /error
+	body_lim = 9999999
+	?methods = POST GET
+	?http_redirection = /something
+	?directory_listing = false
+	?default_file_for_dir_request = /some/file
+	?cgi_based on filetype
+	?upload_files_here
 }

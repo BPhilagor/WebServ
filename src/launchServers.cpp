@@ -1,6 +1,16 @@
-#include "launchServers.hpp"
+/* ************************************************************************** */
+/*                                                     __ __   __             */
+/*    WebServ                                         / // / /__ \            */
+/*                By: skoulen, bphilago, znichola    / // /_ __/ /            */
+/*                                                  /__  __// __/             */
+/*                Created: 2023/06/20 09:17:34        /_/  /____/ lausanne.ch */
+/*                                                                            */
+/* ************************************************************************** */
 
-void launchServers(const Data &config)
+#include "launchServers.hpp"
+#include "SuperServer.hpp"
+
+void launchServers(const SuperServer &config)
 {
 	int eqfd;
 #ifdef LINUX
@@ -14,14 +24,8 @@ void launchServers(const Data &config)
 		exit(1);
 	}
 
-	std::set<int> ports;
-	mapPort mapPort;
-	mapIpPort mapIpPort;
-	findPorts(config, ports, mapIpPort, mapPort);
-
 	std::set<int> listeningSockets;
-	openSockets(ports, listeningSockets);
-
+	openSockets(config.getPorts(), listeningSockets);
 	addPassiveSocketsToQueue(eqfd, listeningSockets);
 
 	std::map<int, HTTPParser> messages;

@@ -20,7 +20,9 @@
 # include <sstream>
 # include <string>
 # include <vector>
+
 # include "typedefs.hpp"
+# include "Data.hpp"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -28,7 +30,6 @@
 int send_to_socket(const std::string &message, int socket_fd);
 int send_file_to_socket(const std::string &filename, int socket_fd);
 void trim_outside_whitespace(std::string &line);
-pairIpPort getIpPort(const std::string &str);
 
 #define LINEAR_WHITESPACE " \t\v\f"
 
@@ -36,6 +37,14 @@ namespace utils
 {
 	std::string&	trim(std::string& s, const char *t = LINEAR_WHITESPACE);
 	std::string&	sanitizeline(std::string& s);
+
+	pairHostPort getHostPort(const std::string &str);
+
+	Data constructDefaultServer();
+
+	int toInt(const std::string &s);
+	void split_around_first_c(char c, const std::string src, std::string &s1, std::string &s2);
+
 }
 
 #endif

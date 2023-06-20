@@ -19,9 +19,6 @@ static void split_around_first_space(const std::string src, std::string &s1, std
 static void print_Data(const Data &d, int level);
 static void print_dataObj(const dataObj &o, int level);
 
-// defaults for server configuration
-#define DF_LISTEN 8080
-
 Data::Data() {}
 
 Data::Data(const Data &other)
@@ -34,6 +31,15 @@ Data &Data::operator=(const Data &other)
 	_content = other._content;
 	_vecObjs = other._vecObjs;
 	return *this;
+}
+
+void Data::setProp(const std::string &ident, const std::string &content)
+{
+	dataObj d;
+
+	d.first = ident;
+	d.second._content = content;
+	this->pushBack(d);
 }
 
 void Data::readFile(Data &n, const char *path)
@@ -53,7 +59,9 @@ void Data::readFile(Data &n, const char *path)
 	{
 		dataObj emptyDataObj;
 		emptyDataObj.first = "server";
+		emptyDataObj.second = utils::constructDefaultServer();
 		n.pushBack(emptyDataObj);
+
 	}
 }
 
@@ -97,32 +105,12 @@ void Data::read_ifstream(Data &n, std::ifstream &file)
 	}
 }
 
-/*
-	wrapper around the pushback function
-	to include some basic type/error checking
-
-	porpery types supported:
-
-	listen : must be an int, else set to default
-	server : must have listen defined if not added default
-*/
 void Data::pushBack(dataObj &o)
 {
-	dataObj emptyDataObj;
-	std::istringstream ss(o.second.getContent());
-	int integer;
-
-	if (o.first == "listen" && !(ss >> integer))
-		o.second._content = SSTR(DF_LISTEN);
-	if (o.first == "server")
-	{
-		if (o.second.count("listen") == 0)
-		{
-			emptyDataObj.first = "listen";
-			o.second.pushBack(emptyDataObj);
-		}
-	}
-
+	/*
+		maybe we will actaully decouple knowledge
+		about the config from the Data class
+	*/
 	_vecObjs.push_back(o);
 }
 
@@ -155,7 +143,7 @@ Data Data::get(const std::string &type, int depth) const
 	else
 	{
 		for (size_t i = 0; i < getObjSize(); i++)
-			_vecObjs.at(i).second.get(type, depth - 1);
+			_vecObjs.at(i).second.get(type, depth - 1); /* untested */
 	}
 	return ret;
 }
@@ -180,23 +168,8 @@ int Data::getInt() const
 	return ret;
 }
 
-const std::string &Data::getDefault(const std::string value) const
-{
-	// this might be an invalid approach, as the default should be
-	// taken from the last server spesified in the config folder
-	// according to the rules
-	// const std::map<std::string, std::string> defaultValues{
-	// 	{"listen", "8080"},
-	// 	{"allow", "GET, POST, DELETE"},
-	// 	{"location", "/"},
-	// 	{"", ""}
-	// };
-	(void)value;
-	static std::string salut =  "";
-	return salut;
-}
-
 const std::string Data::getContent() const { return _content; }
+const std::string &Data::getContentRef() const { return _content; }
 
 size_t Data::getObjSize() const { return _vecObjs.size(); }
 
