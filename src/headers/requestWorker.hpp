@@ -15,6 +15,6 @@
 # include "Data.hpp"
 # include "HTTPRequest.hpp"
 
-std::string requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response);
+void	requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response);
 
 #endif /* REQUESTWORKER_HPP */

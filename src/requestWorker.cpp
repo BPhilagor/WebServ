@@ -13,48 +13,45 @@
 #include "requestWorker.hpp"
 #include "Server.hpp"
 
-void getMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)
+void methodHandlerGET(HTTPResponse &res, const HTTPRequest &req, const Server& server)
 {
 	res.constructReply(server, "", 200);
 	(void)req;
 }
 
-void postMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)
+void methodHandlerPOST(HTTPResponse &res, const HTTPRequest &req, const Server& server)
 {
 	(void)res;
 	(void)req;
 	(void)server;
 }
 
-void deleteMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)
+void methodHandlerDELETE(HTTPResponse &res, const HTTPRequest &req, const Server& server)
 {
 	(void)res;
 	(void)req;
 	(void)server;
 }
 
-std::string requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response)
+void	requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response)
 {
 	// Identify request
 	const std::string& method = request.getMethod();
 
 	if (method == "GET")
 	{
-		getMethod(response, request, server);
+		methodHandlerGET(response, request, server);
 	}
 	else if (method == "POST")
 	{
-		postMethod(response, request, server);
+		methodHandlerPOST(response, request, server);
 	}
 	else if (method == "DELETE")
 	{
-		deleteMethod(response, request, server);
+		methodHandlerDELETE(response, request, server);
 	}
 	else
 	{
 		response.constructErrorReply(501);
 	}
-
-	// Construct HTTPResponse
-	return response.serialize();
 }
