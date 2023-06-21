@@ -108,8 +108,11 @@ void	HTTPRequest::addChar(char c)
 		utils::sanitizeline(_current_line);
 		if (_current_line == "") /* empty line found */
 		{
-			/* state 2 means headers finished, might need to add a body */
-			_state = 2;
+			if (_state == 1) /* we have already parsed the request line, we're now in the header state */
+				_state = 2; /* state 2 means headers finished, might need to add a body */
+			else
+				_valid_syntax = false;
+
 		}
 		else
 		{
@@ -131,6 +134,9 @@ std::string	HTTPRequest::serialize() const
 {
 	std::ostringstream	output;
 
+	if (!_valid_syntax)
+		return (std::string("Not a valid HTTP Request"));
+
 	output << getMethod() << " " << getURI() << " HTTP/" << getVersion().major << "." <<getVersion().minor << "\r\n";
 	output << _headers.serialize();
 	output << getBody();
@@ -145,7 +151,7 @@ int	HTTPRequest::parseRequestLine(const std::string& line)
 	std::istringstream input(line);
 	input >> _method >> _uri >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
 
-	if (input.fail())
+	if (input.fail() || _method == "" || _uri == "" || _version.major < 0 || _version.minor < 0)
 		return (-1);
 
 	std::string remaining;

@@ -30,7 +30,7 @@ class HTTPResponse
 		t_version		getVersion() const;
 		int				getCode() const;
 		std::string		getReason() const;
-		const HTTPHeaders&	getHeaders() const;
+		std::string		getHeader(const std::string& name) const;
 		std::string		getBody() const;
 
 		/* setters */

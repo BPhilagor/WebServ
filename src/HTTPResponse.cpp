@@ -67,9 +67,9 @@ std::string		HTTPResponse::getReason() const
 	return _reason;
 }
 
-const HTTPHeaders&	HTTPResponse::getHeaders() const
+std::string		HTTPResponse::getHeader(const std::string& name) const
 {
-	return _headers;
+	return _headers.get(name);
 }
 
 std::string		HTTPResponse::getBody() const
@@ -149,9 +149,9 @@ void HTTPResponse::constructReply(const Server &server, const std::string &body,
 	setCode(code);
 	setHeader("Server", "WebServ");
 	setHeader("Content-type", "text/html");
+	setHeader("Connection", "keep-alive");
 
 	setBody(genErrorPage(code));
-
 	setHeader("content-length", SSTR(getBody().size()));
 }
 
@@ -163,6 +163,12 @@ void	HTTPResponse::constructErrorReply(int code)
 	setDate();
 	setHeader("Server", "Webserv");
 	setHeader("Content-type", "text/html");
+
+	if (code == 400 || code == 413 || code == 414) /* need to make this more elegant like have a const array*/
+		setHeader("Connection", "close");
+	else
+		setHeader("Connection", "keep-alive");
+
 	setBody(genErrorPage(code));
 	setHeader("Content-length", SSTR(getBody().size()));
 }

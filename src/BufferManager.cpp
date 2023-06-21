@@ -61,7 +61,21 @@ void	BufferManager::addInputBuffer(const std::string& s)
 			break ;
 		}
 	}
-	input_buffer = input_buffer.substr(i, s.length() - i);
+
+	if (_req.isParsingFinished())
+		input_buffer = input_buffer.substr(i + 1, s.length() - i - 1);
+	else
+		input_buffer = "";
+}
+
+const HTTPRequest&	BufferManager::getRequest() const
+{
+	return _req;
+}
+
+const HTTPResponse&	BufferManager::getResponse() const
+{
+	return _resp;
 }
 
 void	BufferManager::constructResponse()

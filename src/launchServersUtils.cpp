@@ -42,8 +42,7 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 		Note that the effect of a CR (\r) char is to put the cursor at the start of the line,
 		which might explain weird output!
 	*/
-	std::cout<< "Number of bytes received: "<<bytesRecv<<std::endl;
-	std::cout << "String received: {" << std::string(buff, 0, bytesRecv) << "}" << std::endl << std::endl;
+	std::cout<< "Received "<< bytesRecv<< " bytes: "<< std::endl << ESC_COLOR_MAGENTA << std::string(buff, 0, bytesRecv) << ESC_COLOR_RESET << std::endl << std::endl;
 
 	/*
 		Add the buffer to the HTTPParser, that stores the entire buffer.
@@ -61,36 +60,39 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 
 void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config)
 {
-	std::cout << "Detected possibility to write the socket" << std::endl;
-
 	BufferManager& buff_man = messages.find(fd)->second;
 
 	/* handle partial write */
 	std::string& response = buff_man.output_buffer;
-	if (response.length() > 0)
-	{
-		std::cout << "writing..." << std::endl;
-		/* should we set send() to be non-blocking ? */
-		int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
-		if (writtenBytes < 0)
-		{
-			std::cout << "send() failed: " << std::strerror(errno) << std::endl;
-		}
-		else
-		{
-			std::cout<<"Written bytes: " << writtenBytes << std::endl;
-			std::cout << "wrote : " << response << "\n";
-			response = response.substr(writtenBytes, response.length() - writtenBytes);
-		}
-		if (writtenBytes < 0 || response.length() == 0)
-		{
-			std::string remaining_buffer = buff_man.input_buffer;
-			buff_man = BufferManager(config, fd); /* reset the buffer manager */
-			buff_man.addInputBuffer(remaining_buffer);
 
-			setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE);
-			setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
+	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
+	if (writtenBytes < 0)
+	{
+		std::cout << "send() failed: " << std::strerror(errno) << std::endl;
+	}
+	else
+	{
+		std::cout<<"Wrote " << writtenBytes << " bytes: " << std::endl << ESC_COLOR_CYAN << response << ESC_COLOR_RESET << std::endl;
+		response = response.substr(writtenBytes, response.length() - writtenBytes);
+	}
+	if (writtenBytes < 0 || response.length() == 0)
+	{
+		std::string remaining_buffer = buff_man.input_buffer;
+
+		/* If we announced in the header of the response that we would close the connection, we close it */
+		const HTTPResponse& resp = buff_man.getResponse();
+		if (resp.getHeader("Connection") == "close")
+		{
+			close(fd);
+			messages.erase(messages.find(fd));
+			return ;
 		}
+
+		buff_man = BufferManager(config, fd); /* reset the buffer manager */
+		buff_man.addInputBuffer(remaining_buffer);
+
+		setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE);
+		setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
 	}
 }
 

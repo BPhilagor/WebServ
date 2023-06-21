@@ -15,12 +15,8 @@
 
 void getMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)
 {
-	// res.setDate();
-	// res.setHeader("Host Name", )
 	res.constructReply(server, "", 200);
 	(void)req;
-	// std::cout << "uri is : " << req.getURI() << "\n";
-	// std::cout << req << "\n";
 }
 
 void postMethod(HTTPResponse &res, const HTTPRequest &req, const Server& server)

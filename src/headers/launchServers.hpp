@@ -34,8 +34,8 @@
 # include "BufferManager.hpp"
 # include "requestWorker.hpp"
 
-# define BUFFER_SIZE	32
-# define MAX_EVENTS	10
+# define BUFFER_SIZE	128
+# define MAX_EVENTS		10
 
 
 # ifdef __linux__
@@ -49,7 +49,6 @@
 
 #define EVENT_ACTION_ADD	2
 #define EVENT_ACTION_DELETE	3
-
 
 /* launchServers.hpp */
 

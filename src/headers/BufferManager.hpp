@@ -22,6 +22,9 @@ class BufferManager
 
 		void	addInputBuffer(const std::string& s);
 
+		const HTTPRequest&	getRequest() const;
+		const HTTPResponse&	getResponse() const;
+
 		/* If something remains in this buffer after parsing, we'll put it in the next request */
 		std::string					input_buffer;
 
