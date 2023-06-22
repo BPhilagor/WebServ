@@ -10,22 +10,71 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
+# include "typedefs.hpp"
+# include "Data.hpp"
+
+typedef enum {
+	ws_no_cgi,
+	ws_php,
+	ws_python
+} t_cgi;
+
+// mask of the accepted methods
+# define WS_GET    (1U << 1)
+# define WS_POST   (1U << 2)
+# define WS_DELETE (1U << 3)
+typedef unsigned int t_methods_mask;
+
+typedef unsigned int t_location_cfg_mask;
+
 class Location
 {
-private:
-
 public:
-// Default constructor
+	Location(const Data &data);
+	Location(const Location &other);
+	~Location();
+	Location & operator=(const Location &other);
+
+	static Data constructDefaultLocation(); /* unused as right now */
+
+	const std::string &	getAlias()					const;
+	t_methods_mask		getMethods()				const;
+	const std::string &	getRedir()					const;
+	bool				getDirListing()				const;
+	const std::string &	getDefaultFile()			const;
+	t_cgi				getCGI() 					const;
+	const std::string &	getSaveLocation()			const;
+
+	bool				isAliasConfigured() 		const;
+	bool				isMethodsConfigured()		const;
+	bool				isRedirConfigured()			const;
+	bool				isDirListingConfigured()	const;
+	bool				isDefaultFileConfigured()	const;
+	bool				isCGIConfigured()			const;
+	bool				isSaveLocationConfigured()	const;
+
+private:
 	Location();
 
-// Copy constructor
-	Location(const Location &other);
+	void				_setAlias(const Data &data);
+	void				_setMethods(const Data &data);
+	void				_setRedir(const Data &data);
+	void				_setDirListing(const Data &data);
+	void				_setDefaultFile(const Data &data);
+	void				_setCGI(const Data &data);
+	void				_setSaveLocation(const Data &data);
 
-// Destructor
-	~Location();
+	std::string		_alias;
+	t_methods_mask	_methods;
+	std::string		_redir;
+	bool			_dir_listing;
+	std::string		_default_file;
+	t_cgi			_cgi;
+	std::string		_save_location;
 
-// Copy assignment operator
-	Location & operator=(const Location &other);
+	t_location_cfg_mask _config_mask;
+
+	static const Data _defaultLocation;
 };
 
 #endif /* LOCATION_HPP */
