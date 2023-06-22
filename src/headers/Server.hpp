@@ -14,17 +14,7 @@
 # include <typedefs.hpp>
 # include <set>
 
-/* use it variable to itterate */
-#define FOREACH_VECTOR(type, thing) \
-for(std::vector<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
-
-/* use it variable to itterate */
-#define FOREACH_SET(type, thing) \
-for(std::set<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
-
-/* use it variable to itterate */
-#define FOREACH_MAP(type, thing) \
-for(std::map<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+# include "utils.hpp"
 
 class Server
 {
