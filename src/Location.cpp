@@ -21,6 +21,7 @@
 const Data Location::_defaultLocation = Location::constructDefaultLocation();
 
 Location::Location() {}
+Location::~Location() {}
 
 Location::Location(const Data &data)
 {
@@ -44,12 +45,16 @@ Location::Location(const Location &other) :
 	_save_location	(other._save_location)
 	{}
 
-Location::~Location() {}
-
 Location &Location::operator=(const Location &other)
 {
-	(void)other;
-	// TODO: insert return statement here
+	_config_mask	= other._config_mask;
+	_alias			= other._alias;
+	_methods		= other._methods;
+	_redir			= other._redir;
+	_dir_listing	= other._dir_listing;
+	_default_file	= other._default_file;
+	_cgi	 		= other._cgi;
+	_save_location	= other._save_location;
 	return *this;
 }
 
@@ -57,13 +62,13 @@ Location &Location::operator=(const Location &other)
 /* getters                                                                    */
 /* ************************************************************************** */
 
-const std::string &	Location::getAlias()		const { return _alias;        }
-t_methods_mask		Location::getMethods()		const { return _methods;      }
-const std::string &	Location::getRedir()		const { return _redir;        }
-bool				Location::getDirListing()	const { return _dir_listing;  }
-const std::string &	Location::getDefaultFile()	const { return _default_file; }
-t_cgi				Location::getCGI() 			const { return _cgi;          }
-const std::string &	Location::getSaveLocation()	const { return _save_location;}
+const std::string &	Location::getAlias()		const { return _alias;         }
+t_methods_mask		Location::getMethods()		const { return _methods;       }
+const std::string &	Location::getRedir()		const { return _redir;         }
+bool				Location::getDirListing()	const { return _dir_listing;   }
+const std::string &	Location::getDefaultFile()	const { return _default_file;  }
+t_cgi				Location::getCGI() 			const { return _cgi;           }
+const std::string &	Location::getSaveLocation()	const { return _save_location; }
 
 /* ************************************************************************** */
 /* is property configured                                                     */
