@@ -44,7 +44,7 @@ public:
 	bool				getDirListing()		const;
 	const std::string &	getDefaultFile()	const;
 	t_cgi				getCGI() 			const;
-	const std::string &	getSaveDir()		const;
+	const std::string &	getUploadDir()		const;
 
 	bool				isAliasSet() 		const;
 	bool				isMethodsSet()		const;
@@ -52,7 +52,7 @@ public:
 	bool				isDirListingSet()	const;
 	bool				isDefaultFileSet()	const;
 	bool				isCGISet()			const;
-	bool				isSaveDirSet()		const;
+	bool				isUploadDirSet()		const;
 
 private:
 	void				_setAlias(const Data &data);
@@ -61,7 +61,7 @@ private:
 	void				_setDirListing(const Data &data);
 	void				_setDefaultFile(const Data &data);
 	void				_setCGI(const Data &data);
-	void				_setSaveDir(const Data &data);
+	void				_setUploadDir(const Data &data);
 
 	std::string			_alias;
 	t_methods_mask		_methods;
@@ -69,7 +69,7 @@ private:
 	bool				_dir_listing;
 	std::string			_default_file;
 	t_cgi				_cgi;
-	std::string			_save_dir;
+	std::string			_upload_dir;
 
 	t_location_cfg_mask	_config_mask;
 

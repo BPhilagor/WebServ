@@ -16,7 +16,7 @@
 #define WS_DIR_LISTING	(1U << 4)
 #define WS_DEFAULT_FILE	(1U << 5)
 #define WS_CGI			(1U << 6)
-#define WS_SAVE_DIR		(1U << 7)
+#define WS_UPLOAD_DIR	(1U << 7)
 
 const Data Location::_defaultLocation = Location::constructDefaultLocation();
 
@@ -32,7 +32,7 @@ Location::Location(const Data &data)
 	_setDirListing		(data);
 	_setDefaultFile		(data);
 	_setCGI				(data);
-	_setSaveDir			(data);
+	_setUploadDir			(data);
 	if (_config_mask == 0)
 		std::cerr << "Invalid location: set at least one property" << std::endl;
 }
@@ -44,7 +44,7 @@ Location::Location(const Location &other) :
 	_dir_listing	(other._dir_listing),
 	_default_file	(other._default_file),
 	_cgi			(other._cgi),
-	_save_dir		(other._save_dir)
+	_upload_dir		(other._upload_dir)
 	{}
 
 Location &Location::operator=(const Location &other)
@@ -56,7 +56,7 @@ Location &Location::operator=(const Location &other)
 	_dir_listing	= other._dir_listing;
 	_default_file	= other._default_file;
 	_cgi	 		= other._cgi;
-	_save_dir		= other._save_dir;
+	_upload_dir		= other._upload_dir;
 	return *this;
 }
 
@@ -70,7 +70,7 @@ const std::string &	Location::getRedir()		const { return _redir;         }
 bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 t_cgi				Location::getCGI() 			const { return _cgi;           }
-const std::string &	Location::getSaveDir()		const { return _save_dir;      }
+const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
 
 /* ************************************************************************** */
 /* is property configured                                                     */
@@ -88,8 +88,8 @@ bool Location::isDefaultFileSet() const
 									{ return   WS_DEFAULT_FILE & _config_mask; }
 bool Location::isCGISet() const
 									{ return            WS_CGI & _config_mask; }
-bool Location::isSaveDirSet() const
-									{ return       WS_SAVE_DIR & _config_mask; }
+bool Location::isUploadDirSet() const
+									{ return     WS_UPLOAD_DIR & _config_mask; }
 
 
 /* ************************************************************************** */
@@ -106,7 +106,7 @@ Data Location::constructDefaultLocation()
 	d.setProp("dir_listing", "true");
 	d.setProp("default_file", "index.html");
 	d.setProp("cgi", "php");
-	d.setProp("save_dir", "some/dir/");
+	d.setProp("upload_dir", "some/dir/");
 	return d;
 }
 
@@ -215,16 +215,16 @@ void Location::_setCGI(const Data &data)
 	}
 }
 
-void Location::_setSaveDir(const Data &data)
+void Location::_setUploadDir(const Data &data)
 {
-	if (data.count("save_dir") == 0)
+	if (data.count("upload_dir") == 0)
 	{
-		_save_dir = "";
+		_upload_dir = "";
 		return ;
 	}
-	_config_mask |= WS_SAVE_DIR;
+	_config_mask |= WS_UPLOAD_DIR;
 
-	_save_dir = data.find("save_dir").getContent();
+	_upload_dir = data.find("upload_dir").getContent();
 }
 
 /* is set print */
@@ -243,7 +243,7 @@ std::ostream & operator<<(std::ostream &os, const Location &l)
 << "\n dir_listing " << isp(l.isDirListingSet())	<< " = " << l.getDirListing()
 << "\ndefault_file " << isp(l.isDefaultFileSet())	<< " = " << l.getDefaultFile()
 << "\n         cgi " << isp(l.isCGISet())			<< " = " << l.getCGI()
-<< "\n    save_dir " << isp(l.isSaveDirSet())		<< " = " << l.getSaveDir()
+<< "\n    upload_dir " << isp(l.isUploadDirSet())		<< " = " << l.getUploadDir()
 << "\n  }";
 	return os;
 }
