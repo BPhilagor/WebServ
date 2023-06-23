@@ -32,7 +32,7 @@ Location::Location(const Data &data)
 	_setDirListing		(data);
 	_setDefaultFile		(data);
 	_setCGI				(data);
-	_setUploadDir			(data);
+	_setUploadDir		(data);
 	if (_config_mask == 0)
 		std::cerr << "Invalid location: set at least one property" << std::endl;
 }
@@ -91,6 +91,14 @@ bool Location::isCGISet() const
 bool Location::isUploadDirSet() const
 									{ return     WS_UPLOAD_DIR & _config_mask; }
 
+t_method_response	Location::isMethodAllowed(int m)	const
+{
+	if (m & _methods)
+		return ws_allowed;
+	if (m & 7U)
+		return ws_not_allowed;
+	return ws_not_implemented;
+}
 
 /* ************************************************************************** */
 /* setters                                                                    */

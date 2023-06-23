@@ -11,8 +11,8 @@ server the real config {
 		cgi = php python
 		upload_dir = some/dir/
 	}
-	location /foobar {
-		alias = some_other_site_bad
+	location /folder {
+		alias = basic_site/folder
 	}
 	locaiton /fooba/this {
 
