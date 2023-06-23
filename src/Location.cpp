@@ -10,13 +10,13 @@
 #include "Location.hpp"
 #include "utils.hpp"
 
-#define WS_ALIAS			(1U << 1)
-#define WS_METHODS			(1U << 2)
-#define WS_REDIR			(1U << 3)
-#define WS_DIR_LISTING		(1U << 4)
-#define WS_DEFAULT_FILE		(1U << 5)
-#define WS_CGI				(1U << 6)
-#define WS_SAVE_LOCATION	(1U << 7)
+#define WS_ALIAS		(1U << 1)
+#define WS_METHODS		(1U << 2)
+#define WS_REDIR		(1U << 3)
+#define WS_DIR_LISTING	(1U << 4)
+#define WS_DEFAULT_FILE	(1U << 5)
+#define WS_CGI			(1U << 6)
+#define WS_SAVE_DIR		(1U << 7)
 
 const Data Location::_defaultLocation = Location::constructDefaultLocation();
 
@@ -32,7 +32,9 @@ Location::Location(const Data &data)
 	_setDirListing		(data);
 	_setDefaultFile		(data);
 	_setCGI				(data);
-	_setSaveLocation	(data);
+	_setSaveDir	(data);
+	if (_config_mask == 0)
+		std::cerr << "Invalid location: set at least one property" << std::endl;
 }
 
 Location::Location(const Location &other) :
@@ -42,7 +44,7 @@ Location::Location(const Location &other) :
 	_dir_listing	(other._dir_listing),
 	_default_file	(other._default_file),
 	_cgi			(other._cgi),
-	_save_location	(other._save_location)
+	_save_dir	(other._save_dir)
 	{}
 
 Location &Location::operator=(const Location &other)
@@ -54,7 +56,7 @@ Location &Location::operator=(const Location &other)
 	_dir_listing	= other._dir_listing;
 	_default_file	= other._default_file;
 	_cgi	 		= other._cgi;
-	_save_location	= other._save_location;
+	_save_dir		= other._save_dir;
 	return *this;
 }
 
@@ -68,26 +70,26 @@ const std::string &	Location::getRedir()		const { return _redir;         }
 bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 t_cgi				Location::getCGI() 			const { return _cgi;           }
-const std::string &	Location::getSaveLocation()	const { return _save_location; }
+const std::string &	Location::getSaveDir()	const { return _save_dir; }
 
 /* ************************************************************************** */
 /* is property configured                                                     */
 /* ************************************************************************** */
 
-bool Location::isAliasConfigured() const
+bool Location::isAliasSet() const
 									{ return          WS_ALIAS & _config_mask; }
-bool Location::isMethodsConfigured() const
+bool Location::isMethodsSet() const
 									{ return        WS_METHODS & _config_mask; }
-bool Location::isRedirConfigured() const
+bool Location::isRedirSet() const
 									{ return          WS_REDIR & _config_mask; }
-bool Location::isDirListingConfigured() const
+bool Location::isDirListingSet() const
 									{ return    WS_DIR_LISTING & _config_mask; }
-bool Location::isDefaultFileConfigured() const
+bool Location::isDefaultFileSet() const
 									{ return   WS_DEFAULT_FILE & _config_mask; }
-bool Location::isCGIConfigured() const
+bool Location::isCGISet() const
 									{ return            WS_CGI & _config_mask; }
-bool Location::isSaveLocationConfigured() const
-									{ return  WS_SAVE_LOCATION & _config_mask; }
+bool Location::isSaveDirSet() const
+									{ return       WS_SAVE_DIR & _config_mask; }
 
 
 /* ************************************************************************** */
@@ -104,7 +106,7 @@ Data Location::constructDefaultLocation()
 	d.setProp("dir_listing", "true");
 	d.setProp("default_file", "index.html");
 	d.setProp("cgi", "php");
-	d.setProp("save_location", "some/dir/");
+	d.setProp("save_dir", "some/dir/");
 	return d;
 }
 
@@ -213,14 +215,35 @@ void Location::_setCGI(const Data &data)
 	}
 }
 
-void Location::_setSaveLocation(const Data &data)
+void Location::_setSaveDir(const Data &data)
 {
-	if (data.count("save_location") == 0)
+	if (data.count("save_dir") == 0)
 	{
-		_save_location = "";
+		_save_dir = "";
 		return ;
 	}
-	_config_mask |= WS_SAVE_LOCATION;
+	_config_mask |= WS_SAVE_DIR;
 
-	_save_location = data.find("save_location").getContent();
+	_save_dir = data.find("save_dir").getContent();
+}
+
+/* is set print */
+static const std::string isp(bool value)
+{
+	return value ? "set  " : "unset";
+}
+
+std::ostream & operator<<(std::ostream &os, const Location &l)
+{
+	os
+<< "  {"
+<< "       alias " << isp(l.isAliasSet())		<< " = " << l.getAlias()
+<< "     methods " << isp(l.isMethodsSet())		<< " = " << l.getMethods()
+<< "       redir " << isp(l.isRedirSet())		<< " = " << l.getRedir()
+<< " dir_listing " << isp(l.isDirListingSet())	<< " = " << l.getDirListing()
+<< "default_file " << isp(l.isDefaultFileSet())	<< " = " << l.getDefaultFile()
+<< "         cgi " << isp(l.isCGISet())			<< " = " << l.getCGI()
+<< "    save_dir " << isp(l.isSaveDirSet())		<< " = " << l.getSaveDir()
+<< "  }";
+	return os;
 }
