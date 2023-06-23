@@ -45,7 +45,7 @@ server the real config {
 		dir_listing = true
 		default_file = index.html
 		cgi = php python
-		save_location = /some/dir
+		upload_dir = some/dir/
 	}
 	location /foobar {
 		alias = some_other_site_bad

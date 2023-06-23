@@ -152,8 +152,9 @@ Data utils::constructDefaultServer()
 	d.setProp("directory_listing", "true");
 
 	dataObj location;
-	location.first = "/";
-	location.second.setProp("root", "basic_site");
+	location.first = "location";
+	location.second.setProp("alias", "basic_site");
+	location.second.setContent("/basic_site");
 	d.pushBack(location);
 	/* etc */
 	return d;

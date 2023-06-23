@@ -28,7 +28,12 @@ else
 LEAKS_CHECK = leaks -atExit --
 endif
 
-FILES	= main utils Data Server  requestWorker handler \
+FILES	= main utils \
+		Data \
+		Server \
+		Location \
+		requestWorker \
+		handler \
 		BufferManager \
 		launchServers \
 		launchServersUtils \

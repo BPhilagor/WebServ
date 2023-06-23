@@ -38,6 +38,11 @@ int main(int argc, char** argv)
 	pairHostPort foo(utils::addrStringToInt("127.0.0.1"), htons(4242));
 	std::cout << "found this server: " << *config.getServerForHostPortAndHostName(foo, "asd") << "\n";
 
+	// const Server *foo = config.getServerForHostPortAndHostName(foo, "asd");
+	// if (foo == NULL)
+	// 	;// dealwht it
+	// else
+	// 	; // use foo
 	launchServers(config);
 
 	return 0;
