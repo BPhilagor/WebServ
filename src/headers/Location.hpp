@@ -19,12 +19,6 @@ typedef enum {
 	ws_python
 } t_cgi;
 
-// mask of the accepted methods
-# define WS_GET    (1U << 1)
-# define WS_POST   (1U << 2)
-# define WS_DELETE (1U << 3)
-typedef unsigned int t_methods_mask;
-
 typedef unsigned int t_location_cfg_mask;
 
 class Location

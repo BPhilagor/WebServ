@@ -22,6 +22,18 @@ class Server;
 typedef std::pair<uint32_t, uint32_t> pairHostPort;
 typedef std::map< pairHostPort, std::vector<Server> > mapHostPort;
 
+// mask of the accepted methods
+# define WS_GET    (1U << 1)
+# define WS_POST   (1U << 2)
+# define WS_DELETE (1U << 3)
+typedef unsigned int t_methods_mask;
+
+typedef enum {
+	ws_not_allowed,
+	ws_not_implemented,
+	ws_allowed
+} t_method_response;
+
 typedef struct
 {
 	int	major;
