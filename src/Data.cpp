@@ -114,6 +114,11 @@ void Data::pushBack(dataObj &o)
 	_vecObjs.push_back(o);
 }
 
+void Data::setContent(const std::string &s)
+{
+	_content = s;
+}
+
 /* ************************************************************************** */
 /* accessors                                                                  */
 /* ************************************************************************** */

@@ -22,13 +22,15 @@ Server::Server(const Data &data) : _data(data)
 	_initListen();
 	_initMethod();
 	_initServerNames();
+	_initLocation();
 }
 
-Server::Server(const Server &other)
-	: _data(other._data),
+Server::Server(const Server &other) :
+	_data(other._data),
 	_hostPort(other._hostPort),
 	_methods(other._methods),
-	_serverNames(other._serverNames)
+	_serverNames(other._serverNames),
+	_locations(other._locations)
 	{}
 
 Server::~Server() { }
@@ -48,6 +50,12 @@ const Data &Server::getData() const { return _data; }
 const std::vector<pairHostPort> &Server::getHostPorts() const { return _hostPort; }
 const std::set<std::string> &Server::getMethods() const { return _methods; }
 const std::set<std::string> &Server::getServerNames() const { return _serverNames; }
+
+const std::map<std::string, Location> &Server::getLocations() const
+{
+	return _locations;
+}
+
 
 const std::string &Server::getDefault(const std::string &prop) const
 {
@@ -190,6 +198,25 @@ void Server::_initServerNames()
 	// std::cout << getMethods()[0] << "asd\n";
 }
 
+void Server::_initLocation()
+{
+	std::cout << "there\n";
+	std::cout << _data;
+	std::cout << "there\n";
+
+	int x = 0;
+	if ( (x = _data.count("location")) == 0)
+	{
+		std::cerr << "Invalid server: no location set" << std::endl;
+		return ;
+	}
+	for (int i = 0; i < x; i++)
+		_locations[_data.find("location", i).getContent()]
+			= Location(_data.find("location", i));
+	std::cout << _locations["/basic_site"] << "\n";
+	std::cout <<"slkdjflksd\n";
+}
+
 /* ************************************************************************** */
 /* stream overloads                                                           */
 /* ************************************************************************** */
@@ -224,6 +251,13 @@ std::ostream &operator<<(std::ostream &os, const Server &s)
 		os << *it;
 		if (it != s.getServerNames().end())
 			os << " ";
+	}
+
+	os << "\n      Lcations = ";
+	FOREACH_MAP(Location, s.getLocations())
+	{
+		os << it->first;
+		os << it->second;
 	}
 	os << "\n";
 	return os;

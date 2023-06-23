@@ -65,6 +65,6 @@ for(std::set<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
 
 /* use it variable to itterate */
 #define FOREACH_MAP(type, thing) \
-for(std::map<type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
+for(std::map<std::string, type>::const_iterator it =thing.begin(); it != thing.end(); ++it)
 
 #endif

@@ -30,6 +30,7 @@ typedef unsigned int t_location_cfg_mask;
 class Location
 {
 public:
+	Location();
 	Location(const Data &data);
 	Location(const Location &other);
 	~Location();
@@ -43,7 +44,7 @@ public:
 	bool				getDirListing()		const;
 	const std::string &	getDefaultFile()	const;
 	t_cgi				getCGI() 			const;
-	const std::string &	getSaveDir()	const;
+	const std::string &	getSaveDir()		const;
 
 	bool				isAliasSet() 		const;
 	bool				isMethodsSet()		const;
@@ -51,11 +52,9 @@ public:
 	bool				isDirListingSet()	const;
 	bool				isDefaultFileSet()	const;
 	bool				isCGISet()			const;
-	bool				isSaveDirSet()	const;
+	bool				isSaveDirSet()		const;
 
 private:
-	Location();
-
 	void				_setAlias(const Data &data);
 	void				_setMethods(const Data &data);
 	void				_setRedir(const Data &data);
@@ -64,17 +63,19 @@ private:
 	void				_setCGI(const Data &data);
 	void				_setSaveDir(const Data &data);
 
-	std::string		_alias;
-	t_methods_mask	_methods;
-	std::string		_redir;
-	bool			_dir_listing;
-	std::string		_default_file;
-	t_cgi			_cgi;
-	std::string		_save_dir;
+	std::string			_alias;
+	t_methods_mask		_methods;
+	std::string			_redir;
+	bool				_dir_listing;
+	std::string			_default_file;
+	t_cgi				_cgi;
+	std::string			_save_dir;
 
-	t_location_cfg_mask _config_mask;
+	t_location_cfg_mask	_config_mask;
 
-	static const Data _defaultLocation;
+	static const Data	_defaultLocation;
 };
+
+std::ostream &operator<<(std::ostream &os, const Location &l);
 
 #endif /* LOCATION_HPP */

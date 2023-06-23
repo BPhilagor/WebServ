@@ -55,6 +55,7 @@ public:
 
 	void setProp(const std::string &ident, const std::string &content);
 	void pushBack(dataObj &o);
+	void setContent(const std::string &s);
 
 	// accessors
 	const Data &		find(const std::string &type, int n = 0) const;

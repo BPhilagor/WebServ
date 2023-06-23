@@ -10,11 +10,12 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include "Data.hpp"
 # include <typedefs.hpp>
 # include <set>
 
 # include "utils.hpp"
+# include "Data.hpp"
+# include "Location.hpp"
 
 class Server
 {
@@ -28,6 +29,7 @@ public:
 	const std::vector<pairHostPort> &getHostPorts() const;
 	const std::set<std::string> &getMethods() const;
 	const std::set<std::string> &getServerNames() const;
+	const std::map<std::string, Location> &getLocations() const;
 
 	/* getters from data */
 	const std::string &getDefault(const std::string &prop) const;
@@ -49,10 +51,12 @@ private:
 	void _initListen();
 	void _initMethod();
 	void _initServerNames();
+	void _initLocation();
 	const Data _data;
 	std::vector<pairHostPort> _hostPort;
 	std::set<std::string> _methods;
 	std::set<std::string> _serverNames;
+	std::map<std::string, Location> _locations;
 	static const Data _defaultServer;
 };
 
