@@ -37,7 +37,8 @@ typedef enum {
 typedef enum {
 	ws_file_found,
 	ws_file_not_found,
-	ws_no_permission
+	ws_no_permission,
+	ws_file_isdir
 } t_getfile_response;
 
 typedef struct

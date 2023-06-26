@@ -199,9 +199,17 @@ pairHostPort utils::fd_to_HostPort(int fd)
 	return ret;
 }
 
+#include <sys/stat.h>
+
 t_getfile_response utils::getFile(const std::string &path, std::string &body)
 {
 	std::ifstream stream;
+
+	struct stat path_stat;
+	stat(path.c_str(), &path_stat);
+	if (S_ISDIR(path_stat.st_mode))
+		return ws_file_isdir;
+
 	stream.open(path);
 
 	if (!stream)
@@ -215,5 +223,6 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 	body = buffer.str();
 	std::cout << "file {" << body << "}" << std::endl;
 	stream.close();
+
 	return ws_file_found;
 }

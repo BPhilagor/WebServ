@@ -18,24 +18,41 @@ int	GET(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
+	int code = 0;
+	std::string body = "";
+
 	(void)request;
+
 	switch (location.isMethodAllowed(WS_GET))
 	{
-	case ws_not_implemented:
-		// res.constructReply(/* get the html page */, 500); /* should really use this */
-		response.constructErrorReply(500);
-		break;
-	case ws_not_allowed:
-		// res.constructReply(/* get the html page */, 405);
-		response.constructErrorReply(405);
-		break;
+	case ws_not_implemented:			code = 500; break;
+	case ws_not_allowed:				code = 405; break;
 	case ws_allowed:
-		std::string body;
-		if (location.getBody(path, body) != ws_file_found)
-			response.constructErrorReply(404, &server);
-		response.constructReply(200, &body);
+		switch (location.getBody(path, body))
+		{
+		case ws_file_not_found:			code = 404; break;
+		case ws_no_permission:			code = 402; break; // not sure if this is correct
+		case ws_file_found:				code = 200; break; // OK
+		case ws_file_isdir:
+			std::cout << "Checking for default file\n";
+			if (location.isDefaultFileSet())
+				switch (location.getBody(path + location.getDefaultFile(), body))
+				{
+				case ws_file_not_found:	code = 404; break;
+				case ws_file_isdir:		code = 404; break;
+				case ws_no_permission:	code = 402; break;
+				case ws_file_found:		code = 200; break; // OK
+				}
+			else
+				/* file not found */	code = 404;
+			break;
+		}
 		break;
 	}
+	if (code == 200) // OK
+		response.constructReply(code, &body);
+	else
+		response.constructErrorReply(code, &server);
 
 	return 0;
 }
