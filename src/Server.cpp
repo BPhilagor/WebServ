@@ -94,10 +94,9 @@ bool Server::getDirListing() const
 			"upload_dir").getContentRef() == "true" ? true : false;
 }
 
-const Location *Server::findLocation(const std::string &path) const
+const Location *Server::findLocation(const std::string &path, std::string &new_path) const
 {
-	std::string tmp_path = utils::stringSlashEnded(path);
-	// utils::stringSlashEnded(tmp_path);
+	std::string tmp_path = path;
 
 	while (1)
 	{
@@ -106,15 +105,19 @@ const Location *Server::findLocation(const std::string &path) const
 		if (it != _locations.end())
 		{
 			std::cout << "Location found !!" << std::endl;
+			new_path = path.substr(tmp_path.length());
+			std::cout << "New path = " << new_path << std::endl;
 			return &it->second;
 		}
 		if (tmp_path.length() == 1)
 			break ;
-		size_t index = tmp_path.find_last_of('/', tmp_path.length() - 2);
+		size_t index = tmp_path.find_last_of('/', tmp_path.length());
 		if (index == std::string::npos)
 			break ;
-		tmp_path = tmp_path.substr(0, index + 1);
-		sleep(1);
+		if (index != tmp_path.length() - 1)
+			tmp_path = tmp_path.substr(0, index + 1);
+		else
+			tmp_path = tmp_path.substr(0, index);
 	}
 	std::cout << "Location not found !!" << std::endl;
 	return NULL;
@@ -279,7 +282,7 @@ std::ostream &operator<<(std::ostream &os, const Server &s)
 			os << " ";
 	}
 
-	os << "\n      Lcations = ";
+	os << "\n      Locations = ";
 	FOREACH_MAP(Location, s.getLocations())
 	{
 		os << it->first;

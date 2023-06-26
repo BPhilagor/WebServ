@@ -145,7 +145,6 @@ std::string HTTPResponse::genPage(int code) const
 */
 void HTTPResponse::constructReply(int code, const std::string *body)
 {
-	(void) body;
 	setVersion(1, 1);
 	setDate();
 	setReason(_reasonMap[code]);
@@ -153,8 +152,10 @@ void HTTPResponse::constructReply(int code, const std::string *body)
 	setHeader("Server", "WebServ");
 	setHeader("Content-type", "text/html");
 	setHeader("Connection", "keep-alive");
-
-	setBody(genPage(code));
+	if (body != NULL)
+		setBody(*body);
+	else
+		setBody(genPage(code));
 	setHeader("content-length", SSTR(getBody().size()));
 }
 

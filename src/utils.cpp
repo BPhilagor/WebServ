@@ -199,14 +199,6 @@ pairHostPort utils::fd_to_HostPort(int fd)
 	return ret;
 }
 
-std::string utils::stringSlashEnded(const std::string &str)
-{
-	if (str.back() != '/')
-		return str + "/";
-	return str;
-}
-
-
 t_getfile_response utils::getFile(const std::string &path, std::string &body)
 {
 	std::ifstream stream;

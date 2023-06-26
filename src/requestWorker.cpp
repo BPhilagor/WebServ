@@ -18,7 +18,8 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 {
 	// Identify req
 	std::cout << "Enter Request Worker" << std::endl;
-	const Location *loc = srv.findLocation(req.getURI());
+	std::string new_path;
+	const Location *loc = srv.findLocation(req.getURI(), new_path);
 	if (!loc)
 	{
 		res.constructErrorReply(404, &srv);
@@ -36,8 +37,8 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 
 	switch (req.getMethod())
 	{
-		case WS_GET : GET(res, srv, *loc, req, path); break;
-		case WS_POST : POST(res, srv, *loc, req, path); break;
-		case WS_DELETE : DELETE(res, srv, *loc, req, path); break;
+		case WS_GET : GET(res, srv, *loc, req, new_path); break;
+		case WS_POST : POST(res, srv, *loc, req, new_path); break;
+		case WS_DELETE : DELETE(res, srv, *loc, req, new_path); break;
 	}
 }

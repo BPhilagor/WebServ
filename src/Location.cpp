@@ -75,7 +75,9 @@ const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
 t_getfile_response	Location::getBody(const std::string &path, // TODO gerer les CGI etc...
 						std::string &body)		const
 {
-	t_getfile_response return_val = utils::getFile(path, body);
+	std::string real_path = _alias + path;
+	std::cout << "Path : " << real_path << std::endl;
+	t_getfile_response return_val = utils::getFile(real_path, body);
 
 	if (return_val != ws_file_found)
 		return return_val;
@@ -138,7 +140,7 @@ void Location::_setAlias(const Data &data)
 	}
 	_config_mask |= WS_ALIAS;
 
-	_alias = utils::stringSlashEnded(data.find("alias").getContent());
+	_alias = data.find("alias").getContent();
 }
 
 void Location::_setMethods(const Data &data)
