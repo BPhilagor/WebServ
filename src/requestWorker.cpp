@@ -13,45 +13,54 @@
 #include "requestWorker.hpp"
 #include "Server.hpp"
 
-void methodHandlerGET(HTTPResponse &res, const HTTPRequest &req, const Server& server)
+static void methodHandlerGET(const Server &srv, const HTTPRequest &req,
+	HTTPResponse& res, const Location& loc)
 {
-	res.constructReply(server, "", 200);
-	(void)req;
-}
-
-void methodHandlerPOST(HTTPResponse &res, const HTTPRequest &req, const Server& server)
-{
+	res.constructReply(srv, "", 200);
+	(void)loc;
 	(void)res;
 	(void)req;
-	(void)server;
+	(void)srv;
 }
 
-void methodHandlerDELETE(HTTPResponse &res, const HTTPRequest &req, const Server& server)
+static void methodHandlerPOST(const Server &srv, const HTTPRequest &req,
+	HTTPResponse& res, const Location& loc)
 {
+	(void)loc;
 	(void)res;
 	(void)req;
-	(void)server;
+	(void)srv;
 }
 
-void	requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response)
+static void methodHandlerDELETE(const Server &srv, const HTTPRequest &req,
+	HTTPResponse& res, const Location& loc)
 {
-	// Identify request
-	const std::string& method = request.getMethod();
+	(void)loc;
+	(void)res;
+	(void)req;
+	(void)srv;
+}
 
-	if (method == "GET")
+void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
+{
+	// Identify req
+	const Location *loc = srv.findLocation(req.getURI());
+	if (!loc)
 	{
-		methodHandlerGET(response, request, server);
+		res.constructErrorReply(404);
+		return ;
 	}
-	else if (method == "POST")
+
+	switch (loc->isMethodAllowed(req.getMethod()))
 	{
-		methodHandlerPOST(response, request, server);
+		case ws_not_allowed : res.constructErrorReply(405); return;
+		case ws_not_implemented : res.constructErrorReply(501); return;
+		default : break;
 	}
-	else if (method == "DELETE")
+	switch (req.getMethod())
 	{
-		methodHandlerDELETE(response, request, server);
-	}
-	else
-	{
-		response.constructErrorReply(501);
+		case WS_GET : methodHandlerGET(srv, req, res, *loc); break;
+		case WS_POST : methodHandlerPOST(srv, req, res, *loc); break;
+		case WS_DELETE : methodHandlerDELETE(srv, req, res, *loc); break;
 	}
 }

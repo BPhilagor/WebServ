@@ -19,7 +19,7 @@ std::istream &operator>>(std::istream &is, char const *s);
 
 HTTPRequest::HTTPRequest():
 	_valid_syntax(true),
-	_method(""),
+	_method(0),
 	_uri(""),
 	_headers(),
 	_body(""),
@@ -80,7 +80,7 @@ std::string				HTTPRequest::getURI() const
 	return _uri;
 }
 
-const std::string&		HTTPRequest::getMethod() const
+t_methods_mask		HTTPRequest::getMethod() const
 {
 	return _method;
 }
@@ -149,9 +149,17 @@ std::string	HTTPRequest::serialize() const
 int	HTTPRequest::parseRequestLine(const std::string& line)
 {
 	std::istringstream input(line);
-	input >> _method >> _uri >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
+	std::string m;
+	input >> m >> _uri >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
 
-	if (input.fail() || _method == "" || _uri == "" || _version.major < 0 || _version.minor < 0)
+	if (m == "GET")
+		_method = WS_GET;
+	else if (m == "POST")
+		_method = WS_POST;
+	else if (m == "DELETE")
+		_method = WS_DELETE;
+
+	if (input.fail() || _method == 0 || _uri == "" || _version.major < 0 || _version.minor < 0)
 		return (-1);
 
 	std::string remaining;

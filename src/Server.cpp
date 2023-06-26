@@ -94,6 +94,23 @@ bool Server::getDirListing() const
 			"upload_dir").getContentRef() == "true" ? true : false;
 }
 
+const Location *Server::findLocation(const std::string &path) const
+{
+	std::string tmp_path = path;
+
+	while (1)
+	{
+		const std::map<std::string, Location>::const_iterator it = _locations.find(path);
+		if (it != _locations.end())
+			return &it->second;
+		size_t index = tmp_path.find_last_of('/');
+		if (index == std::string::npos)
+			break ;
+		tmp_path = tmp_path.substr(0, index + 1);
+	}
+	return NULL;
+}
+
 /* ************************************************************************** */
 /* property interrogators                                                     */
 /* ************************************************************************** */

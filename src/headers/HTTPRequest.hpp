@@ -28,17 +28,17 @@ class HTTPRequest
 		HTTPRequest&	operator=(const HTTPRequest& rhs);
 
 		/* getters */
-		bool				hasValidSyntax() const;
-		t_version			getVersion() const;
-		std::string			getURI() const;
-		const std::string&	getMethod() const;
-		std::string			getHeader(const std::string& name) const;
-		std::string			getBody() const;
+		bool			hasValidSyntax() const;
+		t_version		getVersion() const;
+		std::string		getURI() const;
+		t_methods_mask	getMethod() const;
+		std::string		getHeader(const std::string& name) const;
+		std::string		getBody() const;
 
-		bool				isParsingFinished() const;
+		bool					isParsingFinished() const;
 
 		/* setters */
-		void				addChar(char c);
+		void					addChar(char c);
 
 		/* serialize */
 		std::string	serialize() const;
@@ -48,9 +48,9 @@ class HTTPRequest
 		bool		_valid_syntax;
 
 		/* request line */
-		std::string	_method;
-		std::string	_uri;
-		t_version	_version;
+		t_methods_mask	_method;
+		std::string		_uri;
+		t_version		_version;
 
 		/* headers */
 		HTTPHeaders	_headers;
