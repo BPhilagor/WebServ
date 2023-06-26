@@ -72,6 +72,17 @@ const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 t_cgi				Location::getCGI() 			const { return _cgi;           }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
 
+t_getfile_response	Location::getBody(const std::string &path, // TODO gerer les CGI etc...
+						std::string &body)		const
+{
+	t_getfile_response return_val = utils::getFile(path, body);
+
+	if (return_val != ws_file_found)
+		return return_val;
+	return ws_file_found;
+}
+
+
 /* ************************************************************************** */
 /* is property configured                                                     */
 /* ************************************************************************** */
@@ -127,7 +138,7 @@ void Location::_setAlias(const Data &data)
 	}
 	_config_mask |= WS_ALIAS;
 
-	_alias = data.find("alias").getContent();
+	_alias = utils::stringSlashEnded(data.find("alias").getContent());
 }
 
 void Location::_setMethods(const Data &data)
@@ -255,3 +266,5 @@ std::ostream & operator<<(std::ostream &os, const Location &l)
 << "\n  }";
 	return os;
 }
+
+

@@ -199,15 +199,26 @@ pairHostPort utils::fd_to_HostPort(int fd)
 	return ret;
 }
 
-std::string & utils::stringSlashEnded(std::string &str)
+std::string utils::stringSlashEnded(const std::string &str)
 {
 	if (str.back() != '/')
-		str.append("/");
+		return str + "/";
 	return str;
 }
 
 
-int utils::getFile(const std::string &path, std::string &body)
+t_getfile_response utils::getFile(const std::string &path, std::string &body)
 {
+	std::ifstream stream;
+	stream.open(path);
 
+	if (!stream)
+	{
+		std::cout << "Error when opening : " << path << " : "
+			<< strerror(errno) << " (n: " << errno << ")" << std::endl;
+		return ws_file_not_found;
+	}
+	stream >> body;
+	stream.close();
+	return ws_file_found;
 }

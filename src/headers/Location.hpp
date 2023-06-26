@@ -37,8 +37,10 @@ public:
 	const std::string &	getRedir()				const;
 	bool				getDirListing()			const;
 	const std::string &	getDefaultFile()		const;
-	t_cgi				getCGI() 				const;
+	t_cgi				getCGI()				const;
 	const std::string &	getUploadDir()			const;
+	t_getfile_response	getBody(const std::string &path,
+							std::string &body)	const;
 
 	bool				isAliasSet() 			const;
 	bool				isMethodsSet()			const;

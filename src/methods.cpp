@@ -30,7 +30,7 @@ int	GET(HTTPResponse &response,
 		break;
 	case ws_allowed:
 		std::string body;
-		if (location.getBody(body, path))
+		if (location.getBody(path, body))
 			response.constructErrorReply(404, &server);
 		response.constructReply(body, 200);
 		break;
