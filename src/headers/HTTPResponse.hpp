@@ -48,7 +48,7 @@ class HTTPResponse
 		void	constructReply(int code, const std::string *body);
 		void	constructErrorReply(const int code, const Server *srv=NULL);
 
-		std::string genErrorPage(int code) const;
+		std::string genPage(int code) const;
 		std::string getErrorPage(const Server &srv, int code) const;
 
 

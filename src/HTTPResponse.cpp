@@ -130,7 +130,7 @@ void HTTPResponse::setDate()
 }
 
 // TODO: rename to genPage
-std::string HTTPResponse::genErrorPage(int code) const
+std::string HTTPResponse::genPage(int code) const
 {
 	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1></body></html>\n");
 	page.replace(page.find("EEE"), 3, SSTR(code));
@@ -154,7 +154,7 @@ void HTTPResponse::constructReply(int code, const std::string *body)
 	setHeader("Content-type", "text/html");
 	setHeader("Connection", "keep-alive");
 
-	setBody(genErrorPage(code));
+	setBody(genPage(code));
 	setHeader("content-length", SSTR(getBody().size()));
 }
 
@@ -176,11 +176,15 @@ void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 	else
 		setHeader("Connection", "keep-alive");
 
+	std::cout << srv << std::endl;
+
 	if (srv == NULL)
-		setBody(genErrorPage(code));
+		setBody(genPage(code));
 	else
+	{
 		srv->getErrorDir();
 		setBody(getErrorPage(*srv, code)); // but for now we cheat it
+	}
 
 	setHeader("Content-length", SSTR(getBody().size()));
 }
@@ -199,7 +203,7 @@ std::string HTTPResponse::getErrorPage(const Server &srv, int code) const
 	case ws_no_permission:
 		// fallthrough
 	default:
-		body = genErrorPage(code);
+		body = genPage(code);
 	}
 	return body;
 }

@@ -39,3 +39,31 @@ int	GET(HTTPResponse &response,
 
 	return 0;
 }
+
+int	POST(HTTPResponse &response,
+		const Server &server,
+		const Location &location,
+		const HTTPRequest &request,
+		const std::string &path)
+{
+	(void)response;
+	(void)server;
+	(void)location;
+	(void)request;
+	(void)path;
+	return 0;
+}
+
+int	DELETE(HTTPResponse &response,
+		const Server &server,
+		const Location &location,
+		const HTTPRequest &request,
+		const std::string &path)
+{
+	(void)response;
+	(void)server;
+	(void)location;
+	(void)request;
+	(void)path;
+	return 0;
+}

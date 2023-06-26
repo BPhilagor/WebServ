@@ -218,7 +218,10 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 			<< strerror(errno) << " (n: " << errno << ")" << std::endl;
 		return ws_file_not_found;
 	}
-	stream >> body;
+	std::stringstream	buffer;
+	buffer << stream.rdbuf();
+	body = buffer.str();
+	std::cout << "file {" << body << "}" << std::endl;
 	stream.close();
 	return ws_file_found;
 }

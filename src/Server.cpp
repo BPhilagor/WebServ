@@ -96,8 +96,8 @@ bool Server::getDirListing() const
 
 const Location *Server::findLocation(const std::string &path) const
 {
-	std::string tmp_path = path;
-	utils::stringSlashEnded(tmp_path);
+	std::string tmp_path = utils::stringSlashEnded(path);
+	// utils::stringSlashEnded(tmp_path);
 
 	while (1)
 	{

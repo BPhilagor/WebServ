@@ -151,7 +151,7 @@ int	HTTPRequest::parseRequestLine(const std::string& line)
 	std::istringstream input(line);
 	std::string m;
 	input >> m >> _uri >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
-	utils::stringSlashEnded(_uri);
+	_uri = utils::stringSlashEnded(_uri);
 
 	if (m == "GET")
 		_method = WS_GET;
