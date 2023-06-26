@@ -175,7 +175,7 @@ void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 	if (srv == NULL)
 		setBody(genErrorPage(code));
 	else
-		// srv.set; // and use it to get the page
+		srv->getErrorDir();
 		setBody(genErrorPage(code)); // but for now we cheat it
 
 	setHeader("Content-length", SSTR(getBody().size()));

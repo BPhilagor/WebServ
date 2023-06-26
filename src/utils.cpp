@@ -205,3 +205,9 @@ std::string & utils::stringSlashEnded(std::string &str)
 		str.append("/");
 	return str;
 }
+
+
+int utils::getFile(const std::string &path, std::string &body)
+{
+
+}

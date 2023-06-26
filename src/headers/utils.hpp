@@ -54,6 +54,8 @@ namespace utils
 	u_int32_t addrStringToInt(const std::string &addr_string);
 	pairHostPort fd_to_HostPort(int fd);
 	std::string & stringSlashEnded(std::string &str);
+	int getFile(const std::string &path, std::string &body);
+
 }
 
 /* use it variable to itterate */
