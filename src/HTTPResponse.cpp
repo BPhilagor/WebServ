@@ -129,6 +129,7 @@ void HTTPResponse::setDate()
 	setHeader("Date", std::string(buffer));
 }
 
+// TODO: rename to genPage
 std::string HTTPResponse::genErrorPage(int code) const
 {
 	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1></body></html>\n");
@@ -139,7 +140,10 @@ std::string HTTPResponse::genErrorPage(int code) const
 	return page;
 }
 
-void HTTPResponse::constructReply(const std::string &body, int code)
+/*
+	if body is null we don't set this property
+*/
+void HTTPResponse::constructReply(int code, const std::string *body)
 {
 	(void) body;
 	setVersion(1, 1);
@@ -176,10 +180,30 @@ void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 		setBody(genErrorPage(code));
 	else
 		srv->getErrorDir();
-		setBody(genErrorPage(code)); // but for now we cheat it
+		setBody(getErrorPage(*srv, code)); // but for now we cheat it
 
 	setHeader("Content-length", SSTR(getBody().size()));
 }
+
+std::string HTTPResponse::getErrorPage(const Server &srv, int code) const
+{
+	std::string path = srv.getErrorDir() + SSTR(code) + ".html";
+	std::string body;
+	switch (utils::getFile(path, body))
+	{
+	case ws_file_found:
+		// all good nothing special to do
+		break;
+	case ws_file_not_found:
+		// fallthrough
+	case ws_no_permission:
+		// fallthrough
+	default:
+		body = genErrorPage(code);
+	}
+	return body;
+}
+
 
 std::string	HTTPResponse::serialize() const
 {
@@ -197,4 +221,5 @@ std::ostream&	operator<<(std::ostream& o, const HTTPResponse& h)
 {
 	o << h.serialize();
 	return (o);
+
 }

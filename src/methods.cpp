@@ -18,6 +18,7 @@ int	GET(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
+	(void)request;
 	switch (location.isMethodAllowed(WS_GET))
 	{
 	case ws_not_implemented:
@@ -32,7 +33,7 @@ int	GET(HTTPResponse &response,
 		std::string body;
 		if (location.getBody(path, body))
 			response.constructErrorReply(404, &server);
-		response.constructReply(body, 200);
+		response.constructReply(200, &body);
 		break;
 	}
 

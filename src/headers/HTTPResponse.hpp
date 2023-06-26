@@ -41,13 +41,16 @@ class HTTPResponse
 		void			setBody(const std::string &body);
 		void			setDate();
 
+
 		std::string	serialize() const;
 
 		/* constructors */
-		void	constructReply(const std::string &body, int code);
+		void	constructReply(int code, const std::string *body);
 		void	constructErrorReply(const int code, const Server *srv=NULL);
 
 		std::string genErrorPage(int code) const;
+		std::string getErrorPage(const Server &srv, int code) const;
+
 
 	private:
 		/* status line */

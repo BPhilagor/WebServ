@@ -16,7 +16,7 @@
 static void methodHandlerGET(const Server &srv, const HTTPRequest &req,
 	HTTPResponse& res, const Location& loc)
 {
-	res.constructReply("", 200);
+	res.constructReply(200, NULL);
 	std::cout << "Get Method detected" << std::endl;
 	(void)loc;
 	(void)res;
