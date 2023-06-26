@@ -34,6 +34,12 @@ typedef enum {
 	ws_allowed
 } t_method_response;
 
+typedef enum {
+	ws_file_found,
+	ws_file_not_found,
+	ws_no_permission
+} t_getfile_response;
+
 typedef struct
 {
 	int	major;
