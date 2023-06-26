@@ -36,7 +36,7 @@ int	GET(HTTPResponse &response,
 		case ws_file_isdir:
 			std::cout << "Checking for default file\n";
 			if (location.isDefaultFileSet())
-				switch (location.getBody(path + location.getDefaultFile(), body))
+				switch (location.getBody( path + "/" + location.getDefaultFile(), body))
 				{
 				case ws_file_not_found:	code = 404; break;
 				case ws_file_isdir:		code = 404; break;

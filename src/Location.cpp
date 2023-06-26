@@ -44,12 +44,12 @@ Location::Location(const Location &other) :
 	_dir_listing	(other._dir_listing),
 	_default_file	(other._default_file),
 	_cgi			(other._cgi),
-	_upload_dir		(other._upload_dir)
+	_upload_dir		(other._upload_dir),
+	_config_mask	(other._config_mask)
 	{}
 
 Location &Location::operator=(const Location &other)
 {
-	_config_mask	= other._config_mask;
 	_alias			= other._alias;
 	_methods		= other._methods;
 	_redir			= other._redir;
@@ -57,6 +57,7 @@ Location &Location::operator=(const Location &other)
 	_default_file	= other._default_file;
 	_cgi	 		= other._cgi;
 	_upload_dir		= other._upload_dir;
+	_config_mask	= other._config_mask;
 	return *this;
 }
 
