@@ -33,7 +33,8 @@ int	GET(HTTPResponse &response,
 		std::string body;
 		if (location.getBody(path, body) != ws_file_found)
 			response.constructErrorReply(404, &server);
-		response.constructReply(200, &body);
+		else
+			response.constructReply(200, &body);
 		break;
 	}
 
