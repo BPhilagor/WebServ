@@ -44,8 +44,8 @@ class HTTPResponse
 		std::string	serialize() const;
 
 		/* constructors */
-		void	constructReply(const Server &server, const std::string &body, int code);
-		void	constructErrorReply(int code);
+		void	constructReply(const std::string &body, int code);
+		void	constructErrorReply(const int code, const Server *srv=NULL);
 
 		std::string genErrorPage(int code) const;
 

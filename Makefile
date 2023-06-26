@@ -32,6 +32,7 @@ FILES	= main utils \
 		Data \
 		Server \
 		Location \
+		methods \
 		requestWorker \
 		handler \
 		BufferManager \

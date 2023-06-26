@@ -139,12 +139,11 @@ std::string HTTPResponse::genErrorPage(int code) const
 	return page;
 }
 
-void HTTPResponse::constructReply(const Server &server, const std::string &body, int code)
+void HTTPResponse::constructReply(const std::string &body, int code)
 {
 	(void) body;
 	setVersion(1, 1);
 	setDate();
-	(void)server;
 	setReason(_reasonMap[code]);
 	setCode(code);
 	setHeader("Server", "WebServ");
@@ -155,7 +154,11 @@ void HTTPResponse::constructReply(const Server &server, const std::string &body,
 	setHeader("content-length", SSTR(getBody().size()));
 }
 
-void	HTTPResponse::constructErrorReply(int code)
+/*
+	construct the reply for an error, if srv is spesified we
+	check it for the error page directory
+*/
+void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 {
 	setVersion(1, 1);
 	setCode(code);
@@ -164,12 +167,17 @@ void	HTTPResponse::constructErrorReply(int code)
 	setHeader("Server", "Webserv");
 	setHeader("Content-type", "text/html");
 
-	if (code == 400 || code == 413 || code == 414) /* need to make this more elegant like have a const array*/
+	if (code == 400 || code == 413 || code == 414) /* need to make this more elegant like have a const array */
 		setHeader("Connection", "close");
 	else
 		setHeader("Connection", "keep-alive");
 
-	setBody(genErrorPage(code));
+	if (srv == NULL)
+		setBody(genErrorPage(code));
+	else
+		// srv.set; // and use it to get the page
+		setBody(genErrorPage(code)); // but for now we cheat it
+
 	setHeader("Content-length", SSTR(getBody().size()));
 }
 
