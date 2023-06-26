@@ -17,6 +17,7 @@ static void methodHandlerGET(const Server &srv, const HTTPRequest &req,
 	HTTPResponse& res, const Location& loc)
 {
 	res.constructReply(srv, "", 200);
+	std::cout << "Get Method detected" << std::endl;
 	(void)loc;
 	(void)res;
 	(void)req;
@@ -44,6 +45,7 @@ static void methodHandlerDELETE(const Server &srv, const HTTPRequest &req,
 void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 {
 	// Identify req
+	std::cout << "Enter Request Worker" << std::endl;
 	const Location *loc = srv.findLocation(req.getURI());
 	if (!loc)
 	{

@@ -198,3 +198,10 @@ pairHostPort utils::fd_to_HostPort(int fd)
 	ret.second = addr.sin_port;
 	return ret;
 }
+
+std::string & utils::stringSlashEnded(std::string &str)
+{
+	if (str.back() != '/')
+		str.append("/");
+	return str;
+}
