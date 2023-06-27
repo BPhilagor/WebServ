@@ -40,7 +40,7 @@ int	GET(HTTPResponse &response,
 		case ws_file_no_perm:			code = 403; break; // Forbidden
 		case ws_file_found:				code = 200; break; // OK
 		case ws_file_isdir:
-			std::cout << "Checking for default file\n";
+			std::cout << "Checking for default file: " << path << "\n";
 			if (location.isDefaultFileSet())
 				switch (location.getBody(request, path + "/" + location.getDefaultFile(), body))
 				{
@@ -93,13 +93,19 @@ int	DELETE(HTTPResponse &response,
 
 static int genDirListing(const Location &loc, const std::string &path, std::string &body)
 {
-	std::cout << "checking dir listing\n";
+	std::string full_path(loc.getAlias() + path);
+
+	std::cout << "checking dir listing " << loc.isDirListingSet() << "\n";
 	if (loc.isDirListingSet() == false)
 		return 404;
 
+
+	std::vector<std::string> entry_name;
+	std::vector<std::string> entry_type;
+
 	DIR *dir;
 	struct dirent *dp;
-	if ((dir = opendir(path.c_str())) == NULL)
+	if ((dir = opendir(full_path.c_str())) == NULL)
 		return 403;
 
 	std::cout << "Directory\n";
@@ -113,9 +119,18 @@ static int genDirListing(const Location &loc, const std::string &path, std::stri
 				<< dp->d_seekoff << std::endl
 				<< dp->d_type << std::endl
 				<< "end entry\n";
+		entry_name.push_back(std::string(dp->d_name));
 	}
 	std::cout << "end dir\n";
-	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1></body></html>\n");
-	body = page;
+	std::string head("<!DOCTYPE html><html><head><title>index of" + path + "</title></head><body><h1>index of" + path + "</h1>\n");
+	std::string content("");
+	FOREACH_VECTOR(std::string, entry_name)
+	{
+		content += "<h3><a href=\"/" + path + "/" + *it + "\">" + *it + "</a></h3>\n";
+	}
+
+	std::string foot("</body></html>");
+	body = head + content + foot;
+	closedir(dir);
 	return 200;
 }
