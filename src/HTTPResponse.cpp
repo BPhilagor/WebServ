@@ -144,14 +144,14 @@ std::string HTTPResponse::genPage(int code) const
 /*
 	if body is null we don't set this property
 */
-void HTTPResponse::constructReply(int code, const std::string *body)
+void HTTPResponse::constructReply(int code, const std::string *body, const std::string& mime)
 {
 	setVersion(1, 1);
 	setDate();
 	setReason(_reasonMap[code]);
 	setCode(code);
 	setHeader("Server", "WebServ");
-	setHeader("Content-type", "text/html");
+	setHeader("Content-type", mime);
 	setHeader("Connection", "keep-alive");
 	if (body != NULL)
 		setBody(*body);

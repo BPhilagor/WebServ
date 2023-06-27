@@ -39,7 +39,8 @@ FILES	= main utils \
 		launchServers \
 		launchServersUtils \
 		HTTPRequest HTTPHeaders HTTPResponse \
-		HTTPResponse_reason SuperServer
+		HTTPResponse_reason SuperServer \
+		mimeTypes
 
 OBJS_PATH = objs/
 SRCS_PATH = src/

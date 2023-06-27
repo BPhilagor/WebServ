@@ -10,6 +10,7 @@
 #include "Location.hpp"
 #include "utils.hpp"
 #include "HTTPRequest.hpp"
+#include "mimeTypes.hpp"
 
 #define WS_ALIAS		(1U << 1)
 #define WS_METHODS		(1U << 2)
@@ -76,7 +77,8 @@ const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
 
 t_getfile_response	Location::getBody(const HTTPRequest &request,
 						const std::string &path, // TODO gerer les CGI etc...
-						std::string &body)		const
+						std::string &body,
+						std::string &mime)	const
 {
 	(void)request;
 	std::string real_path = _alias + path;
@@ -84,8 +86,21 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 	t_getfile_response return_val = utils::getFile(real_path, body);
 
 	if (return_val != ws_file_found)
+	{
 		return return_val;
-	return ws_file_found;
+	}
+	else
+	{
+		/* set mime type here! */
+		std::string ext;
+		size_t pos = real_path.find_last_of(".");
+		if (pos < real_path.length() - 1)
+		{
+			ext = real_path.substr(pos + 1, real_path.length() - pos - 1);
+		}
+		mime = getMimeFromExtension(ext);
+		return ws_file_found;
+	}
 }
 
 

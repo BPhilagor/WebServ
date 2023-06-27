@@ -43,7 +43,8 @@ public:
 	const std::string &	getUploadDir()			const;
 	t_getfile_response	getBody(const HTTPRequest &request,
 							const std::string &path,
-							std::string &body)	const;
+							std::string &body,
+							std::string &mime)	const;
 
 	bool				isAliasSet() 			const;
 	bool				isMethodsSet()			const;
