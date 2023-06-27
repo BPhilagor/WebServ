@@ -69,11 +69,42 @@ int	POST(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
-	(void)response;
-	(void)server;
-	(void)location;
+	int code = 0;
+	std::string body = "";
+
 	(void)request;
-	(void)path;
+
+	switch (location.isMethodAllowed(WS_POST))
+	{
+	case ws_not_implemented:			code = 501; break; // Not implemented
+	case ws_not_allowed:				code = 405; break; // Method not allowed
+	case ws_allowed:
+		switch (location.getBody(request, path, body))
+		{
+		case ws_file_not_found:			code = 404; break; // Not found
+		case ws_file_no_perm:			code = 403; break; // Forbidden
+		case ws_file_found:				code = 200; break; // OK
+		case ws_file_isdir:
+			std::cout << "Checking for default file: " << path << "\n";
+			if (location.isDefaultFileSet())
+				switch (location.getBody(request, path + "/" + location.getDefaultFile(), body))
+				{
+				case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
+				case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200
+				case ws_file_no_perm:	code = 403; break; // Forbidden
+				case ws_file_found:		code = 200; break; // OK
+				}
+			else
+				code = genDirListing(location, path, body); break; // 404 or 200
+			break;
+		}
+		break;
+	}
+	if (code == 200) // OK
+		response.constructReply(code, &body);
+	else
+		response.constructErrorReply(code, &server);
+
 	return 0;
 }
 
@@ -99,35 +130,18 @@ static int genDirListing(const Location &loc, const std::string &path, std::stri
 	if (loc.isDirListingSet() == false)
 		return 404;
 
-
-	std::vector<std::string> entry_name;
-	std::vector<std::string> entry_type;
-
 	DIR *dir;
 	struct dirent *dp;
 	if ((dir = opendir(full_path.c_str())) == NULL)
 		return 403;
 
-	std::cout << "Directory\n";
+	std::vector<std::string> entry_name;
 	while ((dp = readdir(dir)) != NULL)
-	{
-		std::cout << "entry: "
-				<< dp->d_ino << std::endl
-				<< dp->d_name << std::endl
-				<< dp->d_namlen << std::endl
-				<< dp->d_reclen << std::endl
-				<< dp->d_seekoff << std::endl
-				<< dp->d_type << std::endl
-				<< "end entry\n";
 		entry_name.push_back(std::string(dp->d_name));
-	}
-	std::cout << "end dir\n";
-	std::string head("<!DOCTYPE html><html><head><title>index of" + path + "</title></head><body><h1>index of" + path + "</h1>\n");
+	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>index of " + path + "</h1>\n");
 	std::string content("");
 	FOREACH_VECTOR(std::string, entry_name)
-	{
 		content += "<h3><a href=\"/" + path + "/" + *it + "\">" + *it + "</a></h3>\n";
-	}
 
 	std::string foot("</body></html>");
 	body = head + content + foot;
