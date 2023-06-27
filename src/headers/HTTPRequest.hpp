@@ -35,7 +35,8 @@ class HTTPRequest
 		std::string		getHeader(const std::string& name) const;
 		std::string		getBody() const;
 
-		bool					isParsingFinished() const;
+		bool				isParsingHeadersFinished() const;
+		bool				isParsingBodyFinished() const;
 
 		/* setters */
 		void					addChar(char c);

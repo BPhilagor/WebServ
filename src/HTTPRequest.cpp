@@ -95,37 +95,51 @@ std::string				HTTPRequest::getBody() const
 	return _body;
 }
 
-bool					HTTPRequest::isParsingFinished() const
+bool					HTTPRequest::isParsingHeadersFinished() const
 {
-	return (!_valid_syntax || _state == 2);
+	return (!_valid_syntax || _state >= 2);
+}
+
+bool					HTTPRequest::isParsingBodyFinished() const
+{
+	return (!_valid_syntax || _state == 3);
 }
 
 /* setters */
 void	HTTPRequest::addChar(char c)
 {
-	if (c == '\n')
+	if (_state == 2) /* might need to add body */
 	{
-		utils::sanitizeline(_current_line);
-		if (_current_line == "") /* empty line found */
-		{
-			if (_state == 1) /* we have already parsed the request line, we're now in the header state */
-				_state = 2; /* state 2 means headers finished, might need to add a body */
-			else
-				_valid_syntax = false;
-
-		}
-		else
-		{
-			if (parseLine(_current_line) != 0)
-			{
-				_valid_syntax = false;
-			}
-			_current_line = "";
-		}
+		_body += c;
+		int length = atoi(getHeader("Content-length").c_str());
+		if (_body.length() == (unsigned int) length)
+			_state = 3; /* parsing of body terminated */
 	}
 	else
 	{
-		_current_line += c;
+		if (c == '\n')
+		{
+			utils::sanitizeline(_current_line);
+			if (_current_line == "") /* empty line found */
+			{
+				if (_state == 1) /* we have already parsed the request line, we're now in the header state */
+					_state = 2; /* state 2 means headers finished, might need to add a body */
+				else
+					_valid_syntax = false;
+			}
+			else
+			{
+				if (parseLine(_current_line) != 0)
+				{
+					_valid_syntax = false;
+				}
+				_current_line = "";
+			}
+		}
+		else
+		{
+			_current_line += c;
+		}
 	}
 }
 

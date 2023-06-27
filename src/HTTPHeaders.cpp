@@ -37,7 +37,15 @@ HTTPHeaders&	HTTPHeaders::operator=(const HTTPHeaders& h)
 
 std::string	HTTPHeaders::get(const std::string& name) const
 {
-	std::map<std::string, std::string>::const_iterator it = _headers.find(name);
+	/* name is case-insensitive */
+	std::string key = name;
+	for (std::string::iterator it = key.begin(); it != key.end(); it++)
+	{
+		if (std::isalpha(*it))
+			*it = std::toupper(*it);
+	}
+
+	std::map<std::string, std::string>::const_iterator it = _headers.find(key);
 	if (it == _headers.end())
 		return ("");
 	else
@@ -46,8 +54,15 @@ std::string	HTTPHeaders::get(const std::string& name) const
 
 void	HTTPHeaders::insert(const std::string& name, const std::string& value)
 {
-	/* should be case insensitive !*/
-	std::string&	content = _headers[name];
+	/* name is case-insensitive */
+	std::string key = name;
+	for (std::string::iterator it = key.begin(); it != key.end(); it++)
+	{
+		if (std::isalpha(*it))
+			*it = std::toupper(*it);
+	}
+
+	std::string&	content = _headers[key];
 	if (content == "")
 		content = value;
 	else

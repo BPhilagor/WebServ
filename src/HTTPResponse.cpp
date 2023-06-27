@@ -17,7 +17,8 @@
 
 std::map<int, std::string> HTTPResponse::_reasonMap = _initialiseReasonMap();
 
-HTTPResponse::HTTPResponse()
+HTTPResponse::HTTPResponse():
+	_code(0)
 {
 	if (DEBUG_PRINT) std::cout << "HTTPResponse constructor" << std::endl;
 }
