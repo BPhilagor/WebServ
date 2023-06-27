@@ -199,7 +199,23 @@ pairHostPort utils::fd_to_HostPort(int fd)
 	return ret;
 }
 
-#include <sys/stat.h>
+std::string utils::ifstreamToString(std::ifstream &stream)
+{
+	std::stringstream	buffer;
+
+	buffer << stream.rdbuf();
+	return buffer.str();
+}
+
+std::string utils::fdToString(int fd)
+{
+	std::string result;
+	char buffer[1000];
+
+	while (read(fd, buffer, 1000))
+		result.append(buffer);
+	return result;
+}
 
 t_getfile_response utils::getFile(const std::string &path, std::string &body)
 {
@@ -218,9 +234,8 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 			<< strerror(errno) << " (n: " << errno << ")" << std::endl;
 		return ws_file_not_found;
 	}
-	std::stringstream	buffer;
-	buffer << stream.rdbuf();
-	body = buffer.str();
+	
+	body = utils::ifstreamToString(stream);
 	std::cout << "file {" << body << "}" << std::endl;
 	stream.close();
 
