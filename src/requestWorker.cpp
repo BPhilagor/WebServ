@@ -19,7 +19,7 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 	// Identify req
 	std::cout << "Enter Request Worker" << std::endl;
 	std::string new_path;
-	const Location *loc = srv.findLocation(req.getURI(), new_path);
+	const Location *loc = srv.findLocation(req.getURI().path, new_path);
 	if (!loc)
 	{
 		res.constructErrorReply(404, &srv);

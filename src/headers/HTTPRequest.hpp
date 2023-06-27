@@ -18,6 +18,13 @@
 # include <map>
 # include <cstdlib>
 
+struct s_uri
+{
+	std::string	authority;
+	std::string	path;
+	std::string	query;
+};
+
 class HTTPRequest
 {
 	public:
@@ -30,7 +37,7 @@ class HTTPRequest
 		/* getters */
 		bool			hasValidSyntax() const;
 		t_version		getVersion() const;
-		std::string		getURI() const;
+		struct s_uri	getURI() const;
 		t_methods_mask	getMethod() const;
 		std::string		getHeader(const std::string& name) const;
 		std::string		getBody() const;
@@ -50,7 +57,7 @@ class HTTPRequest
 
 		/* request line */
 		t_methods_mask	_method;
-		std::string		_uri;
+		struct s_uri	_uri;
 		t_version		_version;
 
 		/* headers */
@@ -67,8 +74,10 @@ class HTTPRequest
 		int		parseLine(const std::string& line);
 		int		parseRequestLine(const std::string& line);
 		int		parseHeader(const std::string& line);
+		int		parseUri(const std::string& str);
 };
 
 std::ostream&	operator<<(std::ostream& o, const HTTPRequest& req);
+std::ostream&	operator<<(std::ostream& o, const struct s_uri uri);
 
 #endif /* HTTP_REQUEST_H */

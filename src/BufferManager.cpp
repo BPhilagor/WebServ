@@ -60,13 +60,18 @@ void	BufferManager::addInputBuffer(const std::string& s)
 		_req.addChar(s[i]);
 		if (_req.isParsingHeadersFinished())
 		{
+			std::cout << _req << std::endl;
+
 			if (!_req.hasValidSyntax())
 			{
 				std::cout << "Invalid syntax" << std::endl;
 				_resp.constructErrorReply(400);
 				goto phase_2;
 			}
-			host = _req.getHeader("Host");
+			if (_req.getURI().authority != "")
+				host = _req.getURI().authority;
+			else
+				host = _req.getHeader("Host");
 			if (host == "")
 			{
 				std::cout << "Host not set" << std::endl;
