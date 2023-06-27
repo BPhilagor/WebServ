@@ -90,7 +90,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 				_resp.constructErrorReply(413);
 				goto phase_2;
 			}
-			if (_req.getMethod() != "POST")
+			if (!(_req.getMethod() & WS_POST))
 			{
 				goto phase_2;
 			}
