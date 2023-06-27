@@ -202,7 +202,7 @@ std::string HTTPResponse::getErrorPage(const Server &srv, int code) const
 		break;
 	case ws_file_not_found:
 		// fallthrough
-	case ws_no_permission:
+	case ws_file_no_perm:
 		// fallthrough
 	default:
 		body = genPage(code);
