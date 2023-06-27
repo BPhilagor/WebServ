@@ -20,7 +20,6 @@ std::istream &operator>>(std::istream &is, char const *s);
 HTTPRequest::HTTPRequest():
 	_valid_syntax(true),
 	_method(0),
-	_uri(""),
 	_headers(),
 	_body(""),
 	_state(0),
@@ -75,12 +74,12 @@ t_version				HTTPRequest::getVersion() const
 	return _version;
 }
 
-std::string				HTTPRequest::getURI() const
+struct s_uri			HTTPRequest::getURI() const
 {
 	return _uri;
 }
 
-t_methods_mask		HTTPRequest::getMethod() const
+t_methods_mask			HTTPRequest::getMethod() const
 {
 	return _method;
 }
@@ -163,8 +162,9 @@ std::string	HTTPRequest::serialize() const
 int	HTTPRequest::parseRequestLine(const std::string& line)
 {
 	std::istringstream input(line);
-	std::string m;
-	input >> m >> _uri >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
+	std::string	m;
+	std::string	u;
+	input >> m >> u >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
 
 	if (m == "GET")
 		_method = WS_GET;
@@ -173,7 +173,10 @@ int	HTTPRequest::parseRequestLine(const std::string& line)
 	else if (m == "DELETE")
 		_method = WS_DELETE;
 
-	if (input.fail() || _method == 0 || _uri == "" || _version.major < 0 || _version.minor < 0)
+	if (input.fail() || _method == 0 || u == "" || _version.major < 0 || _version.minor < 0)
+		return (-1);
+
+	if (parseUri(u) != 0)
 		return (-1);
 
 	std::string remaining;
@@ -225,9 +228,50 @@ int	HTTPRequest::parseLine(const std::string& line)
 	}
 }
 
+int		HTTPRequest::parseUri(const std::string& str)
+{
+	size_t		pos;
+	std::string	remaining;
+
+	/* try absoluteURI form */
+	if (std::strncmp("http://", str.c_str(), 7) == 0)
+	{
+		remaining = std::string(str.c_str() + 7);
+		pos = remaining.find('/');
+		if (pos == std::string::npos)
+			return (-1);
+		_uri.authority = remaining.substr(0, pos);
+		remaining = remaining.substr(pos, remaining.length() - pos);
+	}
+	else
+	{
+		remaining = str;
+	}
+	/* not absoluteURI*/
+	pos = remaining.find('?');
+	if (pos != std::string::npos)
+	{
+		_uri.path = remaining.substr(0, pos);
+		_uri.query = remaining.substr(pos + 1, remaining.length() - pos - 1);
+	}
+	else
+	{
+		_uri.path = remaining;
+	}
+	return (0);
+}
+
 std::ostream &operator<<(std::ostream &o, const HTTPRequest &req)
 {
 	o << req.serialize();
+	return (o);
+}
+
+std::ostream&	operator<<(std::ostream& o, const struct s_uri uri)
+{
+	if (uri.authority != "") o << "http://" << uri.authority;
+	o << uri.path;
+	if (uri.query != "") o << "?" <<uri.query;
 	return (o);
 }
 

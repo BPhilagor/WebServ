@@ -9,7 +9,6 @@
 
 #include "launchServers.hpp"
 
-
 void	addSocketToEventQueue(int eqfd, int socket_fd)
 {
 	setFilter(eqfd, socket_fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
@@ -115,6 +114,9 @@ int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
 			std::cout << "Error when creating socket: " << std::strerror(errno) << std::endl;
 			exit(1);
 		}
+
+		int option = 1;
+		setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
 		sockets.insert(socketFD);
 
