@@ -34,7 +34,7 @@ int	GET(HTTPResponse &response,
 	case ws_not_implemented:			code = 501; break; // Not implemented
 	case ws_not_allowed:				code = 405; break; // Method not allowed
 	case ws_allowed:
-		switch (location.getBody(path, body))
+		switch (location.getBody(request, path, body))
 		{
 		case ws_file_not_found:			code = 404; break; // Not found
 		case ws_file_no_perm:			code = 403; break; // Forbidden
@@ -42,7 +42,7 @@ int	GET(HTTPResponse &response,
 		case ws_file_isdir:
 			std::cout << "Checking for default file\n";
 			if (location.isDefaultFileSet())
-				switch (location.getBody(path + "/" + location.getDefaultFile(), body))
+				switch (location.getBody(request, path + "/" + location.getDefaultFile(), body))
 				{
 				case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
 				case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200

@@ -9,6 +9,7 @@
 
 #include "Location.hpp"
 #include "utils.hpp"
+#include "HTTPRequest.hpp"
 
 #define WS_ALIAS		(1U << 1)
 #define WS_METHODS		(1U << 2)
@@ -73,9 +74,11 @@ const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 t_cgi				Location::getCGI() 			const { return _cgi;           }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
 
-t_getfile_response	Location::getBody(const std::string &path, // TODO gerer les CGI etc...
+t_getfile_response	Location::getBody(const HTTPRequest &request,
+						const std::string &path, // TODO gerer les CGI etc...
 						std::string &body)		const
 {
+	(void)request;
 	std::string real_path = _alias + path;
 	std::cout << "Path : " << real_path << std::endl;
 	t_getfile_response return_val = utils::getFile(real_path, body);

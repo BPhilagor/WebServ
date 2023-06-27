@@ -13,6 +13,8 @@
 # include "typedefs.hpp"
 # include "Data.hpp"
 
+class HTTPRequest;
+
 typedef enum {
 	ws_no_cgi,
 	ws_php,
@@ -39,7 +41,8 @@ public:
 	const std::string &	getDefaultFile()		const;
 	t_cgi				getCGI()				const;
 	const std::string &	getUploadDir()			const;
-	t_getfile_response	getBody(const std::string &path,
+	t_getfile_response	getBody(const HTTPRequest &request,
+							const std::string &path,
 							std::string &body)	const;
 
 	bool				isAliasSet() 			const;
