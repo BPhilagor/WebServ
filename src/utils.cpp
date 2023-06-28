@@ -211,9 +211,14 @@ std::string utils::fdToString(int fd)
 {
 	std::string result;
 	char buffer[1000];
+	int byte_nbr;
 
-	while (read(fd, buffer, 1000))
+	while ((byte_nbr = read(fd, buffer, 1000))) {
+		if (byte_nbr != 1000 && byte_nbr > 0) {
+			buffer[byte_nbr] = 0;
+		}
 		result.append(buffer);
+	}
 	return result;
 }
 
@@ -241,3 +246,17 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 
 	return ws_file_found;
 }
+
+std::string utils::getMethodStr(const HTTPRequest &req)
+{
+	int mask = req.getMethod();
+
+	if (mask & WS_GET)
+		return std::string("GET");
+	else if (mask & WS_POST)
+		return std::string("POST");
+	else if (mask & WS_DELETE)
+		return std::string("DELETE");
+	return "";
+}
+

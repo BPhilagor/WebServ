@@ -28,7 +28,7 @@ else
 LEAKS_CHECK = leaks -atExit --
 endif
 
-FILES	= main utils \
+FILES	= utils \
 		Data \
 		Server \
 		Location \

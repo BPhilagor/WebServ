@@ -21,9 +21,10 @@
 # include <string>
 # include <vector>
 # include <sys/stat.h>
-
 # include "typedefs.hpp"
 # include "Data.hpp"
+
+#include "HTTPRequest.hpp"
 
 #define ESC_COLOR_RED		"\033[31m"
 #define ESC_COLOR_GREEN		"\033[32m"
@@ -57,6 +58,7 @@ namespace utils
 	std::string fdToString(int fd);
 	std::string ifstreamToString(std::ifstream &stream);
 	t_getfile_response getFile(const std::string &path, std::string &body);
+	std::string getMethodStr(const HTTPRequest &req);
 }
 
 /* use it variable to itterate */
