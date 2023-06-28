@@ -30,36 +30,29 @@ int	GET(HTTPResponse &response,
 	std::string mime = "";
 	(void)request;
 
-	switch (location.isMethodAllowed(WS_GET))
+	switch (location.getBody(request, path, body, mime))
 	{
-	case ws_not_allowed:				code = 405; break; // Method not allowed
-	case ws_allowed:
-		switch (location.getBody(request, path, body, mime))
-		{
-		case ws_file_not_found:			code = 404; break; // Not found
-		case ws_file_no_perm:			code = 403; break; // Forbidden
-		case ws_file_found:				code = 200; break; // OK
-		case ws_file_isdir:
-			std::cout << "Checking for default file: " << path << "\n";
-			if (location.isDefaultFileSet())
-				switch (location.getBody(request, path + "/" + location.getDefaultFile(), body, mime))
-				{
-				case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
-				case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200
-				case ws_file_no_perm:	code = 403; break; // Forbidden
-				case ws_file_found:		code = 200; break; // OK
-				}
-			else
-				code = genDirListing(location, path, body); break; // 404 or 200
-			break;
-		}
+	case ws_file_not_found:			code = 404; break; // Not found
+	case ws_file_no_perm:			code = 403; break; // Forbidden
+	case ws_file_found:				code = 200; break; // OK
+	case ws_file_isdir:
+		std::cout << "Checking for default file: " << path << "\n";
+		if (location.isDefaultFileSet())
+			switch (location.getBody(request, path + "/" + location.getDefaultFile(), body, mime))
+			{
+			case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
+			case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200
+			case ws_file_no_perm:	code = 403; break; // Forbidden
+			case ws_file_found:		code = 200; break; // OK
+			}
+		else
+			code = genDirListing(location, path, body); break; // 404 or 200
 		break;
 	}
 	if (code == 200) // OK
 		response.constructReply(code, &body, mime);
 	else
 		response.constructErrorReply(code, &server);
-
 	return 0;
 }
 
@@ -69,42 +62,11 @@ int	POST(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
-	int code = 0;
-	std::string body = "";
-	std::string mime = "";
-
+	(void)response;
+	(void)server;
+	(void)location;
 	(void)request;
-
-	switch (location.isMethodAllowed(WS_POST))
-	{
-	case ws_not_allowed:				code = 405; break; // Method not allowed
-	case ws_allowed:
-		switch (location.getBody(request, path, body, mime))
-		{
-		case ws_file_not_found:			code = 404; break; // Not found
-		case ws_file_no_perm:			code = 403; break; // Forbidden
-		case ws_file_found:				code = 200; break; // OK
-		case ws_file_isdir:
-			std::cout << "Checking for default file: " << path << "\n";
-			if (location.isDefaultFileSet())
-				switch (location.getBody(request, path + "/" + location.getDefaultFile(), body, mime))
-				{
-				case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
-				case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200
-				case ws_file_no_perm:	code = 403; break; // Forbidden
-				case ws_file_found:		code = 200; break; // OK
-				}
-			else
-				code = genDirListing(location, path, body); break; // 404 or 200
-			break;
-		}
-		break;
-	}
-	if (code == 200) // OK
-		response.constructReply(code, &body);
-	else
-		response.constructErrorReply(code, &server);
-
+	(void)path;
 	return 0;
 }
 
@@ -118,40 +80,33 @@ int	DELETE(HTTPResponse &response,
 
 	int	code;
 
-	if (location.isMethodAllowed(WS_DELETE) == ws_not_allowed)
+	/* get real path of location */
+	std::string real_path = location.getRealPath(path);
+
+	/* should we configure this? */
+	std::string	deleted_folder = "deleted";
+
+	/* make sure this folder is created */
+	if (mkdir(deleted_folder.c_str(), 0755) != 0 && errno != EEXIST)
 	{
-		code = 405;
+		std::cout << "Failed to create deleted files folder '" << deleted_folder <<"': "<<std::strerror(errno) <<std::endl;
+		code = 500;
+	}
+
+	std::string new_name = deletedFileName(path, deleted_folder);
+
+	if (rename(real_path.c_str(), new_name.c_str()) != 0)
+	{
+		if (errno == ENOENT || errno == ENOTDIR)
+			code = 404;
+		else if (errno == EPERM || errno == EACCES)
+			code = 403;
+		else
+			code = 500;
 	}
 	else
 	{
-		/* get real path of location */
-		std::string real_path = location.getRealPath(path);
-
-		/* should we configure this? */
-		std::string	deleted_folder = "deleted";
-
-		/* make sure this folder is created */
-		if (mkdir(deleted_folder.c_str(), 0755) != 0 && errno != EEXIST)
-		{
-			std::cout << "Failed to create deleted files folder '" << deleted_folder <<"': "<<std::strerror(errno) <<std::endl;
-			code = 500;
-		}
-
-		std::string new_name = deletedFileName(path, deleted_folder);
-
-		if (rename(real_path.c_str(), new_name.c_str()) != 0)
-		{
-			if (errno == ENOENT || errno == ENOTDIR)
-				code = 404;
-			else if (errno == EPERM || errno == EACCES)
-				code = 403;
-			else
-				code = 500;
-		}
-		else
-		{
-			code = 200;
-		}
+		code = 200;
 	}
 
 	/* generate the reply */

@@ -26,21 +26,17 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 		return ;
 	}
 
-	// switch (loc->isMethodAllowed(req.getMethod()))
-	// {
-	// 	case ws_not_allowed : res.constructErrorReply(405); return;
-	// 	case ws_not_implemented : res.constructErrorReply(501); return;
-	// 	default : break;
-	// }
-
-	std::string path = "/";
-
-	switch (req.getMethod())
+	switch (loc->isMethodAllowed(req.getMethod()))
 	{
-		case WS_GET : GET(res, srv, *loc, req, new_path); break;
-		case WS_POST : POST(res, srv, *loc, req, new_path); break;
-		case WS_DELETE : DELETE(res, srv, *loc, req, new_path); break;
-		default:
-			res.constructErrorReply(501, &srv); /* Method not implemented */
+		case ws_not_allowed : res.constructErrorReply(405); break;
+		default :
+		switch (req.getMethod())
+		{
+			case WS_GET : GET(res, srv, *loc, req, new_path); break;
+			case WS_POST : POST(res, srv, *loc, req, new_path); break;
+			case WS_DELETE : DELETE(res, srv, *loc, req, new_path); break;
+			default:
+				res.constructErrorReply(501, &srv); /* Method not implemented */
+		}
 	}
 }
