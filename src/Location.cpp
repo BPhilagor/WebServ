@@ -73,6 +73,7 @@ const std::string &	Location::getRedir()		const { return _redir;         }
 bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
+const cgiMap	  &	Location::getCGImap()		const { return _cgi;           }
 
 std::string Location::getCGI(const std::string &key) const
 {
@@ -82,8 +83,6 @@ std::string Location::getCGI(const std::string &key) const
 		return "";
 	return value->second;
 }
-
-
 
 t_getfile_response	Location::getBody(const HTTPRequest &request,
 						const std::string &path, // TODO gerer les CGI etc...
@@ -134,6 +133,8 @@ bool Location::isDefaultFileSet() const
 									{ return   WS_DEFAULT_FILE & _config_mask; }
 bool Location::isCGISet() const
 									{ return            WS_CGI & _config_mask; }
+bool Location::isCGISet(const std::string & key) const
+									{ return                  _cgi.count(key); }
 bool Location::isUploadDirSet() const
 									{ return     WS_UPLOAD_DIR & _config_mask; }
 
