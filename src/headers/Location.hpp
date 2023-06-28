@@ -34,27 +34,28 @@ public:
 
 	static Data constructDefaultLocation(); /* unused as right now */
 
-	const std::string &	getAlias()				const;
-	t_methods_mask		getMethods()			const;
-	const std::string &	getRedir()				const;
-	bool				getDirListing()			const;
-	const std::string &	getDefaultFile()		const;
-	t_cgi				getCGI()				const;
-	const std::string &	getUploadDir()			const;
+	const std::string &	getAlias()								const;
+	t_methods_mask		getMethods()							const;
+	const std::string &	getRedir()								const;
+	bool				getDirListing()							const;
+	const std::string & getDefaultFile()						const;
+	std::string			getCGI(const std::string &key) 			const;
+	const std::string &	getUploadDir()							const;
 	t_getfile_response	getBody(const HTTPRequest &request,
 							const std::string &path,
 							std::string &body,
-							std::string &mime)	const;
+							std::string &mime)					const;
 
-	std::string			getRealPath(const std::string& path) const;
+	std::string			getRealPath(const std::string& path)	const;
 
-	bool				isAliasSet() 			const;
-	bool				isMethodsSet()			const;
-	bool				isRedirSet()			const;
-	bool				isDirListingSet()		const;
-	bool				isDefaultFileSet()		const;
-	bool				isCGISet()				const;
-	bool				isUploadDirSet()		const;
+	bool				isAliasSet() 							const;
+	bool				isMethodsSet()							const;
+	bool				isRedirSet()							const;
+	bool				isDirListingSet()						const;
+	bool				isDefaultFileSet()						const;
+	bool				isCGISet()								const;
+	bool				isCGISet(const std::string &key)		const;
+	bool				isUploadDirSet()						const;
 
 	t_method_response	isMethodAllowed(int m)	const;
 
@@ -72,7 +73,7 @@ private:
 	std::string			_redir;
 	bool				_dir_listing;
 	std::string			_default_file;
-	t_cgi				_cgi;
+	cgiMap				_cgi;
 	std::string			_upload_dir;
 
 	t_location_cfg_mask	_config_mask;

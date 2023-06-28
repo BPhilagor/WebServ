@@ -138,14 +138,14 @@ bool launchCGI(HTTPRequest request, std::string &body)
 	}
 }
 
-int main(void)
-{
-	HTTPRequest tmp;
-	std::string body;
+// int main(void)
+// {
+// 	HTTPRequest tmp;
+// 	std::string body;
 
-	if (launchCGI(tmp, body)) {
-		std::cout << "Body : " << std::endl << body << std::endl;
-	} else {
-		std::cerr << "Error with CGI" << std::endl;
-	}
-}
+// 	if (launchCGI(tmp, body)) {
+// 		std::cout << "Body : " << std::endl << body << std::endl;
+// 	} else {
+// 		std::cerr << "Error with CGI" << std::endl;
+// 	}
+// }

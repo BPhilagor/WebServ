@@ -72,8 +72,18 @@ t_methods_mask		Location::getMethods()		const { return _methods;       }
 const std::string &	Location::getRedir()		const { return _redir;         }
 bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
-t_cgi				Location::getCGI() 			const { return _cgi;           }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
+
+std::string Location::getCGI(const std::string &key) const
+{
+	cgiMap::const_iterator value;
+
+	if ((value = _cgi.find(key)) == _cgi.end())
+		return "";
+	return value->second;
+}
+
+
 
 t_getfile_response	Location::getBody(const HTTPRequest &request,
 						const std::string &path, // TODO gerer les CGI etc...
@@ -242,26 +252,17 @@ void Location::_setCGI(const Data &data)
 {
 	int count = 0;
 	if ((count = data.count("cgi")) == 0)
-	{
-		_cgi = ws_no_cgi;
 		return;
-	}
 	_config_mask |= WS_CGI;
 
 	for (int i = 0; i < count; i++)
 	{
-		data.find("cgi", i).getContent();
-	}
-
-	std::string str = data.find("cgi").getContent();
-	if (str == "php")
-		_cgi = ws_php;
-	else if (str == "python")
-		_cgi = ws_python;
-	else
-	{
-		_cgi = ws_no_cgi;
-		std::cerr << "Invalid cgi: " << str << std::endl;
+		std::string str(data.find("cgi", i).getContent());
+		std::string s1, s2;
+		utils::split_around_first_c(' ', str, s1, s2);
+		trim_outside_whitespace(s1);
+		trim_outside_whitespace(s2);
+		_cgi[s1] = s2;
 	}
 }
 
@@ -287,13 +288,13 @@ std::ostream & operator<<(std::ostream &os, const Location &l)
 {
 	os
 << "  {"
-<< "\n       alias " << isp(l.isAliasSet())		<< " = " << l.getAlias()
+<< "\n       alias " << isp(l.isAliasSet())			<< " = " << l.getAlias()
 << "\n     methods " << isp(l.isMethodsSet())		<< " = " << l.getMethods()
-<< "\n       redir " << isp(l.isRedirSet())		<< " = " << l.getRedir()
+<< "\n       redir " << isp(l.isRedirSet())			<< " = " << l.getRedir()
 << "\n dir_listing " << isp(l.isDirListingSet())	<< " = " << l.getDirListing()
 << "\ndefault_file " << isp(l.isDefaultFileSet())	<< " = " << l.getDefaultFile()
-<< "\n         cgi " << isp(l.isCGISet())			<< " = " << l.getCGI()
-<< "\n    upload_dir " << isp(l.isUploadDirSet())		<< " = " << l.getUploadDir()
+<< "\n         cgi " << isp(l.isCGISet())			<< " = " << "l.getCGI()"
+<< "\n  upload_dir " << isp(l.isUploadDirSet())		<< " = " << l.getUploadDir()
 << "\n  }";
 	return os;
 }

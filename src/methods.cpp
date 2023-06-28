@@ -32,7 +32,6 @@ int	GET(HTTPResponse &response,
 
 	switch (location.isMethodAllowed(WS_GET))
 	{
-	case ws_not_implemented:			code = 501; break; // Not implemented
 	case ws_not_allowed:				code = 405; break; // Method not allowed
 	case ws_allowed:
 		switch (location.getBody(request, path, body, mime))
@@ -78,7 +77,6 @@ int	POST(HTTPResponse &response,
 
 	switch (location.isMethodAllowed(WS_POST))
 	{
-	case ws_not_implemented:			code = 501; break; // Not implemented
 	case ws_not_allowed:				code = 405; break; // Method not allowed
 	case ws_allowed:
 		switch (location.getBody(request, path, body, mime))
@@ -120,11 +118,7 @@ int	DELETE(HTTPResponse &response,
 
 	int	code;
 
-	if (location.isMethodAllowed(WS_DELETE) == ws_not_implemented)
-	{
-		code = 501;
-	}
-	else if (location.isMethodAllowed(WS_DELETE) == ws_not_allowed)
+	if (location.isMethodAllowed(WS_DELETE) == ws_not_allowed)
 	{
 		code = 405;
 	}
