@@ -17,6 +17,7 @@
 #include "methods.hpp"
 
 static int genDirListing(const Location &loc, const std::string &path, std::string &body);
+static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder);
 
 int	GET(HTTPResponse &response,
 		const Server &server,
@@ -115,11 +116,61 @@ int	DELETE(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
-	(void)response;
-	(void)server;
-	(void)location;
 	(void)request;
-	(void)path;
+
+	int	code;
+
+	if (location.isMethodAllowed(WS_DELETE) == ws_not_implemented)
+	{
+		code = 501;
+	}
+	else if (location.isMethodAllowed(WS_DELETE) == ws_not_allowed)
+	{
+		code = 405;
+	}
+	else
+	{
+		/* get real path of location */
+		std::string real_path = location.getRealPath(path);
+
+		/* should we configure this? */
+		std::string	deleted_folder = "deleted";
+
+		/* make sure this folder is created */
+		if (mkdir(deleted_folder.c_str(), 0755) != 0 && errno != EEXIST)
+		{
+			std::cout << "Failed to create deleted files folder '" << deleted_folder <<"': "<<std::strerror(errno) <<std::endl;
+			code = 500;
+		}
+
+		std::string new_name = deletedFileName(path, deleted_folder);
+
+		if (rename(real_path.c_str(), new_name.c_str()) != 0)
+		{
+			if (errno == ENOENT || errno == ENOTDIR)
+				code = 404;
+			else if (errno == EPERM || errno == EACCES)
+				code = 403;
+			else
+				code = 500;
+		}
+		else
+		{
+			code = 200;
+		}
+	}
+
+	/* generate the reply */
+	if (code == 200)
+	{
+		/* generate reply for DELETE */
+		std::string body = "<!DOCTYPE html><html><head><title>200 OK</title></head><body><h1>200 OK</h1><p>Resource was moved successfully.</body></html>";
+		response.constructReply(code, &body, "text/html");
+	}
+	else
+	{
+		response.constructErrorReply(code, &server);
+	}
 	return 0;
 }
 
@@ -148,4 +199,19 @@ static int genDirListing(const Location &loc, const std::string &path, std::stri
 	body = head + content + foot;
 	closedir(dir);
 	return 200;
+}
+
+static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder)
+{
+	std::string base_name = path.substr(path.find_last_of("/\\") + 1);
+
+	/* get current timestamp in milliseconds */
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+	std::string timestamp = SSTR(ms);
+
+	std::string new_name = deleted_folder + "/" + timestamp + "-" + base_name;
+
+	return (new_name);
 }
