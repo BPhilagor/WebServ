@@ -39,8 +39,8 @@ public:
 	const std::string &	getRedir()								const;
 	bool				getDirListing()							const;
 	const std::string & getDefaultFile()						const;
-	std::string			getCGI(const std::string &key)			const;
-	const cgiMap      &	getCGImap()								const;
+	const cgiMap	  & getCGIMap()								const;
+	std::string			getCGI(const std::string &key) 			const;
 	const std::string &	getUploadDir()							const;
 	t_getfile_response	getBody(const HTTPRequest &request,
 							const std::string &path,
