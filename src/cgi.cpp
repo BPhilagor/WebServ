@@ -54,7 +54,6 @@ void creat_env(const Location &loc,
 	env.push_back(std::string("REDIRECT_STATUS="));
 }
 
-
 void cgiStateHandler(int event)
 {
 	if (event == SIGALRM)

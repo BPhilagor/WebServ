@@ -73,7 +73,7 @@ const std::string &	Location::getRedir()		const { return _redir;         }
 bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
-const cgiMap	  &	Location::getCGImap()		const { return _cgi;           }
+const cgiMap	  &	Location::getCGIMap()		const { return _cgi;           }
 
 std::string Location::getCGI(const std::string &key) const
 {
@@ -294,8 +294,25 @@ std::ostream & operator<<(std::ostream &os, const Location &l)
 << "\n       redir " << isp(l.isRedirSet())			<< " = " << l.getRedir()
 << "\n dir_listing " << isp(l.isDirListingSet())	<< " = " << l.getDirListing()
 << "\ndefault_file " << isp(l.isDefaultFileSet())	<< " = " << l.getDefaultFile()
-<< "\n         cgi " << isp(l.isCGISet())			<< " = " << "l.getCGI()"
+<< "\n         cgi " << isp(l.isCGISet())			<< " = " << l.getCGIMap()
 << "\n  upload_dir " << isp(l.isUploadDirSet())		<< " = " << l.getUploadDir()
 << "\n  }";
+	return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const cgiMap &map)
+{
+	os << "[";
+	FOREACH_MAP(std::string, map)
+	{
+		if (it != map.begin())
+			os << ", ";
+		os << "(";
+		os << it->first;
+		os << " => ";
+		os << it->second;
+		os << ")";
+	}
+	os << "]";
 	return os;
 }
