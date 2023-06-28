@@ -236,12 +236,18 @@ void Location::_setDefaultFile(const Data &data)
 
 void Location::_setCGI(const Data &data)
 {
-	if (data.count("cgi") == 0)
+	int count = 0;
+	if ((count = data.count("cgi")) == 0)
 	{
 		_cgi = ws_no_cgi;
 		return;
 	}
 	_config_mask |= WS_CGI;
+
+	for (int i = 0; i < count; i++)
+	{
+		data.find("cgi", i).getContent();
+	}
 
 	std::string str = data.find("cgi").getContent();
 	if (str == "php")
