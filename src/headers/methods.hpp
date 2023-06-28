@@ -11,6 +11,8 @@
 # define METHODS_HPP
 
 # include <string>
+# include <sys/time.h>
+# include <fcntl.h>
 
 class Server;
 class Location;

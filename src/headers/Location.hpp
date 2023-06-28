@@ -46,6 +46,8 @@ public:
 							std::string &body,
 							std::string &mime)	const;
 
+	std::string			getRealPath(const std::string& path) const;
+
 	bool				isAliasSet() 			const;
 	bool				isMethodsSet()			const;
 	bool				isRedirSet()			const;

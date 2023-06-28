@@ -81,7 +81,7 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 						std::string &mime)	const
 {
 	(void)request;
-	std::string real_path = _alias + path;
+	std::string real_path = getRealPath(path);
 	std::cout << "Path : " << real_path << std::endl;
 	t_getfile_response return_val = utils::getFile(real_path, body);
 
@@ -103,6 +103,10 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 	}
 }
 
+std::string			Location::getRealPath(const std::string& path) const
+{
+	return _alias + path;
+}
 
 /* ************************************************************************** */
 /* is property configured                                                     */
@@ -125,11 +129,11 @@ bool Location::isUploadDirSet() const
 
 t_method_response	Location::isMethodAllowed(int m)	const
 {
+
 	if (m & _methods)
 		return ws_allowed;
-	if (m & 7U)
+	else
 		return ws_not_allowed;
-	return ws_not_implemented;
 }
 
 /* ************************************************************************** */

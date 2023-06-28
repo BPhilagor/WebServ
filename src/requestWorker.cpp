@@ -40,5 +40,7 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 		case WS_GET : GET(res, srv, *loc, req, new_path); break;
 		case WS_POST : POST(res, srv, *loc, req, new_path); break;
 		case WS_DELETE : DELETE(res, srv, *loc, req, new_path); break;
+		default:
+			res.constructErrorReply(501, &srv); /* Method not implemented */
 	}
 }

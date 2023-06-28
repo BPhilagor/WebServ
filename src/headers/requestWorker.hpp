@@ -14,6 +14,7 @@
 
 # include "Data.hpp"
 # include "HTTPRequest.hpp"
+# include "HTTPResponse.hpp"
 
 void	requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response);
 

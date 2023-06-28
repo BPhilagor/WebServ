@@ -16,7 +16,7 @@
 #include <string.h>
 #include "Location.hpp"
 
-#define UTIME_LIMIT 100000
+#define UTIME_LIMIT 10000000
 
 typedef enum {
 	ws_cgi_done,
@@ -51,6 +51,7 @@ void creat_env(const Location &loc,
 	env.push_back(std::string("HTTP_ACCEPT=" + req.getHeader("ACCEPT")));
 	env.push_back(std::string("HTTP_USER_AGENT=" + req.getHeader("USER-AGENT")));
 	env.push_back(std::string("HTTP_REFERER="));
+	env.push_back(std::string("REDIRECT_STATUS="));
 }
 
 
