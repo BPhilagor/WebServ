@@ -293,8 +293,24 @@ std::ostream & operator<<(std::ostream &os, const Location &l)
 << "\n       redir " << isp(l.isRedirSet())			<< " = " << l.getRedir()
 << "\n dir_listing " << isp(l.isDirListingSet())	<< " = " << l.getDirListing()
 << "\ndefault_file " << isp(l.isDefaultFileSet())	<< " = " << l.getDefaultFile()
-<< "\n         cgi " << isp(l.isCGISet())			<< " = " << "l.getCGI()"
+<< "\n         cgi " << isp(l.isCGISet())			<< " = " << "l.getCGIMap()"
 << "\n  upload_dir " << isp(l.isUploadDirSet())		<< " = " << l.getUploadDir()
 << "\n  }";
 	return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const cgiMap &map)
+{
+	os << "[";
+	FOREACH_MAP(std::string, map)
+	{
+		os << "(";
+		os << it->first;
+		os << ", ";
+		os << it->second;
+		os << ")";
+		if ((it + 1) != map.end())
+			os << ", ";
+		os << "]";
+	}
 }

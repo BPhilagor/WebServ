@@ -82,5 +82,6 @@ private:
 };
 
 std::ostream &operator<<(std::ostream &os, const Location &l);
+std::ostream &operator<<(std::ostream &os, const cgiMap &map);
 
 #endif /* LOCATION_HPP */
