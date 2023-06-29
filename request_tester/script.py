@@ -3,6 +3,8 @@
 import asyncio
 import aiohttp
 
+all_responses : set
+
 async def fetch(session, url):
 	async with session.get(url) as response:
 		return response.status
@@ -27,7 +29,7 @@ async def main():
 		'http://localhost:5555/'
 	]
 
-	for i in range(0, 1000):
+	for i in range(0, 50000):
 		urls.append('http://localhost:96/')
 
 
@@ -36,11 +38,13 @@ async def main():
 		for url in urls:
 			task = asyncio.ensure_future(fetch(session, url))
 			tasks.append(task)
-
 		response_codes = await asyncio.gather(*tasks)
-		for url, response_code in zip(urls, response_codes):
-			print(f"{response_code} : {url}")
+		# for url, response_code in zip(urls, response_codes):
+			# print(f"{response_code} : {url}")
+		return response_codes
 
 loop = asyncio.get_event_loop()
 
-asyncio.run(main())
+ret = asyncio.run(main())
+
+print(len(ret))
