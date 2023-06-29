@@ -70,6 +70,19 @@ void	HTTPHeaders::insert(const std::string& name, const std::string& value)
 	/* should translate into list first! */
 }
 
+void	HTTPHeaders::replace(const std::string& name, const std::string& value)
+{
+	/* name is case-insensitive */
+	std::string key = name;
+	for (std::string::iterator it = key.begin(); it != key.end(); it++)
+	{
+		if (std::isalpha(*it))
+			*it = std::toupper(*it);
+	}
+
+	_headers[key] = value;
+}
+
 std::string	HTTPHeaders::serialize() const
 {
 	std::string	res;

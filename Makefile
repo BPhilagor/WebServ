@@ -41,7 +41,8 @@ FILES	= main \
 		launchServersUtils \
 		HTTPRequest HTTPHeaders HTTPResponse \
 		mimeTypes \
-		HTTPResponse_reason SuperServer cgi
+		HTTPResponse_reason SuperServer \
+		cgi
 
 OBJS_PATH = objs/
 SRCS_PATH = src/

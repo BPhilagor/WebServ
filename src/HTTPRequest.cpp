@@ -203,22 +203,10 @@ int	HTTPRequest::parseRequestLine(const std::string& line)
 
 int	HTTPRequest::parseHeader(const std::string& line)
 {
-	std::string	fieldname;
-	std::string	fieldvalue;
-
-	size_t pos = line.find(':');
-	if (pos == std::string::npos)
+	std::pair<std::string, std::string>	header;
+	if (utils::parseHeader(line, header) != 0)
 		return (-1);
-
-	fieldname = line.substr(0, pos);
-	/* reject if there is whitespace in the fieldname */
-	if (fieldname.find_first_of(LINEAR_WHITESPACE) != std::string::npos)
-		return (-1);
-
-	/* trim right and left optional whitespace */
-	fieldvalue = line.substr(pos + 1, line.size() - pos - 1);
-	utils::trim(fieldvalue);
-	_headers.insert(fieldname, fieldvalue);
+	_headers.insert(header.first, header.second);
 	return (0);
 }
 
