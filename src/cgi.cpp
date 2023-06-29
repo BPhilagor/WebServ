@@ -18,8 +18,6 @@
 #include "Location.hpp"
 #include "debugDefs.hpp"
 
-#define UTIME_LIMIT 10000000
-
 typedef enum {
 	ws_cgi_done,
 	ws_cgi_timeout
@@ -30,7 +28,8 @@ static void creat_env(const Location &loc,
 				const HTTPRequest &req,
 				const std::string &file_path,
 				std::vector<std::string> &env);
-static void cgiStateHandler(int event);
+
+static void cgiStateHandler2(int event, struct __siginfo *a, void *b);
 
 bool launchCGI(const Location &location,
 				const HTTPRequest &request,
@@ -84,39 +83,20 @@ bool launchCGI(const Location &location,
 	if (close(fd[1]) == -1)
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
 
-	signal(SIGCHLD, cgiStateHandler);
-	signal(SIGALRM, cgiStateHandler);
-	ualarm(UTIME_LIMIT, 0);
+	sigset_t set;
+	struct sigaction sig_handler;
+	sig_handler.sa_handler = 0;
+	sig_handler.sa_mask = sigemptyset(&set);
+	sig_handler.sa_flags = SA_RESTART;
+	sig_handler.sa_sigaction = &cgiStateHandler2;
+	sigaction(SIGCHLD, &sig_handler, NULL);
 	pause();
 
-	switch (state)
-	{
-		case ws_cgi_timeout: {
-			std::cout << "CGI timed out";
-			int result = waitpid(pid, NULL, WNOHANG);
-			if (result == 0)
-			{
-				kill(pid, SIGKILL);
-				waitpid(pid, NULL, 0);
-				std::cout << std::endl;
-			}
-			else
-			{
-				std::cout << " but child finished normally" << std::endl;
-				body = utils::fdToString(fd[0]);
-			}
-			if (close(fd[0]) == -1)
-				std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
-			return false;
-		}
-		case ws_cgi_done: {
-			waitpid(pid, NULL, 0);
-			body = utils::fdToString(fd[0]);
-			if (close(fd[0]) == -1)
-				std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
-			return true;
-		}
-	}
+	waitpid(pid, NULL, 0);
+	body = utils::fdToString(fd[0]);
+	if (close(fd[0]) == -1)
+		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
+	return true;
 }
 
 static void creat_env(const Location &loc,
@@ -149,22 +129,13 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("REDIRECT_STATUS="));
 }
 
-static void cgiStateHandler(int event)
+static void cgiStateHandler2(int event, struct __siginfo *a, void *b)
 {
+	(void) a;
+	(void) b;
 	if (event == SIGALRM)
 		state = ws_cgi_timeout;
 	else if(event == SIGCHLD)
 		state = ws_cgi_done;
 }
 
-// int main(void)
-// {
-// 	HTTPRequest tmp;
-// 	std::string body;
-
-// 	if (launchCGI(tmp, body)) {
-// 		std::cout << "Body : " << std::endl << body << std::endl;
-// 	} else {
-// 		std::cerr << "Error with CGI" << std::endl;
-// 	}
-// }

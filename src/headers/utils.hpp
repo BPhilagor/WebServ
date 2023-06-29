@@ -62,6 +62,7 @@ namespace utils
 	t_getfile_response getFile(const std::string &path, std::string &body);
 
 	std::string getMethodStr(const HTTPRequest &req);
+	bool isValideURL(const std::string &str);
 }
 
 /* use it variable to itterate */

@@ -1,5 +1,4 @@
 # needs to be installed with : python3 -m pip install requests
-import requests
 # import os
 import asyncio
 import aiohttp

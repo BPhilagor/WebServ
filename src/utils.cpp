@@ -264,3 +264,10 @@ std::string utils::getMethodStr(const HTTPRequest &req)
 		return std::string("DELETE");
 	return "";
 }
+
+bool utils::isValideURL(const std::string &str)
+{
+
+	return !(str.rfind("../") == 0 || !str.compare("..")
+		|| !str.compare("/..") || str.find("/../") != std::string::npos);
+}
