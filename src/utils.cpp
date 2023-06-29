@@ -264,3 +264,34 @@ std::string utils::getMethodStr(const HTTPRequest &req)
 		return std::string("DELETE");
 	return "";
 }
+
+int	utils::parseHeader(const std::string& line, std::pair<std::string, std::string>& header)
+{
+	size_t pos = line.find(':');
+	if (pos == std::string::npos)
+		return (-1);
+
+	/* field name */
+	header.first = line.substr(0, pos);
+	/* reject if there is whitespace in the fieldname */
+	if (header.first.find_first_of(LINEAR_WHITESPACE) != std::string::npos)
+		return (-1);
+
+	/* trim right and left optional whitespace */
+	header.second = line.substr(pos + 1, line.size() - pos - 1);
+	utils::trim(header.second);
+
+	return (0);
+}
+
+bool	utils::streq_ci(const std::string& s1, const std::string& s2)
+{
+	if (s1.size() != s2.size())
+		return (false);
+	for (unsigned int i = 0; i < s1.size(); i++)
+	{
+		if (std::toupper(s1[i]) != std::toupper(s2[i]))
+			return (false);
+	}
+	return (true);
+}

@@ -62,6 +62,11 @@ namespace utils
 	t_getfile_response getFile(const std::string &path, std::string &body);
 
 	std::string getMethodStr(const HTTPRequest &req);
+
+	int	parseHeader(const std::string& line, std::pair<std::string, std::string>& header);
+
+	/* case-insensitive string comparison */
+	bool	streq_ci(const std::string& s1, const std::string& s2);
 }
 
 /* use it variable to itterate */

@@ -190,6 +190,48 @@ void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 	setHeader("Content-length", SSTR(getBody().size()));
 }
 
+void	HTTPResponse::parseCGIResponse(std::string cgi_body)
+{
+	std::string			line;
+	std::istringstream	input(cgi_body);
+
+	while (true)
+	{
+		std::getline(input, line);
+		utils::sanitizeline(line);
+
+		if (line == "")
+			break ;
+
+		/* process header here */
+		std::pair<std::string, std::string> header;
+		utils::parseHeader(line, header);
+
+		if (utils::streq_ci(header.first, "content-type"))
+		{
+			/* i use 'replace' because i don't know yet at which stage this function will be used */
+			_headers.replace("content-type", header.second);
+		}
+		else if (utils::streq_ci(header.first, "status"))
+		{
+			int code = atoi(header.second.c_str());
+			setCode(code);
+			setReason(_reasonMap[code]);
+		}
+		else if (utils::streq_ci(header.first, "location"))
+		{
+			/* handle Location header, this could imply reprocessing the request with the request worker!*/
+		}
+	}
+
+	/* get what remains of the cgi_body and put it in the body */
+	if (input.tellg() > 0)
+	{
+		_body = input.str().substr(input.tellg());
+		setHeader("Content-length", SSTR(_body.size()));
+	}
+}
+
 std::string HTTPResponse::getErrorPage(const Server &srv, int code) const
 {
 	std::string path = srv.getErrorDir() + SSTR(code) + ".html";
@@ -208,7 +250,6 @@ std::string HTTPResponse::getErrorPage(const Server &srv, int code) const
 	}
 	return body;
 }
-
 
 std::string	HTTPResponse::serialize() const
 {
