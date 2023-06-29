@@ -53,8 +53,17 @@ int	GET(HTTPResponse &response,
 			code = genDirListing(location, path, body); break; // 404 or 200
 		break;
 	}
-	if (code == 200) // OK
-		response.constructReply(code, &body, mime);
+	if (code == 200)
+	{
+		if (isBodyCGIgenerated)
+		{
+			response.parseCGIResponse(body);
+		}
+		else
+		{
+			response.constructReply(code, &body, mime);
+		}
+	}
 	else
 		response.constructErrorReply(code, &server);
 	return 0;

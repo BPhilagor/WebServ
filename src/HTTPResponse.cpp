@@ -195,6 +195,10 @@ void	HTTPResponse::parseCGIResponse(std::string cgi_body)
 	std::string			line;
 	std::istringstream	input(cgi_body);
 
+	setCode(200);
+	setReason(_reasonMap[200]);
+	setVersion(1, 1);
+
 	while (true)
 	{
 		std::getline(input, line);
