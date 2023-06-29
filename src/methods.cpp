@@ -15,6 +15,7 @@
 #include "Location.hpp"
 #include "HTTPResponse.hpp"
 #include "methods.hpp"
+#include "debugDefs.hpp"
 
 static int genDirListing(const Location &loc, const std::string &path, std::string &body);
 static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder);
@@ -36,6 +37,7 @@ int	GET(HTTPResponse &response,
 	case ws_file_no_perm:			code = 403; break; // Forbidden
 	case ws_file_found:				code = 200; break; // OK
 	case ws_file_isdir:
+		if (DP_13 &  DP_MASK)
 		std::cout << "Checking for default file: " << path << "\n";
 		if (location.isDefaultFileSet())
 			switch (location.getBody(request, path + "/" + location.getDefaultFile(), body, mime))
@@ -127,6 +129,7 @@ static int genDirListing(const Location &loc, const std::string &path, std::stri
 {
 	std::string full_path(loc.getAlias() + path);
 
+	if (DP_13 &  DP_MASK)
 	std::cout << "checking dir listing " << loc.isDirListingSet() << "\n";
 	if (loc.isDirListingSet() == false)
 		return 404;

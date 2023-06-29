@@ -19,7 +19,7 @@ void launchServers(const SuperServer &config)
 #endif
 	if (eqfd < 0)
 	{
-		std::cout << "Error when starting event queue: " << std::strerror(errno) << std::endl;
+		std::cerr << "Fatal error when starting event queue: " << std::strerror(errno) << std::endl;
 		exit(1);
 	}
 
@@ -44,7 +44,7 @@ void launchServers(const SuperServer &config)
 #endif
 		if (ev_count < 0)
 		{
-			std::cout << "Error when polling for kernel events: " << strerror(errno) << std::endl;
+			std::cerr << "Fatal error when polling for kernel events: " << strerror(errno) << std::endl;
 			exit(1);
 		}
 		for (int i = 0; i < ev_count; i++)

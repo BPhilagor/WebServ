@@ -79,9 +79,5 @@ std::ostream &operator<<(std::ostream &os, const SuperServer &s)
 		os << *it << " ";
 		os << "</server>";
 	}
-	// os << "\n   Port = ";
-	// FOREACH_VECTOR(int, s.getPorts())
-		// os << *it << " ";
-
 	return os;
 }

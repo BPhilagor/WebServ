@@ -9,18 +9,17 @@
 
 #include "HTTPResponse.hpp"
 #include "utils.hpp"
+#include "debugDefs.hpp"
 
 #include <iostream>
 #include <sstream>
-
-#define DEBUG_PRINT 0
 
 std::map<int, std::string> HTTPResponse::_reasonMap = _initialiseReasonMap();
 
 HTTPResponse::HTTPResponse():
 	_code(0)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse constructor" << std::endl;
 }
 
 HTTPResponse::HTTPResponse(const HTTPResponse& h):
@@ -30,17 +29,17 @@ HTTPResponse::HTTPResponse(const HTTPResponse& h):
 	_headers(h._headers),
 	_body(h._body)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse copy constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse copy constructor" << std::endl;
 }
 
 HTTPResponse::~HTTPResponse()
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse destructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse destructor" << std::endl;
 }
 
 HTTPResponse&	HTTPResponse::operator=(const HTTPResponse& h)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse assignement operator" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse assignement operator" << std::endl;
 
 	_version = h._version;
 	_code = h._code;

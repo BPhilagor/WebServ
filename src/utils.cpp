@@ -10,6 +10,7 @@
 #include "utils.hpp"
 #include "Server.hpp"
 #include <arpa/inet.h>
+#include "debugDefs.hpp"
 
 #define LOCALHOST_UI32 16777343
 
@@ -95,7 +96,7 @@ u_int32_t utils::addrStringToInt(const std::string &addr_string)
 		return LOCALHOST_UI32;
 
 	if (!inet_aton(addr_string.c_str(), &tmp))
-		std::cout << "Warning, wrong adress was converted to 0" << std::endl;
+		std::cerr << "Warning, wrong adress was converted to 0" << std::endl;
 	return tmp.s_addr;
 }
 
@@ -112,6 +113,7 @@ pairHostPort utils::getHostPort(const std::string &str)
 	else
 	{
 		std::string sHost = str.substr(0, tmp);
+		if (DP_6 & DP_MASK)
 		std::cout << "Origine : " << sHost;
 		host = addrStringToInt(sHost);
 		tmp += 1;
@@ -121,6 +123,7 @@ pairHostPort utils::getHostPort(const std::string &str)
 	sPort >> port;
 
 	std::string addr_string = addrIntToString(host);
+	if (DP_6 & DP_MASK)
 	std::cout << " Conversion : " << host << " Reconversion : " << addr_string << std::endl;
 
 	if (sPort.fail())
@@ -235,12 +238,14 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 
 	if (!stream)
 	{
-		std::cout << "Error when opening : " << path << " : "
+		if (DP_7 & DP_MASK)
+		std::cerr << "Error when opening : " << path << " : "
 			<< strerror(errno) << " (n: " << errno << ")" << std::endl;
 		return ws_file_not_found;
 	}
-	
+
 	body = utils::ifstreamToString(stream);
+	if (DP_7 & DP_MASK)
 	std::cout << "file {" << body << "}" << std::endl;
 	stream.close();
 
@@ -259,5 +264,3 @@ std::string utils::getMethodStr(const HTTPRequest &req)
 		return std::string("DELETE");
 	return "";
 }
-
-

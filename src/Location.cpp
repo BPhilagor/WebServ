@@ -11,6 +11,7 @@
 #include "utils.hpp"
 #include "HTTPRequest.hpp"
 #include "mimeTypes.hpp"
+#include "debugDefs.hpp"
 
 #define WS_ALIAS		(1U << 1)
 #define WS_METHODS		(1U << 2)
@@ -91,6 +92,7 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 {
 	(void)request;
 	std::string real_path = getRealPath(path);
+	if (DP_11 & DP_MASK)
 	std::cout << "Path : " << real_path << std::endl;
 	t_getfile_response return_val = utils::getFile(real_path, body);
 

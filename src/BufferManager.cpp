@@ -1,5 +1,15 @@
+/* ************************************************************************** */
+/*                                                     __ __   __             */
+/*    WebServ                                         / // / /__ \            */
+/*                By: skoulen, bphilago, znichola    / // /_ __/ /            */
+/*                                                  /__  __// __/             */
+/*                Created: 2023/06/01 23:16:37        /_/  /____/ lausanne.ch */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "BufferManager.hpp"
 #include "utils.hpp"
+#include "debugDefs.hpp"
 
 BufferManager::BufferManager(const SuperServer& config, int fd):
 	input_buffer(""),
@@ -60,6 +70,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 		_req.addChar(s[i]);
 		if (_req.isParsingHeadersFinished())
 		{
+			if (DP_10 & DP_MASK)
 			std::cout << _req << std::endl;
 
 			if (!_req.hasValidSyntax())
@@ -103,11 +114,22 @@ void	BufferManager::addInputBuffer(const std::string& s)
 		if (_req.isParsingBodyFinished())
 		{
 phase_2:
+			if (DP_14 & DP_MASK)
+			std::cout << "Client " << COL(ESC_COLOR_CYAN ,_fd) << " is requesting "
+			<< COL(ESC_COLOR_CYAN, _req.getURI().path) << std::endl;
+
 			if (_resp.getCode() == 0)
 				requestWorker(*virtual_server, _req, _resp);
 			input_buffer = input_buffer.substr(i + 1, s.length() - i - 1);
 			output_buffer = _resp.serialize();
 			_finished = true;
+
+			if (DP_14 & DP_MASK)
+			std::cout << COL(ESC_COLOR_MAGENTA, SSTR(_resp.getCode()))
+			<< " sent for client " << COL(ESC_COLOR_CYAN, SSTR(_fd))
+			<< " request for " << COL(ESC_COLOR_CYAN, _req.getURI().path)
+			<< std::endl << std::endl;
+
 			break ;
 		}
 	}

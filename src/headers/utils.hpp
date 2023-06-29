@@ -32,6 +32,8 @@
 #define ESC_COLOR_MAGENTA	"\033[35m"
 #define ESC_COLOR_RESET		"\033[0m"
 
+#define COL(col, text) col << text << ESC_COLOR_RESET
+
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 

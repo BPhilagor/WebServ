@@ -9,11 +9,10 @@
 
 #include "HTTPRequest.hpp"
 #include "utils.hpp"
+#include "debugDefs.hpp"
 #include <iostream>
 #include <sstream>
 #include <map>
-
-#define DEBUG_PRINT 0
 
 std::istream &operator>>(std::istream &is, char const *s);
 
@@ -25,7 +24,7 @@ HTTPRequest::HTTPRequest():
 	_state(0),
 	_current_line("")
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest default constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest default constructor" << std::endl;
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest &cpy):
@@ -38,17 +37,17 @@ HTTPRequest::HTTPRequest(const HTTPRequest &cpy):
 	_state(cpy._state),
 	_current_line(cpy._current_line)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest copy constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest copy constructor" << std::endl;
 }
 
 HTTPRequest::~HTTPRequest()
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest destructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest destructor" << std::endl;
 }
 
 HTTPRequest &HTTPRequest::operator=(const HTTPRequest &rhs)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest assignment operator" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest assignment operator" << std::endl;
 
 	_valid_syntax = rhs._valid_syntax;
 	_method = rhs._method;
@@ -222,7 +221,7 @@ int	HTTPRequest::parseLine(const std::string& line)
 	}
 	else
 	{
-		std::cout << "You stupid programmer" << std::endl;
+		std::cout << "You stupid programmer" << std::endl; /* ..ouch */
 		exit(1);
 		return (-1);
 	}
