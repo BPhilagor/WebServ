@@ -29,9 +29,10 @@ int	GET(HTTPResponse &response,
 	int code = 0;
 	std::string body = "";
 	std::string mime = "";
+	bool isBodyCGIgenerated = false;
 	(void)request;
 
-	switch (location.getBody(request, path, body, mime))
+	switch (location.getBody(request, path, body, isBodyCGIgenerated, mime))
 	{
 	case ws_file_not_found:			code = 404; break; // Not found
 	case ws_file_no_perm:			code = 403; break; // Forbidden
@@ -40,7 +41,8 @@ int	GET(HTTPResponse &response,
 		if (DP_13 &  DP_MASK)
 		std::cout << "Checking for default file: " << path << "\n";
 		if (location.isDefaultFileSet())
-			switch (location.getBody(request, path + "/" + location.getDefaultFile(), body, mime))
+			switch (location.getBody(request, path + "/" + location.getDefaultFile(),
+				body, isBodyCGIgenerated, mime))
 			{
 			case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
 			case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200

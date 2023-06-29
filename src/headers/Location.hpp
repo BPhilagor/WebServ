@@ -46,6 +46,7 @@ public:
 	t_getfile_response	getBody(const HTTPRequest &request,
 							const std::string &path,
 							std::string &body,
+							bool &isCGIgenerated,
 							std::string &mime)							const;
 
 

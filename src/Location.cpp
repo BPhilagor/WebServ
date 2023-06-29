@@ -91,6 +91,7 @@ std::string Location::getCGI(const std::string &key) const
 t_getfile_response	Location::getBody(const HTTPRequest &request,
 						const std::string &path, // TODO gerer les CGI etc...
 						std::string &body,
+						bool &isCGIgenerated,
 						std::string &mime)	const
 {
 	(void)request;
@@ -105,6 +106,7 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 	if (isCGIrequired(real_path))
 	{
 		launchCGI(*this, request, getCGIpath(real_path), real_path, body);
+		isCGIgenerated = true;
 		// request.setBodyCGIgenerated(true);
 		// for now we can still get the mimetype from the normal flow below
 	}

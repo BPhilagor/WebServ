@@ -28,6 +28,7 @@ static t_cgi_state state = ws_cgi_done;
 
 static void creat_env(const Location &loc,
 				const HTTPRequest &req,
+				const std::string &file_path,
 				std::vector<std::string> &env);
 static void cgiStateHandler(int event);
 
@@ -45,11 +46,13 @@ bool launchCGI(const Location &location,
 	std::vector<const char *> env;
 
 	std::vector<std::string> tmp_env;
-	creat_env(location, request, tmp_env);
+	creat_env(location, request, file_path, tmp_env);
 
 	FOREACH_VECTOR(std::string, tmp_env)
 	{
 		env.push_back(it->c_str());
+		if (DP_15 & DP_MASK)
+		std::cout << it->c_str() << std::endl;
 	}
 	env.push_back(NULL);
 	std::vector<std::string> env_data;
@@ -74,7 +77,7 @@ bool launchCGI(const Location &location,
 								const_cast<char *>(file_path.c_str()),
 								NULL};
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
-		std::cerr << "Error cannot execute : " << cgi_path << std::endl;
+		std::cerr << "Error cannot execute : " << cgi_path << strerror(errno) << std::endl;
 		exit(1);
 	}
 
@@ -118,19 +121,20 @@ bool launchCGI(const Location &location,
 
 static void creat_env(const Location &loc,
 				const HTTPRequest &req,
+				const std::string &file_path,
 				std::vector<std::string> &env)
 {
 	(void) loc; // TODO utiliser
 	env.push_back(std::string("GATEWAY_INTERFACE="));
-	env.push_back(std::string("SERVER_NAME="));
+	env.push_back(std::string("SERVER_NAME=" + req.getHeader("host")));
 	env.push_back(std::string("SERVER_SOFTWARE=WebServ_0.1"));
 	env.push_back(std::string("SERVER_PROTOCOL="));
 	env.push_back(std::string("SERVER_PORT="));
 	env.push_back(std::string("REQUEST_METHOD=" + utils::getMethodStr(req)));
-	env.push_back(std::string("PATH_INFO="));
-	env.push_back(std::string("PATH_TRANSLATED="));
+	env.push_back(std::string("PATH_INFO=" + req.getURI().path));
+	env.push_back(std::string("PATH_TRANSLATED=" + file_path));
 	env.push_back(std::string("SCRIPT_NAME=" + req.getURI().path));
-	env.push_back(std::string("DOCUMENT_ROOT="));
+	env.push_back(std::string("DOCUMENT_ROOT=")); // seems to be useless
 	env.push_back(std::string("QUERY_STRING=" + req.getURI().query)); // important!
 	env.push_back(std::string("REMOTE_HOST="));
 	env.push_back(std::string("REMOTE_ADDR="));
