@@ -7,14 +7,16 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utils.hpp"
-#include "HTTPRequest.hpp"
 #include <stdlib.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+
+#include "utils.hpp"
+#include "HTTPRequest.hpp"
 #include "Location.hpp"
+#include "debugDefs.hpp"
 
 #define UTIME_LIMIT 10000000
 
@@ -22,53 +24,28 @@ typedef enum {
 	ws_cgi_done,
 	ws_cgi_timeout
 } t_cgi_state;
-
 static t_cgi_state state = ws_cgi_done;
 
-void creat_env(const Location &loc,
+static void creat_env(const Location &loc,
 				const HTTPRequest &req,
-				std::vector<std::string> &env)
-{
-	(void) loc; // TODO utiliser
-	env.push_back(std::string("GATEWAY_INTERFACE="));
-	env.push_back(std::string("SERVER_NAME="));
-	env.push_back(std::string("SERVER_SOFTWARE=WebServ_0.1"));
-	env.push_back(std::string("SERVER_PROTOCOL="));
-	env.push_back(std::string("SERVER_PORT="));
-	env.push_back(std::string("REQUEST_METHOD=" + utils::getMethodStr(req)));
-	env.push_back(std::string("PATH_INFO="));
-	env.push_back(std::string("PATH_TRANSLATED="));
-	env.push_back(std::string("SCRIPT_NAME=" + req.getURI().path));
-	env.push_back(std::string("DOCUMENT_ROOT="));
-	env.push_back(std::string("QUERY_STRING=" + req.getURI().query)); // important!
-	env.push_back(std::string("REMOTE_HOST="));
-	env.push_back(std::string("REMOTE_ADDR="));
-	env.push_back(std::string("AUTH_TYPE="));
-	env.push_back(std::string("REMOTE_USER="));
-	env.push_back(std::string("REMOTE_IDENT="));
-	env.push_back(std::string("CONTENT_TYPE=text/php")); // hardcoded for now
-	env.push_back(std::string("CONTENT_LENGTH=" + SSTR(req.getBody().length())));
-	env.push_back(std::string("HTTP_ACCEPT=" + req.getHeader("ACCEPT")));
-	env.push_back(std::string("HTTP_USER_AGENT=" + req.getHeader("USER-AGENT")));
-	env.push_back(std::string("HTTP_REFERER="));
-	env.push_back(std::string("REDIRECT_STATUS="));
-}
+				std::vector<std::string> &env);
+static void cgiStateHandler(int event);
 
-void cgiStateHandler(int event)
+bool launchCGI(const Location &location,
+				const HTTPRequest &request,
+				const std::string &cgi_path,
+				const std::string &file_path,
+				std::string &body)
 {
-	if (event == SIGALRM)
-		state = ws_cgi_timeout;
-	else if(event == SIGCHLD)
-		state = ws_cgi_done;
-}
+	(void)file_path;
 
-bool launchCGI(HTTPRequest request, std::string &body)
-{
+	if (DP_15 & DP_MASK)
+	std::cout << COL(ESC_COLOR_GREEN, "launching CGI") << std::endl;
+
 	std::vector<const char *> env;
 
-	Location tmp;
 	std::vector<std::string> tmp_env;
-	creat_env(tmp, request, tmp_env);
+	creat_env(location, request, tmp_env);
 
 	FOREACH_VECTOR(std::string, tmp_env)
 	{
@@ -77,7 +54,7 @@ bool launchCGI(HTTPRequest request, std::string &body)
 	env.push_back(NULL);
 	std::vector<std::string> env_data;
 	int fd[2];
-	const std::string cgi_path = "cgi/php-cgi"; // Make sure strings are null terminated
+	// const std::string cgi_path = "cgi/php-cgi"; // Make sure strings are null terminated
 
 	if (pipe(fd) == -1)
 		return false;
@@ -93,7 +70,9 @@ bool launchCGI(HTTPRequest request, std::string &body)
 			std::cerr << "Pipe error when trying to execute : " << cgi_path << std::endl;
 			exit(1);
 		}
-		char * const argv[2] = {const_cast<char *>(cgi_path.c_str()), NULL};
+		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
+								const_cast<char *>(file_path.c_str()),
+								NULL};
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
 		std::cerr << "Error cannot execute : " << cgi_path << std::endl;
 		exit(1);
@@ -135,6 +114,43 @@ bool launchCGI(HTTPRequest request, std::string &body)
 			return true;
 		}
 	}
+}
+
+static void creat_env(const Location &loc,
+				const HTTPRequest &req,
+				std::vector<std::string> &env)
+{
+	(void) loc; // TODO utiliser
+	env.push_back(std::string("GATEWAY_INTERFACE="));
+	env.push_back(std::string("SERVER_NAME="));
+	env.push_back(std::string("SERVER_SOFTWARE=WebServ_0.1"));
+	env.push_back(std::string("SERVER_PROTOCOL="));
+	env.push_back(std::string("SERVER_PORT="));
+	env.push_back(std::string("REQUEST_METHOD=" + utils::getMethodStr(req)));
+	env.push_back(std::string("PATH_INFO="));
+	env.push_back(std::string("PATH_TRANSLATED="));
+	env.push_back(std::string("SCRIPT_NAME=" + req.getURI().path));
+	env.push_back(std::string("DOCUMENT_ROOT="));
+	env.push_back(std::string("QUERY_STRING=" + req.getURI().query)); // important!
+	env.push_back(std::string("REMOTE_HOST="));
+	env.push_back(std::string("REMOTE_ADDR="));
+	env.push_back(std::string("AUTH_TYPE="));
+	env.push_back(std::string("REMOTE_USER="));
+	env.push_back(std::string("REMOTE_IDENT="));
+	env.push_back(std::string("CONTENT_TYPE=text/php")); // hardcoded for now
+	env.push_back(std::string("CONTENT_LENGTH=" + SSTR(req.getBody().length())));
+	env.push_back(std::string("HTTP_ACCEPT=" + req.getHeader("ACCEPT")));
+	env.push_back(std::string("HTTP_USER_AGENT=" + req.getHeader("USER-AGENT")));
+	env.push_back(std::string("HTTP_REFERER="));
+	env.push_back(std::string("REDIRECT_STATUS="));
+}
+
+static void cgiStateHandler(int event)
+{
+	if (event == SIGALRM)
+		state = ws_cgi_timeout;
+	else if(event == SIGCHLD)
+		state = ws_cgi_done;
 }
 
 // int main(void)

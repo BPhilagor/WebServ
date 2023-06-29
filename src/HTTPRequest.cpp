@@ -22,7 +22,8 @@ HTTPRequest::HTTPRequest():
 	_headers(),
 	_body(""),
 	_state(0),
-	_current_line("")
+	_current_line(""),
+	_isBodyCGIgenerated(false)
 {
 	if (DP_12 & DP_MASK) std::cout << "HTTPRequest default constructor" << std::endl;
 }
@@ -35,7 +36,8 @@ HTTPRequest::HTTPRequest(const HTTPRequest &cpy):
 	_headers(cpy._headers),
 	_body(cpy._body),
 	_state(cpy._state),
-	_current_line(cpy._current_line)
+	_current_line(cpy._current_line),
+	_isBodyCGIgenerated(cpy._isBodyCGIgenerated)
 {
 	if (DP_12 & DP_MASK) std::cout << "HTTPRequest copy constructor" << std::endl;
 }
@@ -57,6 +59,7 @@ HTTPRequest &HTTPRequest::operator=(const HTTPRequest &rhs)
 	_body = rhs._body;
 	_state = rhs._state;
 	_current_line = rhs._current_line;
+	_isBodyCGIgenerated = rhs._isBodyCGIgenerated;
 
 	return (*this);
 }
@@ -103,7 +106,18 @@ bool					HTTPRequest::isParsingBodyFinished() const
 	return (!_valid_syntax || _state == 3);
 }
 
+bool					HTTPRequest::isBodyCGIgenerated() const
+{
+	return _isBodyCGIgenerated;
+}
+
 /* setters */
+
+void					HTTPRequest::setBodyCGIgenerated(bool value)
+{
+	_isBodyCGIgenerated = value;
+}
+
 void	HTTPRequest::addChar(char c)
 {
 	if (_state == 2) /* might need to add body */

@@ -12,6 +12,7 @@
 #include "HTTPRequest.hpp"
 #include "mimeTypes.hpp"
 #include "debugDefs.hpp"
+#include "cgi.hpp"
 
 #define WS_ALIAS		(1U << 1)
 #define WS_METHODS		(1U << 2)
@@ -75,6 +76,8 @@ bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
 const cgiMap	  &	Location::getCGIMap()		const { return _cgi;           }
+std::string			Location::getRealPath(const std::string& path)
+												const { return _alias + path;  }
 
 std::string Location::getCGI(const std::string &key) const
 {
@@ -97,26 +100,51 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 	t_getfile_response return_val = utils::getFile(real_path, body);
 
 	if (return_val != ws_file_found)
-	{
 		return return_val;
-	}
-	else
+
+	if (isCGIrequired(real_path))
 	{
-		/* set mime type here! */
-		std::string ext;
-		size_t pos = real_path.find_last_of(".");
-		if (pos < real_path.length() - 1)
-		{
-			ext = real_path.substr(pos + 1, real_path.length() - pos - 1);
-		}
-		mime = getMimeFromExtension(ext);
-		return ws_file_found;
+		launchCGI(*this, request, getCGIpath(real_path), real_path, body);
+		// request.setBodyCGIgenerated(true);
+		// for now we can still get the mimetype from the normal flow below
 	}
+
+	/* set mime type here! */
+	std::string ext;
+	size_t pos = real_path.find_last_of(".");
+	if (pos < real_path.length() - 1)
+	{
+		ext = real_path.substr(pos + 1, real_path.length() - pos - 1);
+	}
+	mime = getMimeFromExtension(ext);
+	return ws_file_found;
 }
 
-std::string			Location::getRealPath(const std::string& path) const
+/*
+	find the cgi path required to process the request
+*/
+std::string Location::getCGIpath(const std::string &real_path) const
 {
-	return _alias + path;
+	if (isCGISet() == true)
+		FOREACH_MAP(std::string, _cgi)
+		{
+			size_t x, y;
+
+			if ((x = it->first.size()) > (y = real_path.size()))
+				continue;
+
+			if (real_path.find(it->first, y - x) != std::string::npos)
+				return it->second;
+		}
+	return "";
+}
+
+/*
+	check if file should be processed by CGI
+*/
+bool Location::isCGIrequired(const std::string &real_path) const
+{
+	return getCGIpath(real_path) == "" ? false : true;
 }
 
 /* ************************************************************************** */

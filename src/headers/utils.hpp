@@ -60,6 +60,7 @@ namespace utils
 	std::string fdToString(int fd);
 	std::string ifstreamToString(std::ifstream &stream);
 	t_getfile_response getFile(const std::string &path, std::string &body);
+
 	std::string getMethodStr(const HTTPRequest &req);
 }
 

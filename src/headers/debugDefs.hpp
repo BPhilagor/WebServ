@@ -26,6 +26,7 @@
 # define DP_12  (1U << 12) /* HTTP* constructors, destructors, etc            */
 # define DP_13  (1U << 13) /* methods:                                        */
 # define DP_14  (1U << 14) /* bufferManager: message info                     */
+# define DP_15  (1U << 15) /* CGI:                                            */
 
 
 /* debug print options mask */
@@ -34,7 +35,7 @@
 #  define DP_MASK (DP_1 | DP_2 | DP_3 | DP_4 | DP_5 | DP_6 | DP_7 | DP_8 | DP_9\
 				DP_10 | DP_11 | DP_12 | DP_13)
 # else
-#  define DP_MASK (DP_5 | DP_9 | DP_14)
+#  define DP_MASK (DP_5 | DP_9 | DP_14 | DP_15)
 # endif
 
 

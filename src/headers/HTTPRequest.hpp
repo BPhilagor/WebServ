@@ -45,8 +45,11 @@ class HTTPRequest
 		bool				isParsingHeadersFinished() const;
 		bool				isParsingBodyFinished() const;
 
+		bool				isBodyCGIgenerated() const;
+
 		/* setters */
 		void					addChar(char c);
+		void					setBodyCGIgenerated(bool value);
 
 		/* serialize */
 		std::string	serialize() const;
@@ -69,6 +72,9 @@ class HTTPRequest
 		/* used internally to parse and know what we have to do next */
 		int			_state;
 		std::string	_current_line;
+
+		/* used to know if body is gen by CGI */
+		bool		_isBodyCGIgenerated;
 
 		/* parser */
 		int		parseLine(const std::string& line);
