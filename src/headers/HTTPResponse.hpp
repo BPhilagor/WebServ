@@ -44,11 +44,9 @@ class HTTPResponse
 
 		std::string	serialize() const;
 
-		/* constructors */
-		void	constructReply(int code, const std::string *body=NULL, const std::string& mime = NULL);
 		void	constructErrorReply(const int code, const Server *srv=NULL);
-
 		void	parseCGIResponse(std::string cgi_body);
+		void	finalize();
 
 		std::string genPage(int code) const;
 		std::string getErrorPage(const Server &srv, int code) const;

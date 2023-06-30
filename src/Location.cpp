@@ -89,7 +89,7 @@ std::string Location::getCGI(const std::string &key) const
 }
 
 t_getfile_response	Location::getBody(const HTTPRequest &request,
-						const std::string &path, // TODO gerer les CGI etc...
+						const std::string &path,
 						std::string &body,
 						bool &isCGIgenerated,
 						std::string &mime)	const
@@ -105,19 +105,18 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 
 	if (isCGIrequired(real_path))
 	{
-		launchCGI(*this, request, getCGIpath(real_path), real_path, body);
-		isCGIgenerated = true;
-		// request.setBodyCGIgenerated(true);
-		// for now we can still get the mimetype from the normal flow below
+		if (launchCGI(*this, request, getCGIpath(real_path), real_path, body) == false)
+		{
+			//should return internal server error
+		}
+		else
+		{
+			isCGIgenerated = true;
+		}
 	}
 
 	/* set mime type here! */
-	std::string ext;
-	size_t pos = real_path.find_last_of(".");
-	if (pos < real_path.length() - 1)
-	{
-		ext = real_path.substr(pos + 1, real_path.length() - pos - 1);
-	}
+	std::string ext = utils::getFileExtension(real_path);
 	mime = getMimeFromExtension(ext);
 	return ws_file_found;
 }

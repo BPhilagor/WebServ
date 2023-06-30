@@ -68,6 +68,8 @@ namespace utils
 
 	/* case-insensitive string comparison */
 	bool	streq_ci(const std::string& s1, const std::string& s2);
+
+	std::string	getFileExtension(const std::string& file);
 }
 
 /* use it variable to itterate */
