@@ -223,8 +223,8 @@ int	HTTPRequest::parseLine(const std::string& line)
 	}
 	else
 	{
-		std::cout << "You stupid programmer" << std::endl; /* ..ouch */
-		exit(1);
+		std::cout << "Fatal error : You stupid programmer" << std::endl; /* ..ouch */
+		exit(1); // TODO : Pas sur que l'on doive exit ??
 		return (-1);
 	}
 }

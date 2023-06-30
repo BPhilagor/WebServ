@@ -37,6 +37,16 @@ SuperServer &SuperServer::operator=(const SuperServer &other){ (void)other; retu
 
 const std::vector<Server> &SuperServer::getServers() const { return _servers; }
 const std::set<int> &SuperServer::getPorts() const { return _ports; }
+const std::set<int> &SuperServer::getListeningSockets() const { return _listeningSockets;}
+
+/* ************************************************************************** */
+/* setters                                                                    */
+/* ************************************************************************** */
+
+void SuperServer::addListeningSocket(int fd)
+{
+	_listeningSockets.insert(fd);
+}
 
 /* ************************************************************************** */
 /* propery interrogators                                                      */
