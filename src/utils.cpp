@@ -234,7 +234,7 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 	if (S_ISDIR(path_stat.st_mode))
 		return ws_file_isdir;
 
-	stream.open(path);
+	stream.open(path.c_str());
 
 	if (!stream)
 	{

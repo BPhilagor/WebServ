@@ -13,6 +13,7 @@
 # include "HTTPHeaders.hpp"
 # include "typedefs.hpp"
 # include <string>
+# include <cstring>
 # include <ostream>
 # include <exception>
 # include <map>
