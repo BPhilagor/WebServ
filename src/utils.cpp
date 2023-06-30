@@ -302,3 +302,14 @@ bool	utils::streq_ci(const std::string& s1, const std::string& s2)
 	}
 	return (true);
 }
+
+std::string	utils::getFileExtension(const std::string& file)
+{
+	std::string ext;
+	size_t pos = file.find_last_of(".");
+	if (pos < file.length() - 1)
+	{
+		ext = file.substr(pos + 1, file.length() - pos - 1);
+	}
+	return (ext);
+}

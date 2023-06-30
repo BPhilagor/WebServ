@@ -37,4 +37,6 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 				res.constructErrorReply(501, &srv); /* Method not implemented */
 		}
 	}
+	
+	res.finalize();
 }

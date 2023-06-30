@@ -53,7 +53,6 @@ bool launchCGI(const Location &location,
 		std::cout << it->c_str() << std::endl;
 	}
 	env.push_back(NULL);
-	std::vector<std::string> env_data;
 
 	int fd[2];
 	if (pipe(fd) < 0)
@@ -69,8 +68,6 @@ bool launchCGI(const Location &location,
 	}
 	if (pid == 0)
 	{
-		FOREACH_VECTOR(std::string, env_data)
-			;
 		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
 			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "
@@ -105,7 +102,12 @@ bool launchCGI(const Location &location,
 	sig_handler.sa_sigaction = &cgiStateHandler2;
 	sigaction(SIGCHLD, &sig_handler, NULL);
 
-	waitpid(pid, NULL, 0);
+	int child_status;
+	waitpid(pid, &child_status, 0);
+	if (WIFEXITED(child_status))
+		std::cout<<"CGI exited with status: "<<WEXITSTATUS(child_status)<<std::endl;
+	else
+		std::cout<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
 
 	body = utils::fdToString(fd[0]);
 	if (close(fd[0]) == -1)

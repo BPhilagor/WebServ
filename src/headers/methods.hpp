@@ -14,6 +14,8 @@
 # include <cstring>
 # include <sys/time.h>
 # include <fcntl.h>
+# include "mimeTypes.hpp"
+# include "cgi.hpp"
 
 class Server;
 class Location;

@@ -17,8 +17,110 @@
 #include "methods.hpp"
 #include "debugDefs.hpp"
 
-static int genDirListing(const Location &loc, const std::string &path, std::string &body);
+static int genDirListing(const Location &loc, const std::string &path, HTTPResponse& response);
 static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder);
+
+/* return ENOENT, EPERM, EISDIR or 0*/
+int check_file(const char *path)
+{
+	if (access(path, R_OK) != 0)
+	{
+		if (errno == ENOENT)
+			return (ENOENT);
+		else
+			return (EPERM);
+	}
+	else
+	{
+		/* check if file is directory*/
+		struct stat path_stat;
+		stat(path, &path_stat);
+		if (S_ISDIR(path_stat.st_mode))
+			return (EISDIR);
+		else
+			return (0);
+	}
+}
+
+void	getOrPost(HTTPResponse &response, const Server &server, const Location& location, const HTTPRequest& request, const std::string& path)
+{
+	int	code;
+
+	std::string real_path = location.getRealPath(path);
+
+	std::cout << "Real path: "<< real_path << std::endl;
+
+	int file_status = check_file(real_path.c_str());
+
+	std::cout << "file status: " <<std::strerror(file_status)<<std::endl;
+
+	if (file_status == ENOENT)
+		code = 404;
+	else if (file_status == EPERM)
+		code = 403;
+	else if (file_status == EISDIR)
+	{
+		if (DP_13 & DP_MASK)	std::cout << "URI is a directory. Checking for default file: " << path << std::endl;
+		if (location.isDefaultFileSet())
+		{
+			std::cout << "A default file is set"<< std::endl;
+			std::string index_path = path + "/" + location.getDefaultFile();
+			std::string real_index_path = location.getRealPath(index_path);
+			std::cout << "That file is located at: "<<real_index_path<<std::endl;
+			int index_file_status = check_file(real_index_path.c_str());
+
+			if (index_file_status != 0)
+			{
+				goto generate_dir_listing;
+			}
+			else
+			{
+				real_path = real_index_path;
+				goto file_is_found;
+			}
+		}
+		else
+		{
+			generate_dir_listing:
+			std::cout << "let's generate dir listing!"<<std::endl;
+			if (!location.isDirListingSet())
+				code = 403;
+			else
+				code = genDirListing(location, path, response);
+		}
+	}
+	else
+	{
+		std::cout << "File is found"<<std::endl;
+		file_is_found:
+		if (location.isCGIrequired(real_path))
+		{
+			std::string	cgi_response;
+			if (!launchCGI(location, request, location.getCGIpath(real_path), real_path, cgi_response))
+				code = 500;
+			else
+			{
+				response.parseCGIResponse(cgi_response);
+			}
+		}
+		else
+		{
+			std::cout << "Static content needs to be served" << std::endl;
+			std::string body;
+			std::string ext = utils::getFileExtension(real_path);
+			std::string mime = getMimeFromExtension(ext);
+			utils::getFile(real_path, body);
+			response.setBody(body);
+			response.setHeader("content-type", mime);
+			response.setHeader("content-length", SSTR(body.size()));
+			response.setCode(200);
+		}
+	}
+	if (code >= 400) /* errors 4xx and 5xx */
+	{
+		response.constructErrorReply(code, &server);
+	}
+}
 
 int	GET(HTTPResponse &response,
 		const Server &server,
@@ -26,49 +128,7 @@ int	GET(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
-	int code = 0;
-	std::string body = "";
-	std::string mime = "";
-	bool isBodyCGIgenerated = false;
-	(void)request;
-
-	switch (location.getBody(request, path, body, isBodyCGIgenerated, mime))
-	{
-	case ws_file_not_found:			code = 404; break; // Not found
-	case ws_file_no_perm:			code = 403; break; // Forbidden
-	case ws_file_found:				code = 200; break; // OK
-	case ws_file_isdir:
-		if (DP_13 &  DP_MASK)	std::cout << "Checking for default file: " << path << std::endl;
-		if (location.isDefaultFileSet())
-		{
-			switch (location.getBody(request, path + "/" + location.getDefaultFile(),
-				body, isBodyCGIgenerated, mime))
-			{
-			case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
-			case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200
-			case ws_file_no_perm:	code = 403; break; // Forbidden
-			case ws_file_found:		code = 200; break; // OK
-			}
-		}
-		else
-		{
-			code = genDirListing(location, path, body); // 404 or 200
-		}
-		break;
-	}
-	if (code == 200)
-	{
-		if (isBodyCGIgenerated)
-		{
-			response.parseCGIResponse(body);
-		}
-		else
-		{
-			response.constructReply(code, &body, mime);
-		}
-	}
-	else
-		response.constructErrorReply(code, &server);
+	getOrPost(response, server, location, request, path);
 	return 0;
 }
 
@@ -78,49 +138,7 @@ int	POST(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
-	int code = 0;
-	std::string body = "";
-	std::string mime = "";
-	bool isBodyCGIgenerated = false;
-	(void)request;
-
-	switch (location.getBody(request, path, body, isBodyCGIgenerated, mime))
-	{
-	case ws_file_not_found:			code = 404; break; // Not found
-	case ws_file_no_perm:			code = 403; break; // Forbidden
-	case ws_file_found:				code = 200; break; // OK
-	case ws_file_isdir:
-		if (DP_13 &  DP_MASK)	std::cout << "Checking for default file: " << path << std::endl;
-		if (location.isDefaultFileSet())
-		{
-			switch (location.getBody(request, path + "/" + location.getDefaultFile(),
-				body, isBodyCGIgenerated, mime))
-			{
-			case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
-			case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200
-			case ws_file_no_perm:	code = 403; break; // Forbidden
-			case ws_file_found:		code = 200; break; // OK
-			}
-		}
-		else
-		{
-			code = genDirListing(location, path, body); // 404 or 200
-		}
-		break;
-	}
-	if (code == 200)
-	{
-		if (isBodyCGIgenerated)
-		{
-			response.parseCGIResponse(body);
-		}
-		else
-		{
-			response.constructReply(code, &body, mime);
-		}
-	}
-	else
-		response.constructErrorReply(code, &server);
+	getOrPost(response, server, location, request, path);
 	return 0;
 }
 
@@ -168,7 +186,10 @@ int	DELETE(HTTPResponse &response,
 	{
 		/* generate reply for DELETE */
 		std::string body = "<!DOCTYPE html><html><head><title>200 OK</title></head><body><h1>200 OK</h1><p>Resource was moved successfully.</body></html>";
-		response.constructReply(code, &body, "text/html");
+		response.setBody(body);
+		response.setHeader("content-type", "text/html");
+		response.setHeader("content-length", SSTR(body.size()));
+		response.setCode(200);
 	}
 	else
 	{
@@ -177,31 +198,32 @@ int	DELETE(HTTPResponse &response,
 	return 0;
 }
 
-static int genDirListing(const Location &loc, const std::string &path, std::string &body)
+static int genDirListing(const Location &loc, const std::string &path, HTTPResponse& response)
 {
-	std::string full_path(loc.getAlias() + path);
-
-	if (DP_13 &  DP_MASK)
-	std::cout << "checking dir listing " << loc.isDirListingSet() << "\n";
-	if (loc.isDirListingSet() == false)
-		return 404;
+	std::string real_path = loc.getRealPath(path);
 
 	DIR *dir;
 	struct dirent *dp;
-	if ((dir = opendir(full_path.c_str())) == NULL)
-		return 403;
+	if ((dir = opendir(real_path.c_str())) == NULL)
+		return 500;
 
 	std::vector<std::string> entry_name;
 	while ((dp = readdir(dir)) != NULL)
 		entry_name.push_back(std::string(dp->d_name));
+
 	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>index of " + path + "</h1>\n");
 	std::string content("");
 	FOREACH_VECTOR(std::string, entry_name)
 		content += "<h3><a href=\"/" + path + "/" + *it + "\">" + *it + "</a></h3>\n";
-
 	std::string foot("</body></html>");
-	body = head + content + foot;
+
 	closedir(dir);
+
+	response.setBody(head + content + foot);
+	response.setHeader("content-length", SSTR(response.getBody().size()));
+	response.setHeader("content-type", "text/html");
+	response.setCode(200);
+
 	return 200;
 }
 

@@ -141,51 +141,18 @@ std::string HTTPResponse::genPage(int code) const
 }
 
 /*
-	if body is null we don't set this property
-*/
-void HTTPResponse::constructReply(int code, const std::string *body, const std::string& mime)
-{
-	setVersion(1, 1);
-	setDate();
-	setReason(_reasonMap[code]);
-	setCode(code);
-	setHeader("Server", "WebServ");
-	setHeader("Content-type", mime);
-	setHeader("Connection", "keep-alive");
-	if (body != NULL)
-		setBody(*body);
-	else
-		setBody(genPage(code));
-	setHeader("content-length", SSTR(getBody().size()));
-}
-
-/*
 	construct the reply for an error, if srv is spesified we
 	check it for the error page directory
 */
 void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 {
-	setVersion(1, 1);
 	setCode(code);
-	setReason(_reasonMap[code]);
-	setDate();
-	setHeader("Server", "Webserv");
 	setHeader("Content-type", "text/html");
-
-	if (code == 400 || code == 413 || code == 414) /* need to make this more elegant like have a const array */
-		setHeader("Connection", "close");
-	else
-		setHeader("Connection", "keep-alive");
-
-	std::cout << srv << std::endl;
 
 	if (srv == NULL)
 		setBody(genPage(code));
 	else
-	{
-		srv->getErrorDir();
-		setBody(getErrorPage(*srv, code)); // but for now we cheat it
-	}
+		setBody(getErrorPage(*srv, code));
 
 	setHeader("Content-length", SSTR(getBody().size()));
 }
@@ -196,8 +163,6 @@ void	HTTPResponse::parseCGIResponse(std::string cgi_body)
 	std::istringstream	input(cgi_body);
 
 	setCode(200);
-	setReason(_reasonMap[200]);
-	setVersion(1, 1);
 
 	while (true)
 	{
@@ -220,7 +185,6 @@ void	HTTPResponse::parseCGIResponse(std::string cgi_body)
 		{
 			int code = atoi(header.second.c_str());
 			setCode(code);
-			setReason(_reasonMap[code]);
 		}
 		else if (utils::streq_ci(header.first, "location"))
 		{
@@ -234,6 +198,19 @@ void	HTTPResponse::parseCGIResponse(std::string cgi_body)
 		_body = input.str().substr(input.tellg());
 		setHeader("Content-length", SSTR(_body.size()));
 	}
+}
+
+void	HTTPResponse::finalize()
+{
+	int code = getCode();
+	setVersion(1, 1);
+	setReason(_reasonMap[code]);
+	setDate();
+	setHeader("Server", "Webserv");
+	if (code == 400 || code == 413 || code == 414 || code >= 500)
+		setHeader("Connection", "close");
+	else
+		setHeader("Connection", "keep-alive");
 }
 
 std::string HTTPResponse::getErrorPage(const Server &srv, int code) const
