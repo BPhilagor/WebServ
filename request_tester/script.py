@@ -29,8 +29,8 @@ async def main():
 		'http://localhost:5555/'
 	]
 
-	for i in range(0, 50000):
-		urls.append('http://localhost:96/')
+	for i in range(0, 1000):
+		urls.append('http://localhost:420/index.py')
 
 
 	async with aiohttp.ClientSession() as session:
