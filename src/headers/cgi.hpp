@@ -3,19 +3,22 @@
 /*    WebServ                                         / // / /__ \            */
 /*                By: skoulen, bphilago, znichola    / // /_ __/ /            */
 /*                                                  /__  __// __/             */
-/*                Created: 2023/06/14 14:15:29        /_/  /____/ lausanne.ch */
+/*                Created: 2023/06/29 13:21:12        /_/  /____/ lausanne.ch */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef REQUESTWORKER_HPP
-# define REQUESTWORKER_HPP
+#ifndef CGI_HPP
+# define CGI_HPP
 
-# include <string>
+#include <string>
 
-# include "Data.hpp"
-# include "HTTPRequest.hpp"
-# include "HTTPResponse.hpp"
+#include "HTTPRequest.hpp"
+#include "Location.hpp"
 
-void	requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response);
+bool launchCGI(const Location &location,
+				const HTTPRequest &request,
+				const std::string &cgi_path,
+				const std::string &file_path,
+				std::string &body);
 
-#endif /* REQUESTWORKER_HPP */
+#endif /* CGI_HPP */

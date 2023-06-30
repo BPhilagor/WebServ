@@ -8,7 +8,8 @@
 /* ************************************************************************** */
 
 #include "launchServers.hpp"
-
+#include "debugDefs.hpp"
+#include "utils.hpp"
 
 void	addSocketToEventQueue(int eqfd, int socket_fd)
 {
@@ -32,7 +33,8 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 
 	if (bytesRecv <= 0)
 	{
-		std::cout << "Client " << fd << " closed" << std::endl;
+		if (DP_9 & DP_MASK)
+		std::cout << "Client " << COL(ESC_COLOR_CYAN, fd) << " closed" << std::endl;
 		close(fd);
 		messages.erase(messages.find(fd)); /* this line can segfault if not found */
 		return ;
@@ -42,7 +44,8 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 		Note that the effect of a CR (\r) char is to put the cursor at the start of the line,
 		which might explain weird output!
 	*/
-	std::cout<< "Received "<< bytesRecv<< " bytes: "<< std::endl << ESC_COLOR_MAGENTA << std::string(buff, 0, bytesRecv) << ESC_COLOR_RESET << std::endl << std::endl;
+	if (DP_1 & DP_MASK)
+	std::cout << "Received "<< bytesRecv<< " bytes: "<< std::endl << ESC_COLOR_MAGENTA << std::string(buff, 0, bytesRecv) << ESC_COLOR_RESET << std::endl << std::endl;
 
 	/*
 		Add the buffer to the HTTPParser, that stores the entire buffer.
@@ -52,6 +55,7 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 	buff_man.addInputBuffer(std::string(buff, 0, bytesRecv));
 	if (buff_man.isFinished())
 	{
+		if (DP_2 & DP_MASK)
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
 		setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE);
 		setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD);
@@ -68,10 +72,11 @@ void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, cons
 	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
 	if (writtenBytes < 0)
 	{
-		std::cout << "send() failed: " << std::strerror(errno) << std::endl;
+		std::cerr << "send() failed: " << std::strerror(errno) << std::endl;
 	}
 	else
 	{
+		if (DP_3 & DP_MASK)
 		std::cout<<"Wrote " << writtenBytes << " bytes: " << std::endl << ESC_COLOR_CYAN << response << ESC_COLOR_RESET << std::endl;
 		response = response.substr(writtenBytes, response.length() - writtenBytes);
 	}
@@ -101,7 +106,10 @@ void	printClientAddress(int fd)
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 	getsockname(fd, (struct sockaddr *)&addr, &addrlen);
-	std::cout << "Received connection from: " << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
+	if (DP_9 & DP_MASK)
+	std::cout << "Received connection from: "
+	<< COL(ESC_COLOR_CYAN ,inet_ntoa(addr.sin_addr)) << ":"
+	<< COL(ESC_COLOR_CYAN , ntohs(addr.sin_port)) << std::endl;
 }
 
 int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
@@ -112,9 +120,12 @@ int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
 		int socketFD = socket(AF_INET, SOCK_STREAM, 0);
 		if (socketFD < 0)
 		{
-			std::cout << "Error when creating socket: " << std::strerror(errno) << std::endl;
+			std::cerr << "Error when creating socket: " << std::strerror(errno) << std::endl;
 			exit(1);
 		}
+
+		int option = 1;
+		setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
 		sockets.insert(socketFD);
 
@@ -128,17 +139,18 @@ int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
 		//Binding the socket with the wanted port
 		if (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
 		{
-			std::cout << "Error when binding socket: " << std::strerror(errno) << std::endl;
+			std::cerr << "Error when binding socket: " << std::strerror(errno) << std::endl;
 			exit(1);
 		}
 
 		// Start listening
 		if (listen(socketFD, BACK_LOG) < 0)
 		{
-			std::cout << "Error when establishing a listen: "<<std::strerror(errno) << std::endl;
+			std::cerr << "Error when establishing a listen: "<<std::strerror(errno) << std::endl;
 			exit(1);
 		}
-		std::cout << "Socket for port : " << ntohs(*it)  << " created" << std::endl;
+		if (DP_9 & DP_MASK)
+		std::cout << "Socket for port : " << COL(ESC_COLOR_CYAN, ntohs(*it))  << " created" << std::endl;
 	}
 	return (0);
 }
@@ -153,7 +165,7 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 	int new_socket_fd = accept(ev_fd, NULL, NULL);
 	if (new_socket_fd < 0)
 	{
-		std::cout << "Error when accepting request: " << std::strerror(errno) << std::endl;
+		std::cerr << "Error when accepting request: " << std::strerror(errno) << std::endl;
 		exit(1); /* This might not be fatal! Better error handling needed. */
 	}
 
@@ -162,7 +174,7 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 	int set = 1;
 	if (setsockopt(new_socket_fd, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(int)) != 0)
 	{
-		std::cout << "Error with setsockopt: " << std::strerror(errno) << std::endl;
+		std::cerr << "Error with setsockopt: " << std::strerror(errno) << std::endl;
 		exit(1);
 	}
 #endif
@@ -172,7 +184,9 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 
 	/* create an HTTPParser instance for that connection */
 	messages.insert(std::pair<int, BufferManager>(new_socket_fd, BufferManager(config, new_socket_fd)));
-	std::cout << "Connection established on socket " << new_socket_fd << std::endl;
+	if (DP_9 & DP_MASK)
+	std::cout << "Connection established on socket "
+	<< COL(ESC_COLOR_CYAN, new_socket_fd) << std::endl << std::endl;
 }
 
 void	setFilter(int eqfd, int socket_fd, int event, int action)
@@ -189,7 +203,7 @@ void	setFilter(int eqfd, int socket_fd, int event, int action)
 #endif
 	if (res < 0)
 	{
-		std::cout << "Error when adding event filter to queue: " << std::strerror(errno) << std::endl;
+		std::cerr << "Error when adding event filter to queue: " << std::strerror(errno) << std::endl;
 		exit(1);
 	}
 }

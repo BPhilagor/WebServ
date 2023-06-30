@@ -25,6 +25,7 @@ class HTTPHeaders
 
 		std::string	get(const std::string& name) const;
 		void		insert(const std::string& name, const std::string& value);
+		void		replace(const std::string& name, const std::string& value);
 		std::string	serialize() const;
 
 	private:

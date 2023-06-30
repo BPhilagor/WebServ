@@ -9,6 +9,10 @@
 
 #include "Location.hpp"
 #include "utils.hpp"
+#include "HTTPRequest.hpp"
+#include "mimeTypes.hpp"
+#include "debugDefs.hpp"
+#include "cgi.hpp"
 
 #define WS_ALIAS		(1U << 1)
 #define WS_METHODS		(1U << 2)
@@ -44,12 +48,12 @@ Location::Location(const Location &other) :
 	_dir_listing	(other._dir_listing),
 	_default_file	(other._default_file),
 	_cgi			(other._cgi),
-	_upload_dir		(other._upload_dir)
+	_upload_dir		(other._upload_dir),
+	_config_mask	(other._config_mask)
 	{}
 
 Location &Location::operator=(const Location &other)
 {
-	_config_mask	= other._config_mask;
 	_alias			= other._alias;
 	_methods		= other._methods;
 	_redir			= other._redir;
@@ -57,6 +61,7 @@ Location &Location::operator=(const Location &other)
 	_default_file	= other._default_file;
 	_cgi	 		= other._cgi;
 	_upload_dir		= other._upload_dir;
+	_config_mask	= other._config_mask;
 	return *this;
 }
 
@@ -69,8 +74,80 @@ t_methods_mask		Location::getMethods()		const { return _methods;       }
 const std::string &	Location::getRedir()		const { return _redir;         }
 bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
-t_cgi				Location::getCGI() 			const { return _cgi;           }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
+const cgiMap	  &	Location::getCGIMap()		const { return _cgi;           }
+std::string			Location::getRealPath(const std::string& path)
+												const { return _alias + path;  }
+
+std::string Location::getCGI(const std::string &key) const
+{
+	cgiMap::const_iterator value;
+
+	if ((value = _cgi.find(key)) == _cgi.end())
+		return "";
+	return value->second;
+}
+
+t_getfile_response	Location::getBody(const HTTPRequest &request,
+						const std::string &path, // TODO gerer les CGI etc...
+						std::string &body,
+						bool &isCGIgenerated,
+						std::string &mime)	const
+{
+	(void)request;
+	std::string real_path = getRealPath(path);
+	if (DP_11 & DP_MASK)
+	std::cout << "Path : " << real_path << std::endl;
+	t_getfile_response return_val = utils::getFile(real_path, body);
+
+	if (return_val != ws_file_found)
+		return return_val;
+
+	if (isCGIrequired(real_path))
+	{
+		launchCGI(*this, request, getCGIpath(real_path), real_path, body);
+		isCGIgenerated = true;
+		// request.setBodyCGIgenerated(true);
+		// for now we can still get the mimetype from the normal flow below
+	}
+
+	/* set mime type here! */
+	std::string ext;
+	size_t pos = real_path.find_last_of(".");
+	if (pos < real_path.length() - 1)
+	{
+		ext = real_path.substr(pos + 1, real_path.length() - pos - 1);
+	}
+	mime = getMimeFromExtension(ext);
+	return ws_file_found;
+}
+
+/*
+	find the cgi path required to process the request
+*/
+std::string Location::getCGIpath(const std::string &real_path) const
+{
+	if (isCGISet() == true)
+		FOREACH_MAP(std::string, _cgi)
+		{
+			size_t x, y;
+
+			if ((x = it->first.size()) > (y = real_path.size()))
+				continue;
+
+			if (real_path.find(it->first, y - x) != std::string::npos)
+				return it->second;
+		}
+	return "";
+}
+
+/*
+	check if file should be processed by CGI
+*/
+bool Location::isCGIrequired(const std::string &real_path) const
+{
+	return getCGIpath(real_path) == "" ? false : true;
+}
 
 /* ************************************************************************** */
 /* is property configured                                                     */
@@ -88,16 +165,18 @@ bool Location::isDefaultFileSet() const
 									{ return   WS_DEFAULT_FILE & _config_mask; }
 bool Location::isCGISet() const
 									{ return            WS_CGI & _config_mask; }
+bool Location::isCGISet(const std::string & key) const
+									{ return                  _cgi.count(key); }
 bool Location::isUploadDirSet() const
 									{ return     WS_UPLOAD_DIR & _config_mask; }
 
 t_method_response	Location::isMethodAllowed(int m)	const
 {
+
 	if (m & _methods)
 		return ws_allowed;
-	if (m & 7U)
+	else
 		return ws_not_allowed;
-	return ws_not_implemented;
 }
 
 /* ************************************************************************** */
@@ -204,22 +283,19 @@ void Location::_setDefaultFile(const Data &data)
 
 void Location::_setCGI(const Data &data)
 {
-	if (data.count("cgi") == 0)
-	{
-		_cgi = ws_no_cgi;
+	int count = 0;
+	if ((count = data.count("cgi")) == 0)
 		return;
-	}
 	_config_mask |= WS_CGI;
 
-	std::string str = data.find("cgi").getContent();
-	if (str == "php")
-		_cgi = ws_php;
-	else if (str == "python")
-		_cgi = ws_python;
-	else
+	for (int i = 0; i < count; i++)
 	{
-		_cgi = ws_no_cgi;
-		std::cerr << "Invalid cgi: " << str << std::endl;
+		std::string str(data.find("cgi", i).getContent());
+		std::string s1, s2;
+		utils::split_around_first_c(' ', str, s1, s2);
+		trim_outside_whitespace(s1);
+		trim_outside_whitespace(s2);
+		_cgi[s1] = s2;
 	}
 }
 
@@ -245,13 +321,30 @@ std::ostream & operator<<(std::ostream &os, const Location &l)
 {
 	os
 << "  {"
-<< "\n       alias " << isp(l.isAliasSet())		<< " = " << l.getAlias()
+<< "\n       alias " << isp(l.isAliasSet())			<< " = " << l.getAlias()
 << "\n     methods " << isp(l.isMethodsSet())		<< " = " << l.getMethods()
-<< "\n       redir " << isp(l.isRedirSet())		<< " = " << l.getRedir()
+<< "\n       redir " << isp(l.isRedirSet())			<< " = " << l.getRedir()
 << "\n dir_listing " << isp(l.isDirListingSet())	<< " = " << l.getDirListing()
 << "\ndefault_file " << isp(l.isDefaultFileSet())	<< " = " << l.getDefaultFile()
-<< "\n         cgi " << isp(l.isCGISet())			<< " = " << l.getCGI()
-<< "\n    upload_dir " << isp(l.isUploadDirSet())		<< " = " << l.getUploadDir()
+<< "\n         cgi " << isp(l.isCGISet())			<< " = " << l.getCGIMap()
+<< "\n  upload_dir " << isp(l.isUploadDirSet())		<< " = " << l.getUploadDir()
 << "\n  }";
+	return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const cgiMap &map)
+{
+	os << "[";
+	FOREACH_MAP(std::string, map)
+	{
+		if (it != map.begin())
+			os << ", ";
+		os << "(";
+		os << it->first;
+		os << " => ";
+		os << it->second;
+		os << ")";
+	}
+	os << "]";
 	return os;
 }

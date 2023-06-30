@@ -11,6 +11,7 @@
 
 #include "Server.hpp"
 #include "utils.hpp"
+#include "debugDefs.hpp"
 
 #define DEFAULT_LISTEN "0:8080"
 
@@ -94,28 +95,35 @@ bool Server::getDirListing() const
 			"upload_dir").getContentRef() == "true" ? true : false;
 }
 
-const Location *Server::findLocation(const std::string &path) const
+const Location *Server::findLocation(const std::string &path, std::string &new_path) const
 {
 	std::string tmp_path = path;
-	utils::stringSlashEnded(tmp_path);
 
 	while (1)
 	{
+		if (DP_4 & DP_MASK)
 		std::cout << tmp_path << std::endl;
 		const std::map<std::string, Location>::const_iterator it = _locations.find(tmp_path);
 		if (it != _locations.end())
 		{
+			if (DP_4 & DP_MASK)
 			std::cout << "Location found !!" << std::endl;
+			new_path = path.substr(tmp_path.length());
+			if (DP_4 & DP_MASK)
+			std::cout << "New path = " << new_path << std::endl;
 			return &it->second;
 		}
 		if (tmp_path.length() == 1)
 			break ;
-		size_t index = tmp_path.find_last_of('/', tmp_path.length() - 2);
+		size_t index = tmp_path.find_last_of('/', tmp_path.length());
 		if (index == std::string::npos)
 			break ;
-		tmp_path = tmp_path.substr(0, index + 1);
-		sleep(1);
+		if (index != tmp_path.length() - 1)
+			tmp_path = tmp_path.substr(0, index + 1);
+		else
+			tmp_path = tmp_path.substr(0, index);
 	}
+	if (DP_4 & DP_MASK)
 	std::cout << "Location not found !!" << std::endl;
 	return NULL;
 }
@@ -158,7 +166,6 @@ bool Server::isNameMatch(const std::string &name) const
 {
 	return _serverNames.count(name);
 }
-
 
 const std::string &Server::getPropOrDefaultStr(const std::string &prop) const
 {
@@ -210,8 +217,6 @@ void Server::_initServerNames()
 {
 	std::string str = getPropOrDefaultStr("server_name");
 
-	std::cout << "names : " << str << "\n";
-
 	while(!str.empty())
 	{
 		std::string s1;
@@ -221,15 +226,10 @@ void Server::_initServerNames()
 		_serverNames.insert(s1);
 		str = s2;
 	}
-	// std::cout << getMethods()[0] << "asd\n";
 }
 
 void Server::_initLocation()
 {
-	std::cout << "there\n";
-	std::cout << _data;
-	std::cout << "there\n";
-
 	int x = 0;
 	if ( (x = _data.count("location")) == 0)
 	{
@@ -239,8 +239,6 @@ void Server::_initLocation()
 	for (int i = 0; i < x; i++)
 		_locations[_data.find("location", i).getContent()]
 			= Location(_data.find("location", i));
-	std::cout << _locations["/basic_site"] << "\n";
-	std::cout <<"slkdjflksd\n";
 }
 
 /* ************************************************************************** */
@@ -279,7 +277,7 @@ std::ostream &operator<<(std::ostream &os, const Server &s)
 			os << " ";
 	}
 
-	os << "\n      Lcations = ";
+	os << "\n      Locations = ";
 	FOREACH_MAP(Location, s.getLocations())
 	{
 		os << it->first;

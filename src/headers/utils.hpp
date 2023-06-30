@@ -20,15 +20,19 @@
 # include <sstream>
 # include <string>
 # include <vector>
-
+# include <sys/stat.h>
 # include "typedefs.hpp"
 # include "Data.hpp"
+
+#include "HTTPRequest.hpp"
 
 #define ESC_COLOR_RED		"\033[31m"
 #define ESC_COLOR_GREEN		"\033[32m"
 #define ESC_COLOR_CYAN		"\033[96m"
 #define ESC_COLOR_MAGENTA	"\033[35m"
 #define ESC_COLOR_RESET		"\033[0m"
+
+#define COL(col, text) col << text << ESC_COLOR_RESET
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -53,7 +57,17 @@ namespace utils
 	std::string addrIntToString(u_int32_t addr_int);
 	u_int32_t addrStringToInt(const std::string &addr_string);
 	pairHostPort fd_to_HostPort(int fd);
-	std::string & stringSlashEnded(std::string &str);
+	std::string fdToString(int fd);
+	std::string ifstreamToString(std::ifstream &stream);
+	t_getfile_response getFile(const std::string &path, std::string &body);
+
+	std::string getMethodStr(const HTTPRequest &req);
+	bool isValideURL(const std::string &str);
+
+	int	parseHeader(const std::string& line, std::pair<std::string, std::string>& header);
+
+	/* case-insensitive string comparison */
+	bool	streq_ci(const std::string& s1, const std::string& s2);
 }
 
 /* use it variable to itterate */

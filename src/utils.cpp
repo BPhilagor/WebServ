@@ -10,6 +10,7 @@
 #include "utils.hpp"
 #include "Server.hpp"
 #include <arpa/inet.h>
+#include "debugDefs.hpp"
 
 #define LOCALHOST_UI32 16777343
 
@@ -95,7 +96,7 @@ u_int32_t utils::addrStringToInt(const std::string &addr_string)
 		return LOCALHOST_UI32;
 
 	if (!inet_aton(addr_string.c_str(), &tmp))
-		std::cout << "Warning, wrong adress was converted to 0" << std::endl;
+		std::cerr << "Warning, wrong adress was converted to 0" << std::endl;
 	return tmp.s_addr;
 }
 
@@ -112,6 +113,7 @@ pairHostPort utils::getHostPort(const std::string &str)
 	else
 	{
 		std::string sHost = str.substr(0, tmp);
+		if (DP_6 & DP_MASK)
 		std::cout << "Origine : " << sHost;
 		host = addrStringToInt(sHost);
 		tmp += 1;
@@ -121,6 +123,7 @@ pairHostPort utils::getHostPort(const std::string &str)
 	sPort >> port;
 
 	std::string addr_string = addrIntToString(host);
+	if (DP_6 & DP_MASK)
 	std::cout << " Conversion : " << host << " Reconversion : " << addr_string << std::endl;
 
 	if (sPort.fail())
@@ -199,9 +202,103 @@ pairHostPort utils::fd_to_HostPort(int fd)
 	return ret;
 }
 
-std::string & utils::stringSlashEnded(std::string &str)
+std::string utils::ifstreamToString(std::ifstream &stream)
 {
-	if (str.back() != '/')
-		str.append("/");
-	return str;
+	std::stringstream	buffer;
+
+	buffer << stream.rdbuf();
+	return buffer.str();
+}
+
+std::string utils::fdToString(int fd)
+{
+	std::string result;
+	char buffer[1000];
+	int byte_nbr;
+
+	while ((byte_nbr = read(fd, buffer, 1000))) {
+		if (byte_nbr != 1000 && byte_nbr > 0) {
+			buffer[byte_nbr] = 0;
+		}
+		result.append(buffer);
+	}
+	return result;
+}
+
+t_getfile_response utils::getFile(const std::string &path, std::string &body)
+{
+	std::ifstream stream;
+
+	struct stat path_stat;
+	stat(path.c_str(), &path_stat);
+	if (S_ISDIR(path_stat.st_mode))
+		return ws_file_isdir;
+
+	stream.open(path);
+
+	if (!stream)
+	{
+		if (DP_7 & DP_MASK)
+		std::cerr << "Error when opening : " << path << " : "
+			<< strerror(errno) << " (n: " << errno << ")" << std::endl;
+		return ws_file_not_found;
+	}
+
+	body = utils::ifstreamToString(stream);
+	if (DP_7 & DP_MASK)
+	std::cout << "file {" << body << "}" << std::endl;
+	stream.close();
+
+	return ws_file_found;
+}
+
+std::string utils::getMethodStr(const HTTPRequest &req)
+{
+	int mask = req.getMethod();
+
+	if (mask & WS_GET)
+		return std::string("GET");
+	else if (mask & WS_POST)
+		return std::string("POST");
+	else if (mask & WS_DELETE)
+		return std::string("DELETE");
+	return "";
+}
+
+bool utils::isValideURL(const std::string &str)
+{
+
+	return !(str.rfind("../") == 0 || !str.compare("..")
+		|| !str.compare("/..") || str.find("/../") != std::string::npos);
+}
+
+int	utils::parseHeader(const std::string& line, std::pair<std::string, std::string>& header)
+{
+	size_t pos = line.find(':');
+	if (pos == std::string::npos)
+		return (-1);
+
+	/* field name */
+	header.first = line.substr(0, pos);
+	/* reject if there is whitespace in the fieldname */
+	if (header.first.find_first_of(LINEAR_WHITESPACE) != std::string::npos)
+		return (-1);
+
+	/* trim right and left optional whitespace */
+	header.second = line.substr(pos + 1, line.size() - pos - 1);
+	utils::trim(header.second);
+
+	return (0);
+}
+
+bool	utils::streq_ci(const std::string& s1, const std::string& s2)
+{
+	if (s1.size() != s2.size())
+		return (false);
+	for (unsigned int i = 0; i < s1.size(); i++)
+	{
+		if (std::toupper(s1[i]) != std::toupper(s2[i]))
+			return (false);
+	}
+	return (true);
 }

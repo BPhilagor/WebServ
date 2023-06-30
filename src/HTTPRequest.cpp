@@ -9,24 +9,23 @@
 
 #include "HTTPRequest.hpp"
 #include "utils.hpp"
+#include "debugDefs.hpp"
 #include <iostream>
 #include <sstream>
 #include <map>
-
-#define DEBUG_PRINT 0
 
 std::istream &operator>>(std::istream &is, char const *s);
 
 HTTPRequest::HTTPRequest():
 	_valid_syntax(true),
 	_method(0),
-	_uri(""),
 	_headers(),
 	_body(""),
 	_state(0),
-	_current_line("")
+	_current_line(""),
+	_isBodyCGIgenerated(false)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest default constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest default constructor" << std::endl;
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest &cpy):
@@ -37,19 +36,20 @@ HTTPRequest::HTTPRequest(const HTTPRequest &cpy):
 	_headers(cpy._headers),
 	_body(cpy._body),
 	_state(cpy._state),
-	_current_line(cpy._current_line)
+	_current_line(cpy._current_line),
+	_isBodyCGIgenerated(cpy._isBodyCGIgenerated)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest copy constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest copy constructor" << std::endl;
 }
 
 HTTPRequest::~HTTPRequest()
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest destructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest destructor" << std::endl;
 }
 
 HTTPRequest &HTTPRequest::operator=(const HTTPRequest &rhs)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPRequest assignment operator" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPRequest assignment operator" << std::endl;
 
 	_valid_syntax = rhs._valid_syntax;
 	_method = rhs._method;
@@ -59,6 +59,7 @@ HTTPRequest &HTTPRequest::operator=(const HTTPRequest &rhs)
 	_body = rhs._body;
 	_state = rhs._state;
 	_current_line = rhs._current_line;
+	_isBodyCGIgenerated = rhs._isBodyCGIgenerated;
 
 	return (*this);
 }
@@ -75,12 +76,12 @@ t_version				HTTPRequest::getVersion() const
 	return _version;
 }
 
-std::string				HTTPRequest::getURI() const
+struct s_uri			HTTPRequest::getURI() const
 {
 	return _uri;
 }
 
-t_methods_mask		HTTPRequest::getMethod() const
+t_methods_mask			HTTPRequest::getMethod() const
 {
 	return _method;
 }
@@ -95,37 +96,62 @@ std::string				HTTPRequest::getBody() const
 	return _body;
 }
 
-bool					HTTPRequest::isParsingFinished() const
+bool					HTTPRequest::isParsingHeadersFinished() const
 {
-	return (!_valid_syntax || _state == 2);
+	return (!_valid_syntax || _state >= 2);
+}
+
+bool					HTTPRequest::isParsingBodyFinished() const
+{
+	return (!_valid_syntax || _state == 3);
+}
+
+bool					HTTPRequest::isBodyCGIgenerated() const
+{
+	return _isBodyCGIgenerated;
 }
 
 /* setters */
+
+void					HTTPRequest::setBodyCGIgenerated(bool value)
+{
+	_isBodyCGIgenerated = value;
+}
+
 void	HTTPRequest::addChar(char c)
 {
-	if (c == '\n')
+	if (_state == 2) /* might need to add body */
 	{
-		utils::sanitizeline(_current_line);
-		if (_current_line == "") /* empty line found */
-		{
-			if (_state == 1) /* we have already parsed the request line, we're now in the header state */
-				_state = 2; /* state 2 means headers finished, might need to add a body */
-			else
-				_valid_syntax = false;
-
-		}
-		else
-		{
-			if (parseLine(_current_line) != 0)
-			{
-				_valid_syntax = false;
-			}
-			_current_line = "";
-		}
+		_body += c;
+		int length = atoi(getHeader("Content-length").c_str());
+		if (_body.length() == (unsigned int) length)
+			_state = 3; /* parsing of body terminated */
 	}
 	else
 	{
-		_current_line += c;
+		if (c == '\n')
+		{
+			utils::sanitizeline(_current_line);
+			if (_current_line == "") /* empty line found */
+			{
+				if (_state == 1) /* we have already parsed the request line, we're now in the header state */
+					_state = 2; /* state 2 means headers finished, might need to add a body */
+				else
+					_valid_syntax = false;
+			}
+			else
+			{
+				if (parseLine(_current_line) != 0)
+				{
+					_valid_syntax = false;
+				}
+				_current_line = "";
+			}
+		}
+		else
+		{
+			_current_line += c;
+		}
 	}
 }
 
@@ -149,9 +175,9 @@ std::string	HTTPRequest::serialize() const
 int	HTTPRequest::parseRequestLine(const std::string& line)
 {
 	std::istringstream input(line);
-	std::string m;
-	input >> m >> _uri >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
-	utils::stringSlashEnded(_uri);
+	std::string	m;
+	std::string	u;
+	input >> m >> u >> "HTTP" >> "/" >> _version.major >> "." >> _version.minor;
 
 	if (m == "GET")
 		_method = WS_GET;
@@ -160,7 +186,10 @@ int	HTTPRequest::parseRequestLine(const std::string& line)
 	else if (m == "DELETE")
 		_method = WS_DELETE;
 
-	if (input.fail() || _method == 0 || _uri == "" || _version.major < 0 || _version.minor < 0)
+	if (input.fail() || _method == 0 || u == "" || _version.major < 0 || _version.minor < 0)
+		return (-1);
+
+	if (parseUri(u) != 0)
 		return (-1);
 
 	std::string remaining;
@@ -174,22 +203,10 @@ int	HTTPRequest::parseRequestLine(const std::string& line)
 
 int	HTTPRequest::parseHeader(const std::string& line)
 {
-	std::string	fieldname;
-	std::string	fieldvalue;
-
-	size_t pos = line.find(':');
-	if (pos == std::string::npos)
+	std::pair<std::string, std::string>	header;
+	if (utils::parseHeader(line, header) != 0)
 		return (-1);
-
-	fieldname = line.substr(0, pos);
-	/* reject if there is whitespace in the fieldname */
-	if (fieldname.find_first_of(LINEAR_WHITESPACE) != std::string::npos)
-		return (-1);
-
-	/* trim right and left optional whitespace */
-	fieldvalue = line.substr(pos + 1, line.size() - pos - 1);
-	utils::trim(fieldvalue);
-	_headers.insert(fieldname, fieldvalue);
+	_headers.insert(header.first, header.second);
 	return (0);
 }
 
@@ -206,15 +223,56 @@ int	HTTPRequest::parseLine(const std::string& line)
 	}
 	else
 	{
-		std::cout << "You stupid programmer" << std::endl;
+		std::cout << "You stupid programmer" << std::endl; /* ..ouch */
 		exit(1);
 		return (-1);
 	}
 }
 
+int		HTTPRequest::parseUri(const std::string& str)
+{
+	size_t		pos;
+	std::string	remaining;
+
+	/* try absoluteURI form */
+	if (std::strncmp("http://", str.c_str(), 7) == 0)
+	{
+		remaining = std::string(str.c_str() + 7);
+		pos = remaining.find('/');
+		if (pos == std::string::npos)
+			return (-1);
+		_uri.authority = remaining.substr(0, pos);
+		remaining = remaining.substr(pos, remaining.length() - pos);
+	}
+	else
+	{
+		remaining = str;
+	}
+	/* not absoluteURI*/
+	pos = remaining.find('?');
+	if (pos != std::string::npos)
+	{
+		_uri.path = remaining.substr(0, pos);
+		_uri.query = remaining.substr(pos + 1, remaining.length() - pos - 1);
+	}
+	else
+	{
+		_uri.path = remaining;
+	}
+	return (0);
+}
+
 std::ostream &operator<<(std::ostream &o, const HTTPRequest &req)
 {
 	o << req.serialize();
+	return (o);
+}
+
+std::ostream&	operator<<(std::ostream& o, const struct s_uri uri)
+{
+	if (uri.authority != "") o << "http://" << uri.authority;
+	o << uri.path;
+	if (uri.query != "") o << "?" <<uri.query;
 	return (o);
 }
 

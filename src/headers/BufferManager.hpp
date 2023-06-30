@@ -40,10 +40,7 @@ class BufferManager
 		HTTPRequest					_req;
 		HTTPResponse				_resp;
 
-		/* are we in the header or the body state ? */
-		int							_state;
-
-		void	constructResponse();
+		bool						_finished;
 
 		BufferManager();
 };

@@ -28,17 +28,21 @@ else
 LEAKS_CHECK = leaks -atExit --
 endif
 
-FILES	= main utils \
+FILES	= main \
+		utils \
 		Data \
 		Server \
 		Location \
+		methods \
 		requestWorker \
 		handler \
 		BufferManager \
 		launchServers \
 		launchServersUtils \
 		HTTPRequest HTTPHeaders HTTPResponse \
-		HTTPResponse_reason SuperServer
+		mimeTypes \
+		HTTPResponse_reason SuperServer \
+		cgi
 
 OBJS_PATH = objs/
 SRCS_PATH = src/

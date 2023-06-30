@@ -21,6 +21,7 @@ class Server;
 
 typedef std::pair<uint32_t, uint32_t> pairHostPort;
 typedef std::map< pairHostPort, std::vector<Server> > mapHostPort;
+typedef std::map<std::string, std::string> cgiMap;
 
 // mask of the accepted methods
 # define WS_GET    (1U << 1)
@@ -30,9 +31,20 @@ typedef unsigned int t_methods_mask;
 
 typedef enum {
 	ws_not_allowed,
-	ws_not_implemented,
 	ws_allowed
 } t_method_response;
+
+typedef enum {
+	ws_file_found,
+	ws_file_not_found,
+	ws_file_no_perm,
+	ws_file_isdir
+} t_getfile_response;
+
+typedef enum {
+	ws_dir_found,
+	ws_dir_no_perm
+} t_get_dirlist;
 
 typedef struct
 {

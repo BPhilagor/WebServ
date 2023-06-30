@@ -14,6 +14,7 @@
 #include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
 #include "SuperServer.hpp"
+#include "debugDefs.hpp"
 
 int main(int argc, char** argv)
 {
@@ -27,22 +28,18 @@ int main(int argc, char** argv)
 	else
 		Data::readFile(data, argv[1]);
 
-	std::cout << "\nconfig:\n";
-	Data::print(data, 2);
-	std::cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
+	if (DP_5 & DP_MASK)
+	{
+		std::cout << "\nconfig:\n";
+		Data::print(data, 2);
+		std::cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
+	}
 
 	SuperServer config(data);
 
+	if (DP_8 & DP_MASK)
 	std::cout << config << "\n";
 
-	pairHostPort foo(utils::addrStringToInt("127.0.0.1"), htons(8080));
-	std::cout << "found this server: " << *config.getServerForHostPortAndHostName(foo, "asd") << "\n";
-
-	// const Server *foo = config.getServerForHostPortAndHostName(foo, "asd");
-	// if (foo == NULL)
-	// 	;// dealwht it
-	// else
-	// 	; // use foo
 	launchServers(config);
 
 	return 0;

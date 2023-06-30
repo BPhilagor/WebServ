@@ -30,7 +30,7 @@ public:
 	const std::set<std::string> &getMethods() const;
 	const std::set<std::string> &getServerNames() const;
 	const std::map<std::string, Location> &getLocations() const;
-	const Location *findLocation(const std::string &path) const;
+	const Location *findLocation(const std::string &path, std::string &new_path) const;
 
 	/* getters from data */
 	const std::string &getDefault(const std::string &prop) const;

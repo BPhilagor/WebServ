@@ -13,6 +13,8 @@
 # include "typedefs.hpp"
 # include "Data.hpp"
 
+class HTTPRequest;
+
 typedef enum {
 	ws_no_cgi,
 	ws_php,
@@ -32,23 +34,35 @@ public:
 
 	static Data constructDefaultLocation(); /* unused as right now */
 
-	const std::string &	getAlias()				const;
-	t_methods_mask		getMethods()			const;
-	const std::string &	getRedir()				const;
-	bool				getDirListing()			const;
-	const std::string &	getDefaultFile()		const;
-	t_cgi				getCGI() 				const;
-	const std::string &	getUploadDir()			const;
+	const std::string &	getAlias()										const;
+	t_methods_mask		getMethods()									const;
+	const std::string &	getRedir()										const;
+	bool				getDirListing()									const;
+	const std::string & getDefaultFile()								const;
+	const cgiMap	  & getCGIMap()										const;
+	std::string			getCGI(const std::string &key) 					const;
+	const std::string &	getUploadDir()									const;
+	std::string			getRealPath(const std::string& path)			const;
+	t_getfile_response	getBody(const HTTPRequest &request,
+							const std::string &path,
+							std::string &body,
+							bool &isCGIgenerated,
+							std::string &mime)							const;
 
-	bool				isAliasSet() 			const;
-	bool				isMethodsSet()			const;
-	bool				isRedirSet()			const;
-	bool				isDirListingSet()		const;
-	bool				isDefaultFileSet()		const;
-	bool				isCGISet()				const;
-	bool				isUploadDirSet()		const;
 
-	t_method_response	isMethodAllowed(int m)	const;
+	std::string			getCGIpath(const std::string &real_path)		const;
+	bool				isCGIrequired(const std::string &real_path)		const;
+
+	bool				isAliasSet() 									const;
+	bool				isMethodsSet()									const;
+	bool				isRedirSet()									const;
+	bool				isDirListingSet()								const;
+	bool				isDefaultFileSet()								const;
+	bool				isCGISet()										const;
+	bool				isCGISet(const std::string &key)				const;
+	bool				isUploadDirSet()								const;
+
+	t_method_response	isMethodAllowed(int m)							const;
 
 private:
 	void				_setAlias(const Data &data);
@@ -64,7 +78,7 @@ private:
 	std::string			_redir;
 	bool				_dir_listing;
 	std::string			_default_file;
-	t_cgi				_cgi;
+	cgiMap				_cgi;
 	std::string			_upload_dir;
 
 	t_location_cfg_mask	_config_mask;
@@ -73,5 +87,6 @@ private:
 };
 
 std::ostream &operator<<(std::ostream &os, const Location &l);
+std::ostream &operator<<(std::ostream &os, const cgiMap &map);
 
 #endif /* LOCATION_HPP */

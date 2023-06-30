@@ -9,17 +9,17 @@
 
 #include "HTTPResponse.hpp"
 #include "utils.hpp"
+#include "debugDefs.hpp"
 
 #include <iostream>
 #include <sstream>
 
-#define DEBUG_PRINT 0
-
 std::map<int, std::string> HTTPResponse::_reasonMap = _initialiseReasonMap();
 
-HTTPResponse::HTTPResponse()
+HTTPResponse::HTTPResponse():
+	_code(0)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse constructor" << std::endl;
 }
 
 HTTPResponse::HTTPResponse(const HTTPResponse& h):
@@ -29,17 +29,17 @@ HTTPResponse::HTTPResponse(const HTTPResponse& h):
 	_headers(h._headers),
 	_body(h._body)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse copy constructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse copy constructor" << std::endl;
 }
 
 HTTPResponse::~HTTPResponse()
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse destructor" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse destructor" << std::endl;
 }
 
 HTTPResponse&	HTTPResponse::operator=(const HTTPResponse& h)
 {
-	if (DEBUG_PRINT) std::cout << "HTTPResponse assignement operator" << std::endl;
+	if (DP_12 & DP_MASK) std::cout << "HTTPResponse assignement operator" << std::endl;
 
 	_version = h._version;
 	_code = h._code;
@@ -129,7 +129,8 @@ void HTTPResponse::setDate()
 	setHeader("Date", std::string(buffer));
 }
 
-std::string HTTPResponse::genErrorPage(int code) const
+// TODO: rename to genPage
+std::string HTTPResponse::genPage(int code) const
 {
 	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1></body></html>\n");
 	page.replace(page.find("EEE"), 3, SSTR(code));
@@ -139,23 +140,30 @@ std::string HTTPResponse::genErrorPage(int code) const
 	return page;
 }
 
-void HTTPResponse::constructReply(const Server &server, const std::string &body, int code)
+/*
+	if body is null we don't set this property
+*/
+void HTTPResponse::constructReply(int code, const std::string *body, const std::string& mime)
 {
-	(void) body;
 	setVersion(1, 1);
 	setDate();
-	(void)server;
 	setReason(_reasonMap[code]);
 	setCode(code);
 	setHeader("Server", "WebServ");
-	setHeader("Content-type", "text/html");
+	setHeader("Content-type", mime);
 	setHeader("Connection", "keep-alive");
-
-	setBody(genErrorPage(code));
+	if (body != NULL)
+		setBody(*body);
+	else
+		setBody(genPage(code));
 	setHeader("content-length", SSTR(getBody().size()));
 }
 
-void	HTTPResponse::constructErrorReply(int code)
+/*
+	construct the reply for an error, if srv is spesified we
+	check it for the error page directory
+*/
+void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 {
 	setVersion(1, 1);
 	setCode(code);
@@ -164,13 +172,87 @@ void	HTTPResponse::constructErrorReply(int code)
 	setHeader("Server", "Webserv");
 	setHeader("Content-type", "text/html");
 
-	if (code == 400 || code == 413 || code == 414) /* need to make this more elegant like have a const array*/
+	if (code == 400 || code == 413 || code == 414) /* need to make this more elegant like have a const array */
 		setHeader("Connection", "close");
 	else
 		setHeader("Connection", "keep-alive");
 
-	setBody(genErrorPage(code));
+	std::cout << srv << std::endl;
+
+	if (srv == NULL)
+		setBody(genPage(code));
+	else
+	{
+		srv->getErrorDir();
+		setBody(getErrorPage(*srv, code)); // but for now we cheat it
+	}
+
 	setHeader("Content-length", SSTR(getBody().size()));
+}
+
+void	HTTPResponse::parseCGIResponse(std::string cgi_body)
+{
+	std::string			line;
+	std::istringstream	input(cgi_body);
+
+	setCode(200);
+	setReason(_reasonMap[200]);
+	setVersion(1, 1);
+
+	while (true)
+	{
+		std::getline(input, line);
+		utils::sanitizeline(line);
+
+		if (line == "")
+			break ;
+
+		/* process header here */
+		std::pair<std::string, std::string> header;
+		utils::parseHeader(line, header);
+
+		if (utils::streq_ci(header.first, "content-type"))
+		{
+			/* i use 'replace' because i don't know yet at which stage this function will be used */
+			_headers.replace("content-type", header.second);
+		}
+		else if (utils::streq_ci(header.first, "status"))
+		{
+			int code = atoi(header.second.c_str());
+			setCode(code);
+			setReason(_reasonMap[code]);
+		}
+		else if (utils::streq_ci(header.first, "location"))
+		{
+			/* handle Location header, this could imply reprocessing the request with the request worker!*/
+		}
+	}
+
+	/* get what remains of the cgi_body and put it in the body */
+	if (input.tellg() > 0)
+	{
+		_body = input.str().substr(input.tellg());
+		setHeader("Content-length", SSTR(_body.size()));
+	}
+}
+
+std::string HTTPResponse::getErrorPage(const Server &srv, int code) const
+{
+	std::string path = srv.getErrorDir() + SSTR(code) + ".html";
+	std::string body;
+	switch (utils::getFile(path, body))
+	{
+	case ws_file_found:
+		// all good nothing special to do
+		break;
+	case ws_file_not_found:
+		// fallthrough
+	case ws_file_no_perm:
+		// fallthrough
+	default:
+		body = genPage(code);
+	}
+	return body;
 }
 
 std::string	HTTPResponse::serialize() const
@@ -189,4 +271,5 @@ std::ostream&	operator<<(std::ostream& o, const HTTPResponse& h)
 {
 	o << h.serialize();
 	return (o);
+
 }

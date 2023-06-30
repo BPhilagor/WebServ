@@ -12,57 +12,29 @@
 #include "handler.hpp"
 #include "requestWorker.hpp"
 #include "Server.hpp"
-
-static void methodHandlerGET(const Server &srv, const HTTPRequest &req,
-	HTTPResponse& res, const Location& loc)
-{
-	res.constructReply(srv, "", 200);
-	std::cout << "Get Method detected" << std::endl;
-	(void)loc;
-	(void)res;
-	(void)req;
-	(void)srv;
-}
-
-static void methodHandlerPOST(const Server &srv, const HTTPRequest &req,
-	HTTPResponse& res, const Location& loc)
-{
-	(void)loc;
-	(void)res;
-	(void)req;
-	(void)srv;
-}
-
-static void methodHandlerDELETE(const Server &srv, const HTTPRequest &req,
-	HTTPResponse& res, const Location& loc)
-{
-	(void)loc;
-	(void)res;
-	(void)req;
-	(void)srv;
-}
+#include "methods.hpp"
 
 void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 {
-	// Identify req
-	std::cout << "Enter Request Worker" << std::endl;
-	const Location *loc = srv.findLocation(req.getURI());
+	std::string new_path;
+	const Location *loc = srv.findLocation(req.getURI().path, new_path);
 	if (!loc)
 	{
-		res.constructErrorReply(404);
+		res.constructErrorReply(404, &srv);
 		return ;
 	}
 
 	switch (loc->isMethodAllowed(req.getMethod()))
 	{
-		case ws_not_allowed : res.constructErrorReply(405); return;
-		case ws_not_implemented : res.constructErrorReply(501); return;
-		default : break;
-	}
-	switch (req.getMethod())
-	{
-		case WS_GET : methodHandlerGET(srv, req, res, *loc); break;
-		case WS_POST : methodHandlerPOST(srv, req, res, *loc); break;
-		case WS_DELETE : methodHandlerDELETE(srv, req, res, *loc); break;
+		case ws_not_allowed : res.constructErrorReply(405); break;
+		default :
+		switch (req.getMethod())
+		{
+			case WS_GET : GET(res, srv, *loc, req, new_path); break;
+			case WS_POST : POST(res, srv, *loc, req, new_path); break;
+			case WS_DELETE : DELETE(res, srv, *loc, req, new_path); break;
+			default:
+				res.constructErrorReply(501, &srv); /* Method not implemented */
+		}
 	}
 }

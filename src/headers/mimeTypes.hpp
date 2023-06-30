@@ -3,19 +3,15 @@
 /*    WebServ                                         / // / /__ \            */
 /*                By: skoulen, bphilago, znichola    / // /_ __/ /            */
 /*                                                  /__  __// __/             */
-/*                Created: 2023/06/14 14:15:29        /_/  /____/ lausanne.ch */
+/*                Created: 2023/06/27 15:53:42        /_/  /____/ lausanne.ch */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef REQUESTWORKER_HPP
-# define REQUESTWORKER_HPP
+#ifndef MIME_TYPES_H
+# define MIME_TYPES_H
 
-# include <string>
+#include <string>
 
-# include "Data.hpp"
-# include "HTTPRequest.hpp"
-# include "HTTPResponse.hpp"
+std::string getMimeFromExtension(std::string& ext);
 
-void	requestWorker(const Server &server, const HTTPRequest &request, HTTPResponse& response);
-
-#endif /* REQUESTWORKER_HPP */
+#endif /* MIME_TYPES_H */
