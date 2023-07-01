@@ -157,6 +157,27 @@ void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 	setHeader("Content-length", SSTR(getBody().size()));
 }
 
+void	HTTPResponse::serveStaticFile(const std::string& path)
+{
+	std::string body;
+	std::string ext = utils::getFileExtension(path);
+	std::string mime = getMimeFromExtension(ext);
+	utils::getFile(path, body);
+	setBody(body);
+	setHeader("content-type", mime);
+	setHeader("content-length", SSTR(body.size()));
+	setCode(200);
+}
+
+void	HTTPResponse::serveDynamicFile(const Location& location, const std::string& path, const HTTPRequest& request)
+{
+	std::string	cgi_response;
+	if (!launchCGI(location, request, location.getCGIpath(path), path, cgi_response))
+		setCode(500);
+	else
+		parseCGIResponse(cgi_response); /* this sets the res code */
+}
+
 void	HTTPResponse::parseCGIResponse(std::string cgi_body)
 {
 	std::string			line;

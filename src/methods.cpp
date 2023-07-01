@@ -44,31 +44,23 @@ int check_file(const char *path)
 
 void	getOrPost(HTTPResponse &response, const Server &server, const Location& location, const HTTPRequest& request, const std::string& path)
 {
-	int	code;
-
 	std::string real_path = location.getRealPath(path);
-
-	std::cout << "Real path: "<< real_path << std::endl;
-
 	int file_status = check_file(real_path.c_str());
 
-	std::cout << "file status: " <<std::strerror(file_status)<<std::endl;
-
 	if (file_status == ENOENT)
-		code = 404;
+		response.setCode(404);
 	else if (file_status == EPERM)
-		code = 403;
+		response.setCode(403);
 	else if (file_status == EISDIR)
 	{
-		if (DP_13 & DP_MASK)	std::cout << "URI is a directory. Checking for default file: " << path << std::endl;
+		if (DP_13 & DP_MASK)
+			std::cout << "URI is a directory. Checking for default file: " << path << std::endl;
+
 		if (location.isDefaultFileSet())
 		{
-			std::cout << "A default file is set"<< std::endl;
 			std::string index_path = path + "/" + location.getDefaultFile();
 			std::string real_index_path = location.getRealPath(index_path);
-			std::cout << "That file is located at: "<<real_index_path<<std::endl;
 			int index_file_status = check_file(real_index_path.c_str());
-
 			if (index_file_status != 0)
 			{
 				goto generate_dir_listing;
@@ -82,43 +74,25 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 		else
 		{
 			generate_dir_listing:
-			std::cout << "let's generate dir listing!"<<std::endl;
 			if (!location.isDirListingSet())
-				code = 403;
+				response.setCode(403);
 			else
-				code = genDirListing(location, path, response);
+				response.setCode(genDirListing(location, path, response));
 		}
 	}
 	else
 	{
-		std::cout << "File is found"<<std::endl;
 		file_is_found:
 		if (location.isCGIrequired(real_path))
-		{
-			std::string	cgi_response;
-			if (!launchCGI(location, request, location.getCGIpath(real_path), real_path, cgi_response))
-				code = 500;
-			else
-			{
-				response.parseCGIResponse(cgi_response);
-			}
-		}
+			response.serveDynamicFile(location, real_path, request);
 		else
-		{
-			std::cout << "Static content needs to be served" << std::endl;
-			std::string body;
-			std::string ext = utils::getFileExtension(real_path);
-			std::string mime = getMimeFromExtension(ext);
-			utils::getFile(real_path, body);
-			response.setBody(body);
-			response.setHeader("content-type", mime);
-			response.setHeader("content-length", SSTR(body.size()));
-			response.setCode(200);
-		}
+			response.serveStaticFile(real_path);
 	}
-	if (code >= 400) /* errors 4xx and 5xx */
+
+	/* check the status code produced in the operations above. If necessary, serve an error reply */
+	if (response.getCode() >= 400) /* errors 4xx and 5xx */
 	{
-		response.constructErrorReply(code, &server);
+		response.constructErrorReply(response.getCode(), &server);
 	}
 }
 
