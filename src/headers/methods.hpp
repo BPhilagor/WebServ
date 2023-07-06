@@ -11,6 +11,7 @@
 # define METHODS_HPP
 
 # include <string>
+# include <cstring>
 # include <sys/time.h>
 # include <fcntl.h>
 

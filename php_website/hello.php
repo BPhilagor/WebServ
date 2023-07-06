@@ -15,5 +15,12 @@
 		<li><a href="/info.php">Here some $_SERVER variables</a></li>
 	</ul>
 	<h1><?php echo "hello ".$_POST['name']; ?></h1>
+	<p>
+			<table>
+			<tr><td>$_POST array: </td> <td> <?php var_dump($_POST); ?></td></tr>
+			<tr><td>$_GET array:  </td> <td> <?php var_dump($_GET); ?></td></tr>
+			</table>
+			
+	</p>
 </body>
 </html>

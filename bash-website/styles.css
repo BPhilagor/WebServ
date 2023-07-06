@@ -1,0 +1,6 @@
+.cmd {
+	color: white;
+	word-break: break-all;
+	white-space: pre-wrap;
+	display: inline;
+  }

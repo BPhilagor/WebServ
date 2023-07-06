@@ -29,7 +29,7 @@ static void creat_env(const Location &loc,
 				const std::string &file_path,
 				std::vector<std::string> &env);
 
-static void cgiStateHandler(int event);
+static void cgiStateHandler2(int event, siginfo_t *a, void *b);
 
 bool launchCGI(const Location &location,
 				const HTTPRequest &request,
@@ -37,7 +37,6 @@ bool launchCGI(const Location &location,
 				const std::string &file_path,
 				std::string &body)
 {
-	(void)file_path;
 
 	if (DP_15 & DP_MASK)
 	std::cout << COL(ESC_COLOR_GREEN, "launching CGI") << std::endl;
@@ -55,19 +54,24 @@ bool launchCGI(const Location &location,
 	}
 	env.push_back(NULL);
 	std::vector<std::string> env_data;
+
 	int fd[2];
-	// const std::string cgi_path = "cgi/php-cgi"; // Make sure strings are null terminated
-
-	if (pipe(fd) == -1)
+	if (pipe(fd) < 0)
+	{
+		std::cerr << "pipe() failed: "<< std::strerror(errno)<<std::endl;
 		return false;
-
+	}
 	int pid = fork();
-
-	if (!pid)
+	if (pid < 0)
+	{
+		std::cerr << "fork() failed: "<<std::strerror(errno)<<std::endl;
+		return false;
+	}
+	if (pid == 0)
 	{
 		FOREACH_VECTOR(std::string, env_data)
 			;
-		if (dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
+		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
 			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "
 				<< cgi_path << ESC_COLOR_RESET << std::endl;
@@ -82,14 +86,27 @@ bool launchCGI(const Location &location,
 		exit(1);
 	}
 
-	if (close(fd[1]) == -1)
-		std::cerr << ESC_COLOR_RED << "Error when closing pipe for : "
-			<< cgi_path << ESC_COLOR_RESET << std::endl;
+	int bytes_written = write(fd[1], request.getBody().c_str(), request.getBody().size());
+	if (bytes_written < 0)
+	{
+		std::cerr << "writing request body to pipe failed: "<< std::strerror(errno) << std::endl;
+		exit(1);
+	}
 
-	signal(SIGCHLD, &cgiStateHandler);
-	pause();
+	if (close(fd[1]) == -1)
+		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
+
+	sigset_t set;
+	sigemptyset(&set);
+	struct sigaction sig_handler;
+	sig_handler.sa_handler = 0;
+	sig_handler.sa_mask = set;
+	sig_handler.sa_flags = SA_RESTART;
+	sig_handler.sa_sigaction = &cgiStateHandler2;
+	sigaction(SIGCHLD, &sig_handler, NULL);
 
 	waitpid(pid, NULL, 0);
+
 	body = utils::fdToString(fd[0]);
 	if (close(fd[0]) == -1)
 		std::cerr << ESC_COLOR_RED << "Error when closing pipe for : " << cgi_path
@@ -103,10 +120,10 @@ static void creat_env(const Location &loc,
 				std::vector<std::string> &env)
 {
 	(void) loc; // TODO utiliser
-	env.push_back(std::string("GATEWAY_INTERFACE="));
+	env.push_back(std::string("GATEWAY_INTERFACE=CGI/1.1"));
 	env.push_back(std::string("SERVER_NAME=" + req.getHeader("host")));
 	env.push_back(std::string("SERVER_SOFTWARE=WebServ_0.1"));
-	env.push_back(std::string("SERVER_PROTOCOL="));
+	env.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
 	env.push_back(std::string("SERVER_PORT="));
 	env.push_back(std::string("REQUEST_METHOD=" + utils::getMethodStr(req)));
 	env.push_back(std::string("PATH_INFO=" + req.getURI().path));
@@ -119,7 +136,7 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("AUTH_TYPE="));
 	env.push_back(std::string("REMOTE_USER="));
 	env.push_back(std::string("REMOTE_IDENT="));
-	env.push_back(std::string("CONTENT_TYPE=text/php")); // hardcoded for now
+	env.push_back(std::string("CONTENT_TYPE=" + req.getHeader("content-type")));
 	env.push_back(std::string("CONTENT_LENGTH=" + SSTR(req.getBody().length())));
 	env.push_back(std::string("HTTP_ACCEPT=" + req.getHeader("ACCEPT")));
 	env.push_back(std::string("HTTP_USER_AGENT=" + req.getHeader("USER-AGENT")));
@@ -127,11 +144,12 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("REDIRECT_STATUS="));
 }
 
-static void cgiStateHandler(int event)
+static void cgiStateHandler2(int event, siginfo_t *a, void *b)
 {
+	(void) a;
+	(void) b;
 	if (event == SIGALRM)
 		state = ws_cgi_timeout;
 	else if(event == SIGCHLD)
 		state = ws_cgi_done;
 }
-

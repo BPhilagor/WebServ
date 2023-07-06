@@ -38,9 +38,9 @@ int	GET(HTTPResponse &response,
 	case ws_file_no_perm:			code = 403; break; // Forbidden
 	case ws_file_found:				code = 200; break; // OK
 	case ws_file_isdir:
-		if (DP_13 &  DP_MASK)
-		std::cout << "Checking for default file: " << path << "\n";
+		if (DP_13 &  DP_MASK)	std::cout << "Checking for default file: " << path << std::endl;
 		if (location.isDefaultFileSet())
+		{
 			switch (location.getBody(request, path + "/" + location.getDefaultFile(),
 				body, isBodyCGIgenerated, mime))
 			{
@@ -49,8 +49,11 @@ int	GET(HTTPResponse &response,
 			case ws_file_no_perm:	code = 403; break; // Forbidden
 			case ws_file_found:		code = 200; break; // OK
 			}
+		}
 		else
-			code = genDirListing(location, path, body); break; // 404 or 200
+		{
+			code = genDirListing(location, path, body); // 404 or 200
+		}
 		break;
 	}
 	if (code == 200)
@@ -75,11 +78,49 @@ int	POST(HTTPResponse &response,
 		const HTTPRequest &request,
 		const std::string &path)
 {
-	(void)response;
-	(void)server;
-	(void)location;
+	int code = 0;
+	std::string body = "";
+	std::string mime = "";
+	bool isBodyCGIgenerated = false;
 	(void)request;
-	(void)path;
+
+	switch (location.getBody(request, path, body, isBodyCGIgenerated, mime))
+	{
+	case ws_file_not_found:			code = 404; break; // Not found
+	case ws_file_no_perm:			code = 403; break; // Forbidden
+	case ws_file_found:				code = 200; break; // OK
+	case ws_file_isdir:
+		if (DP_13 &  DP_MASK)	std::cout << "Checking for default file: " << path << std::endl;
+		if (location.isDefaultFileSet())
+		{
+			switch (location.getBody(request, path + "/" + location.getDefaultFile(),
+				body, isBodyCGIgenerated, mime))
+			{
+			case ws_file_not_found:	code = genDirListing(location, path, body); break; // 404 or 200
+			case ws_file_isdir:		code = genDirListing(location, path, body); break; // 404 or 200
+			case ws_file_no_perm:	code = 403; break; // Forbidden
+			case ws_file_found:		code = 200; break; // OK
+			}
+		}
+		else
+		{
+			code = genDirListing(location, path, body); // 404 or 200
+		}
+		break;
+	}
+	if (code == 200)
+	{
+		if (isBodyCGIgenerated)
+		{
+			response.parseCGIResponse(body);
+		}
+		else
+		{
+			response.constructReply(code, &body, mime);
+		}
+	}
+	else
+		response.constructErrorReply(code, &server);
 	return 0;
 }
 
