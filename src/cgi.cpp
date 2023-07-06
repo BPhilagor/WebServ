@@ -29,7 +29,7 @@ static void creat_env(const Location &loc,
 				const std::string &file_path,
 				std::vector<std::string> &env);
 
-static void cgiStateHandler2(int event, struct __siginfo *a, void *b);
+static void cgiStateHandler(int event);
 
 bool launchCGI(const Location &location,
 				const HTTPRequest &request,
@@ -69,33 +69,31 @@ bool launchCGI(const Location &location,
 			;
 		if (dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
-			std::cerr << "Pipe error when trying to execute : " << cgi_path << std::endl;
+			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "
+				<< cgi_path << ESC_COLOR_RESET << std::endl;
 			exit(1);
 		}
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
-		std::cerr << "Error cannot execute : " << cgi_path << strerror(errno) << std::endl;
+		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
+			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
 		exit(1);
 	}
 
 	if (close(fd[1]) == -1)
-		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
+		std::cerr << ESC_COLOR_RED << "Error when closing pipe for : "
+			<< cgi_path << ESC_COLOR_RESET << std::endl;
 
-	sigset_t set;
-	struct sigaction sig_handler;
-	sig_handler.sa_handler = 0;
-	sig_handler.sa_mask = sigemptyset(&set);
-	sig_handler.sa_flags = SA_RESTART;
-	sig_handler.sa_sigaction = &cgiStateHandler2;
-	sigaction(SIGCHLD, &sig_handler, NULL);
+	signal(SIGCHLD, &cgiStateHandler);
 	pause();
 
 	waitpid(pid, NULL, 0);
 	body = utils::fdToString(fd[0]);
 	if (close(fd[0]) == -1)
-		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
+		std::cerr << ESC_COLOR_RED << "Error when closing pipe for : " << cgi_path
+			<< ESC_COLOR_RESET << std::endl;
 	return true;
 }
 
@@ -129,10 +127,8 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("REDIRECT_STATUS="));
 }
 
-static void cgiStateHandler2(int event, struct __siginfo *a, void *b)
+static void cgiStateHandler(int event)
 {
-	(void) a;
-	(void) b;
 	if (event == SIGALRM)
 		state = ws_cgi_timeout;
 	else if(event == SIGCHLD)

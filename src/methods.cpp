@@ -102,7 +102,7 @@ int	DELETE(HTTPResponse &response,
 	/* make sure this folder is created */
 	if (mkdir(deleted_folder.c_str(), 0755) != 0 && errno != EEXIST)
 	{
-		std::cout << "Failed to create deleted files folder '" << deleted_folder <<"': "<<std::strerror(errno) <<std::endl;
+		std::cerr << "Failed to create deleted files folder '" << deleted_folder <<"': "<<std::strerror(errno) <<std::endl;
 		code = 500;
 	}
 

@@ -16,11 +16,16 @@ void	addSocketToEventQueue(int eqfd, int socket_fd)
 	setFilter(eqfd, socket_fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
 }
 
-void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets)
+void	addPassiveSocketsToQueue(int eqfd, const std::set<int> listeningSockets)
 {
-	for (std::set<int>::iterator it = listeningSockets.begin(); it != listeningSockets.end(); ++it)
+	for (std::set<int>::const_iterator it = listeningSockets.begin(); it != listeningSockets.end(); ++it)
 	{
-		setFilter(eqfd, *it, EVENT_FILTER_READ, EVENT_ACTION_ADD);
+		if (setFilter(eqfd, *it, EVENT_FILTER_READ, EVENT_ACTION_ADD))
+		{
+			std::cerr << ESC_COLOR_RED << "Fatal error when creating passive socket event"
+				<< ESC_COLOR_RESET << std::endl;
+			exit (1);
+		}
 	}
 }
 
@@ -57,8 +62,9 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 	{
 		if (DP_2 & DP_MASK)
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
-		setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE);
-		setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD);
+		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
+			|| setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
+			throw "Set filter error";
 	}
 }
 
@@ -96,8 +102,9 @@ void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, cons
 		buff_man = BufferManager(config, fd); /* reset the buffer manager */
 		buff_man.addInputBuffer(remaining_buffer);
 
-		setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE);
-		setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
+		if (setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE)
+			|| setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD))
+			throw "Set Filter Error";
 	}
 }
 
@@ -112,50 +119,67 @@ void	printClientAddress(int fd)
 	<< COL(ESC_COLOR_CYAN , ntohs(addr.sin_port)) << std::endl;
 }
 
-int	openSockets(const std::set<int>& ports, std::set<int>& sockets)
+static int openSocket(SuperServer &config, int port_nbr)
+{
+	int socketFD = socket(AF_INET, SOCK_STREAM, 0);
+	if (socketFD < 0)
+	{
+		std::cerr << ESC_COLOR_RED << "Error when creating socket: " 
+			<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;
+		exit(1);
+	}
+
+	int option = 1;
+	setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+
+
+	// Creating the sockaddr_in struct
+	struct sockaddr_in	addr;
+	memset(&addr, 0, sizeof(addr));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_port = port_nbr;
+
+	//Binding the socket with the wanted port
+	while (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
+	{
+		std::cerr << "Error when binding socket: " << std::strerror(errno) << std::endl;
+		close(socketFD);
+		return (1);
+	}
+
+	// Start listening
+	if (listen(socketFD, BACK_LOG) < 0)
+	{
+		std::cerr << ESC_COLOR_RED << "Error when establishing a listen: "
+		<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;
+		exit(1);
+	}
+	if (DP_9 & DP_MASK)
+		std::cout << "Socket for port : " << COL(ESC_COLOR_CYAN, ntohs(port_nbr))  << " created" << std::endl;
+	config.addListeningSocket(socketFD);
+	return (0);
+}
+
+int	openSockets(const std::set<int>& ports, SuperServer &config)
 {
 	// we made our sockets
 	for (std::set<int>::iterator it = ports.begin(); it != ports.end(); ++it)
 	{
-		int socketFD = socket(AF_INET, SOCK_STREAM, 0);
-		if (socketFD < 0)
+		while (openSocket(config, *it))
 		{
-			std::cerr << "Error when creating socket: " << std::strerror(errno) << std::endl;
-			exit(1);
+			if (errno == EADDRINUSE)
+			{
+				std::cerr << ESC_COLOR_GREEN << "Retrying in 5 seconds ..." << ESC_COLOR_RESET << std::endl;
+				sleep(5);
+			} else
+				exit (1);
 		}
-
-		int option = 1;
-		setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-
-		sockets.insert(socketFD);
-
-		// Creating the sockaddr_in struct
-		struct sockaddr_in	addr;
-		memset(&addr, 0, sizeof(addr));
-		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		addr.sin_port = *it;
-
-		//Binding the socket with the wanted port
-		if (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
-		{
-			std::cerr << "Error when binding socket: " << std::strerror(errno) << std::endl;
-			exit(1);
-		}
-
-		// Start listening
-		if (listen(socketFD, BACK_LOG) < 0)
-		{
-			std::cerr << "Error when establishing a listen: "<<std::strerror(errno) << std::endl;
-			exit(1);
-		}
-		if (DP_9 & DP_MASK)
-		std::cout << "Socket for port : " << COL(ESC_COLOR_CYAN, ntohs(*it))  << " created" << std::endl;
 	}
 	return (0);
 }
 
-bool	isListenSocket(int fd, std::set<int>& listenSockets)
+bool	isListenSocket(int fd, const std::set<int>& listenSockets)
 {
 	return (listenSockets.find(fd) != listenSockets.end());
 }
@@ -165,8 +189,9 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 	int new_socket_fd = accept(ev_fd, NULL, NULL);
 	if (new_socket_fd < 0)
 	{
-		std::cerr << "Error when accepting request: " << std::strerror(errno) << std::endl;
-		exit(1); /* This might not be fatal! Better error handling needed. */
+		std::cerr << ESC_COLOR_RED << "Error when accepting request: "
+			<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;
+		return ;
 	}
 
 #ifndef __linux__
@@ -174,8 +199,10 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 	int set = 1;
 	if (setsockopt(new_socket_fd, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(int)) != 0)
 	{
-		std::cerr << "Error with setsockopt: " << std::strerror(errno) << std::endl;
-		exit(1);
+		std::cerr << ESC_COLOR_RED << "Error with setsockopt: "
+			<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;
+		close(new_socket_fd);
+		return ;
 	}
 #endif
 
@@ -189,7 +216,7 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 	<< COL(ESC_COLOR_CYAN, new_socket_fd) << std::endl << std::endl;
 }
 
-void	setFilter(int eqfd, int socket_fd, int event, int action)
+int	setFilter(int eqfd, int socket_fd, int event, int action)
 {
 #ifdef __linux__
 	struct epoll_event ev;
@@ -203,7 +230,9 @@ void	setFilter(int eqfd, int socket_fd, int event, int action)
 #endif
 	if (res < 0)
 	{
-		std::cerr << "Error when adding event filter to queue: " << std::strerror(errno) << std::endl;
-		exit(1);
+		std::cerr << ESC_COLOR_RED << "Error when adding event filter to queue: "
+			<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;
+		return (1);
 	}
+	return (0);
 }

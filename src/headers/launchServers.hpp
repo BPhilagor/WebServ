@@ -52,7 +52,7 @@
 
 /* launchServers.hpp */
 
-void	launchServers(const SuperServer &config);
+void    launchServers(const SuperServer &config, char **argv, char **env);
 
 /* launchServersUtils.hpp */
 
@@ -62,8 +62,8 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages);
 void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config);
 void	establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int eqfd, const SuperServer& config);
 void	printClientAddress(int fd);
-int		openSockets(const std::set<int>& ports, std::set<int>& sockets);
-bool	isListenSocket(int fd, std::set<int>& listenSockets);
-void	setFilter(int eqfd, int socket_fd, int event, int action);
+int		openSockets(const std::set<int>& ports, SuperServer &config);
+bool	isListenSocket(int fd, const std::set<int>& listenSockets);
+int		setFilter(int eqfd, int socket_fd, int event, int action);
 
 #endif /* LAUNCHSERVERS_HPP */

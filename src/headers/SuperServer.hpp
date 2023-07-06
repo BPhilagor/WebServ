@@ -25,6 +25,7 @@ public:
 	/* propery getters */
 	const std::vector<Server> &getServers() const;
 	const std::set<int> &getPorts() const;
+	const std::set<int> &getListeningSockets() const;
 
 	/* propery interrogators */
 	bool isMatchHostPort(const pairHostPort &match) const;
@@ -33,10 +34,13 @@ public:
 
 	const Server *getServerForHostPort(const pairHostPort &match) const;
 
+	void addListeningSocket(int fd);
+
 private:
 	std::vector<Server>	_servers;
 	std::set<int>		_ports;
 	mapHostPort			_mapHostPort;
+	std::set<int> 		_listeningSockets;
 };
 
 std::ostream &operator<<(std::ostream &os, const SuperServer &s);
