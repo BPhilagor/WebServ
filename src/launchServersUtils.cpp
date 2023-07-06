@@ -124,7 +124,7 @@ static int openSocket(SuperServer &config, int port_nbr)
 	int socketFD = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketFD < 0)
 	{
-		std::cerr << ESC_COLOR_RED << "Error when creating socket: " 
+		std::cerr << ESC_COLOR_RED << "Error when creating socket: "
 			<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;
 		exit(1);
 	}
@@ -143,7 +143,10 @@ static int openSocket(SuperServer &config, int port_nbr)
 	//Binding the socket with the wanted port
 	while (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
 	{
-		std::cerr << "Error when binding socket: " << std::strerror(errno) << std::endl;
+		std::cerr << "Error when binding socket: port "
+		<< COL(ESC_COLOR_CYAN, ntohs(port_nbr)) << " .. "
+		<< std::strerror(errno) << std::endl;
+		std::cout << "Trying using: $> netstat -vanp tcp | grep port_number" << std::endl;
 		close(socketFD);
 		return (1);
 	}

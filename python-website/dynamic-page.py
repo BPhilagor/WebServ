@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import cgi
+# import cgi
+import os
 
 def generate_html_page(title, content, server_name):
 	html = '''
@@ -22,10 +23,16 @@ def generate_html_page(title, content, server_name):
 	''' % (title, title, content, server_name)
 	return html
 # Read form data
-form = cgi.FieldStorage()
-page_title = form.getvalue('title', 'My Generated Page')
-page_content = form.getvalue('content', 'This is a dynamically generated HTML page.')
-server_name = form.getvalue('SERVER_SOFTWARE')
+# form = cgi.FieldStorage()
+# page_title = form.getvalue('title', 'My Generated Page')
+# page_content = form.getvalue('content', 'This is a dynamically generated HTML page.')
+# server_name = form.getvalue('SERVER_SOFTWARE')
+
+
+env = os.environ
+page_title = env.get('title') if env.get('title') is not None else 'real title not found, My Generated Page'
+page_content = env.get('content') if env.get('content') is not None else  'This is a dynamically generated HTML page.'
+server_name = env.get('SERVER_SOFTWARE') if env.get('SERVER_SOFTWARE') is not None else 'no server content'
 
 # Generate HTML page
 generated_html = generate_html_page(page_title, page_content, server_name)
