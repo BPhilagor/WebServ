@@ -49,7 +49,8 @@ void Data::readFile(Data &n, const char *path)
 		std::ifstream file(path);
 		if (!file.is_open())
 		{
-			std::cerr << "can't read config file: " << path << std::endl;
+			std::cerr << ESC_COLOR_RED <<  "Fatal error : cannot read config file: "
+				<< path << ESC_COLOR_RESET << std::endl;
 			exit(1);
 		}
 		while(!file.eof())

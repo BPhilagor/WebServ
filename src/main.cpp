@@ -16,7 +16,7 @@
 #include "SuperServer.hpp"
 #include "debugDefs.hpp"
 
-int main(int argc, char** argv)
+int main(int argc, char** argv, char **env)
 {
 	Data data;
 	if (argc != 2)
@@ -40,7 +40,9 @@ int main(int argc, char** argv)
 	if (DP_8 & DP_MASK)
 	std::cout << config << "\n";
 
-	launchServers(config);
+	openSockets(config.getPorts(), config);
+
+	launchServers(config, argv, env);
 
 	return 0;
 }

@@ -54,7 +54,7 @@ bool launchCGI(const Location &location,
 	}
 	env.push_back(NULL);
 	std::vector<std::string> env_data;
-	
+
 	int fd[2];
 	if (pipe(fd) < 0)
 	{
@@ -73,14 +73,16 @@ bool launchCGI(const Location &location,
 			;
 		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
-			std::cerr << "Pipe error when trying to execute : " << cgi_path << std::endl;
+			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "
+				<< cgi_path << ESC_COLOR_RESET << std::endl;
 			exit(1);
 		}
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
-		std::cerr << "Error cannot execute : " << cgi_path << strerror(errno) << std::endl;
+		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
+			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
 		exit(1);
 	}
 
@@ -94,7 +96,6 @@ bool launchCGI(const Location &location,
 	if (close(fd[1]) == -1)
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
 
-	
 	sigset_t set;
 	sigemptyset(&set);
 	struct sigaction sig_handler;
@@ -108,7 +109,8 @@ bool launchCGI(const Location &location,
 
 	body = utils::fdToString(fd[0]);
 	if (close(fd[0]) == -1)
-		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
+		std::cerr << ESC_COLOR_RED << "Error when closing pipe for : " << cgi_path
+			<< ESC_COLOR_RESET << std::endl;
 	return true;
 }
 
@@ -151,4 +153,3 @@ static void cgiStateHandler2(int event, siginfo_t *a, void *b)
 	else if(event == SIGCHLD)
 		state = ws_cgi_done;
 }
-

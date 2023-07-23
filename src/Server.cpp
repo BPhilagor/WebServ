@@ -62,7 +62,8 @@ const std::string &Server::getDefault(const std::string &prop) const
 {
 	if (_defaultServer.count(prop) == 0)
 	{
-		std::cerr << "default property \"" << prop << "\" not set\n";
+		std::cerr << ESC_COLOR_RED << "default property \"" << prop << "\" not set"
+			<< ESC_COLOR_RESET << std::endl;
 		exit(42);
 	}
 	return _defaultServer.find(prop).getContentRef();
