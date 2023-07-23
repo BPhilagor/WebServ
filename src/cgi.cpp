@@ -37,9 +37,8 @@ bool launchCGI(const Location &location,
 				const std::string &file_path,
 				std::string &body)
 {
-
 	if (DP_15 & DP_MASK)
-	std::cout << COL(ESC_COLOR_GREEN, "launching CGI") << std::endl;
+	std::cout << COL(ESC_COLOR_GREEN, "launching CGI ") << cgi_path << std::endl;
 
 	std::vector<const char *> env;
 
@@ -143,7 +142,7 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("PATH_INFO=" + req.getURI().path));
 	env.push_back(std::string("PATH_TRANSLATED=" + file_path));
 	env.push_back(std::string("SCRIPT_NAME=" + req.getURI().path));
-	env.push_back(std::string("DOCUMENT_ROOT=")); // seems to be useless
+	env.push_back(std::string("DOCUMENT_ROOT=!!!! this should be set to the root of the website i.e. websites/python-website/")); // seems to be useless
 	env.push_back(std::string("QUERY_STRING=" + req.getURI().query)); // important!
 	env.push_back(std::string("REMOTE_HOST="));
 	env.push_back(std::string("REMOTE_ADDR="));
