@@ -1,0 +1,1 @@
+<? echo "short open tag accepted" ?>

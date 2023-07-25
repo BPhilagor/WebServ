@@ -14,6 +14,14 @@
 		<li><a href="/hello.php">Let's say hello</a></li>
 		<li><a href="/info.php">Here some $_SERVER variables</a></li>
 	</ul>
+
+	<?php
+		//echo '$argc:  '.$argc.' $argv: ';
+		echo $argc;
+		echo $argv;
+		//vardump($argv);
+	?>
+
 	<h1> Contents of the $_SERVER variable </h1>
 	<table>
 		<ul>
@@ -49,7 +57,10 @@
 		<li>AUTH_TYPE = <?php echo $_SERVER["AUTH_TYPE"] ?? "UNDEFINED"; ?></li>
 		<li>PATH_INFO = <?php echo $_SERVER["PATH_INFO"] ?? "UNDEFINED"; ?></li>
 		<li>ORIG_PATH_INFO = <?php echo $_SERVER["ORIG_PATH_INFO"] ?? "UNDEFINED"; ?></li>
+		<li>POTATO = <?php echo $_SERVER["potato"] ?? "UNDEFINED"; ?></li>
 </ul>
 	</table>
+	<h2>Contents of $_ENV</h2>
+	<p><?php print_r($_ENV);?>
 </body>
 </html>
