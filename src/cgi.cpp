@@ -87,11 +87,14 @@ bool launchCGI(const Location &location,
 	if (bytes_written < 0)
 	{
 		std::cerr << "writing request body to pipe failed: "<< std::strerror(errno) << std::endl;
-		exit(1);
+		return (false);
 	}
 
 	if (close(fd[1]) == -1)
+	{
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
+		return (false);
+	}
 
 	sigset_t set;
 	sigemptyset(&set);
@@ -105,14 +108,23 @@ bool launchCGI(const Location &location,
 	int child_status;
 	waitpid(pid, &child_status, 0);
 	if (WIFEXITED(child_status))
+	{
 		std::cout<<"CGI exited with status: "<<WEXITSTATUS(child_status)<<std::endl;
+		if (WEXITSTATUS(child_status) != 0)
+			return (false);
+	}
 	else
+	{
 		std::cout<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
+		return (false);
+	}
 
 	body = utils::fdToString(fd[0]);
 	if (close(fd[0]) == -1)
-		std::cerr << ESC_COLOR_RED << "Error when closing pipe for : " << cgi_path
-			<< ESC_COLOR_RESET << std::endl;
+	{
+		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
+		return (false);
+	}
 	return true;
 }
 
