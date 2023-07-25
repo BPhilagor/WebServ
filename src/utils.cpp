@@ -213,13 +213,14 @@ std::string utils::ifstreamToString(std::ifstream &stream)
 std::string utils::fdToString(int fd)
 {
 	std::string result;
-	char buffer[1000];
+	char buffer[1001];
 	int byte_nbr;
 
 	while ((byte_nbr = read(fd, buffer, 1000))) {
 		if (byte_nbr != 1000 && byte_nbr > 0) {
 			buffer[byte_nbr] = 0;
 		}
+		buffer[1000] = '\0';
 		result.append(buffer);
 	}
 	return result;
