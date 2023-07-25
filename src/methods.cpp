@@ -21,11 +21,13 @@ static int genDirListing(const Location &loc, const std::string &path, HTTPRespo
 static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder);
 
 /* return ENOENT, EPERM, EISDIR or 0*/
+/* Maybe this should be able to set 500 Internal server error, for example if ENOMEM (no more kernel memory) */
 int check_file(const char *path)
 {
 	if (access(path, R_OK) != 0)
 	{
-		if (errno == ENOENT)
+		std::cout << std::strerror(errno) <<std::endl;
+		if (errno == ENOENT || errno == ENOTDIR)
 			return (ENOENT);
 		else
 			return (EPERM);
