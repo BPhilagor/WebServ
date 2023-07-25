@@ -7,6 +7,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstdlib>
+
 #include "Location.hpp"
 #include "utils.hpp"
 #include "HTTPRequest.hpp"
@@ -295,6 +297,20 @@ void Location::_setCGI(const Data &data)
 		utils::split_around_first_c(' ', str, s1, s2);
 		trim_outside_whitespace(s1);
 		trim_outside_whitespace(s2);
+
+		if (s2.size() > 2 && s2[0] == '$')
+		{
+			s2.erase(s2.begin());
+			char* new_cgi_path(std::getenv(s2.c_str()));
+			if (new_cgi_path == NULL)
+			{
+				std::cerr << COL(ESC_COLOR_RED, "Cannot resolve cgi env variable:")
+				<< " $" << s2 << std::endl;
+				s2 = "";
+			}
+			else
+				s2 = new_cgi_path;
+		}
 		_cgi[s1] = s2;
 	}
 }
