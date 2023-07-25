@@ -62,5 +62,8 @@
 	</table>
 	<h2>Contents of $_ENV</h2>
 	<p><?php print_r($_ENV);?>
+
+	<h1> Content of the $_COOKIE variable </h1>
+	<p> <?php print_r($_COOKIE); ?> </p>
 </body>
 </html>
