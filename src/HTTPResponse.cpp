@@ -211,6 +211,10 @@ void	HTTPResponse::parseCGIResponse(std::string cgi_body)
 		{
 			/* handle Location header, this could imply reprocessing the request with the request worker!*/
 		}
+		else
+		{
+			_headers.insert(header.first, header.second);
+		}
 	}
 
 	/* get what remains of the cgi_body and put it in the body */
