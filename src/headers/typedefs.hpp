@@ -52,4 +52,12 @@ typedef struct
 	int	minor;
 }	t_version;
 
+typedef struct {
+	int fd;
+	union {
+		int pid;
+		int error_status;
+	};
+} cgi_ret;
+
 #endif /* TYPEDEFS_HPP */

@@ -17,6 +17,7 @@
 #include "HTTPRequest.hpp"
 #include "Location.hpp"
 #include "debugDefs.hpp"
+#include "typedefs.hpp"
 
 typedef enum {
 	ws_cgi_done,
@@ -31,7 +32,7 @@ static void creat_env(const Location &loc,
 
 static void cgiStateHandler2(int event, siginfo_t *a, void *b);
 
-bool launchCGI(const Location &location,
+cgi_ret launchCGI(const Location &location,
 				const HTTPRequest &request,
 				const std::string &cgi_path,
 				const std::string &file_path,
