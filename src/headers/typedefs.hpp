@@ -54,10 +54,7 @@ typedef struct
 
 typedef struct {
 	int fd;
-	union {
-		int pid;
-		int error_status;
-	};
+	int pid;
 } cgi_ret;
 
 #endif /* TYPEDEFS_HPP */

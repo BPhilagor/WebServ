@@ -38,6 +38,6 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 			}
 		}
 	}
-
+	// std::cout << "Code is: "<< res.getCode()<<std::endl;
 	res.finalize();
 }

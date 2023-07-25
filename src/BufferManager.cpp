@@ -12,6 +12,7 @@
 #include "debugDefs.hpp"
 
 BufferManager::BufferManager(const SuperServer& config, int fd):
+	_is_cgi_message(false),
 	input_buffer(""),
 	output_buffer(""),
 	_fd(fd),
@@ -24,6 +25,7 @@ BufferManager::BufferManager(const SuperServer& config, int fd):
 }
 
 BufferManager::BufferManager(const BufferManager& h):
+	_is_cgi_message(false),
 	input_buffer(h.input_buffer),
 	output_buffer(h.output_buffer),
 	_fd(h._fd),
@@ -42,6 +44,7 @@ BufferManager::~BufferManager()
 
 BufferManager& BufferManager::operator=(const BufferManager& h)
 {
+	_is_cgi_message = h._is_cgi_message;
 	input_buffer = h.input_buffer;
 	output_buffer = h.output_buffer;
 	_fd = h._fd;

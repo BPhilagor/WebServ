@@ -35,11 +35,15 @@ static void cgiStateHandler2(int event, siginfo_t *a, void *b);
 cgi_ret launchCGI(const Location &location,
 				const HTTPRequest &request,
 				const std::string &cgi_path,
-				const std::string &file_path,
-				std::string &body)
+				const std::string &file_path)
 {
 	if (DP_15 & DP_MASK)
 	std::cout << COL(ESC_COLOR_GREEN, "launching CGI ") << cgi_path << std::endl;
+
+	cgi_ret ret;
+
+	ret.fd = -1;
+	ret.pid = 0;
 
 	std::vector<const char *> env;
 
@@ -58,13 +62,12 @@ cgi_ret launchCGI(const Location &location,
 	if (pipe(fd) < 0)
 	{
 		std::cerr << "pipe() failed: "<< std::strerror(errno)<<std::endl;
-		return false;
+		return ret;
 	}
 	int pid = fork();
 	if (pid < 0)
 	{
 		std::cerr << "fork() failed: "<<std::strerror(errno)<<std::endl;
-		return false;
 	}
 	if (pid == 0)
 	{
@@ -87,13 +90,13 @@ cgi_ret launchCGI(const Location &location,
 	if (bytes_written < 0)
 	{
 		std::cerr << "writing request body to pipe failed: "<< std::strerror(errno) << std::endl;
-		return (false);
+		return ret;
 	}
 
 	if (close(fd[1]) == -1)
 	{
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
-		return (false);
+		return ret;
 	}
 
 	sigset_t set;
@@ -111,21 +114,17 @@ cgi_ret launchCGI(const Location &location,
 	{
 		std::cout<<"CGI exited with status: "<<WEXITSTATUS(child_status)<<std::endl;
 		if (WEXITSTATUS(child_status) != 0)
-			return (false);
+			return ret;
 	}
 	else
 	{
 		std::cout<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
-		return (false);
+		return ret;
 	}
 
-	body = utils::fdToString(fd[0]);
-	if (close(fd[0]) == -1)
-	{
-		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
-		return (false);
-	}
-	return true;
+	ret.fd = fd[0];
+	ret.pid = pid;
+	return ret;
 }
 
 static void creat_env(const Location &loc,
