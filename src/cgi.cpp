@@ -133,13 +133,21 @@ static void creat_env(const Location &loc,
 				std::vector<std::string> &env)
 {
 	(void) loc; // TODO utiliser
+
 	env.push_back(std::string("GATEWAY_INTERFACE=CGI/1.1"));
 	env.push_back(std::string("SERVER_NAME=" + req.getHeader("host")));
 	env.push_back(std::string("SERVER_SOFTWARE=WebServ_0.1"));
 	env.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
 	env.push_back(std::string("SERVER_PORT="));
 	env.push_back(std::string("REQUEST_METHOD=" + utils::getMethodStr(req)));
-	env.push_back(std::string("PATH_INFO=" + req.getURI().path));
+
+	//is the part that comes after the name of the script
+	//ex:	if the url is /index.php/truc/bidule
+	//		and index.php is a cgi script
+	//		then the PATH_INFO is /truc/bidule
+	env.push_back(std::string("PATH_INFO="));
+
+
 	env.push_back(std::string("PATH_TRANSLATED=" + file_path));
 	env.push_back(std::string("SCRIPT_NAME=" + req.getURI().path));
 	env.push_back(std::string("DOCUMENT_ROOT=!!!! this should be set to the root of the website i.e. websites/python-website/")); // seems to be useless
@@ -156,6 +164,7 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("HTTP_REFERER="));
 	env.push_back(std::string("REDIRECT_STATUS="));
 	env.push_back(std::string("HTTP_COOKIE=" + req.getHeader("Cookie")));
+	env.push_back(std::string("POTATO=trucbidule"));
 }
 
 static void cgiStateHandler2(int event, siginfo_t *a, void *b)
