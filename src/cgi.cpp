@@ -155,6 +155,7 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("HTTP_USER_AGENT=" + req.getHeader("USER-AGENT")));
 	env.push_back(std::string("HTTP_REFERER="));
 	env.push_back(std::string("REDIRECT_STATUS="));
+	env.push_back(std::string("HTTP_COOKIE=" + req.getHeader("Cookie")));
 }
 
 static void cgiStateHandler2(int event, siginfo_t *a, void *b)

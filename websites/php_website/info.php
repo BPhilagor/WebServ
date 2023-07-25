@@ -51,5 +51,8 @@
 		<li>ORIG_PATH_INFO = <?php echo $_SERVER["ORIG_PATH_INFO"] ?? "UNDEFINED"; ?></li>
 </ul>
 	</table>
+
+	<h1> Content of the $_COOKIE variable </h1>
+	<p> <?php print_r($_COOKIE); ?> </p>
 </body>
 </html>
