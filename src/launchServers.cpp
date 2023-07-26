@@ -32,6 +32,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 	}
 	addPassiveSocketsToQueue(eqfd, config.getListeningSockets());
 	std::map<int, BufferManager> buffer_managers;
+	std::map<int, cgi_buff> cgi_messages;
 
 #ifdef __linux__
 	epoll_event events[MAX_EVENTS];
@@ -83,7 +84,15 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				bool read_ev = events[i].filter == EVFILT_READ;
 				bool write_ev = events[i].filter == EVFILT_WRITE;
 #endif
-				if (isListenSocket(ev_fd, config.getListeningSockets()))
+				std::map<int, cgi_buff>::iterator cgi_msg = cgi_messages.find(ev_fd);
+				if (cgi_msg != cgi_messages.end())
+				{
+					if (read_ev)
+						CGIread(ev_fd, eqfd, cgi_msg, cgi_messages);
+					else if (write_ev)
+						CGIwrite(ev_fd, eqfd, cgi_msg, cgi_messages);
+				}
+				else if (isListenSocket(ev_fd, config.getListeningSockets()))
 				{
 					establishConnection(ev_fd, buffer_managers, eqfd, config);
 				}

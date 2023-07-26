@@ -29,68 +29,8 @@ void	addPassiveSocketsToQueue(int eqfd, const std::set<int> listeningSockets)
 	}
 }
 
-static void	cgi_readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
-{
-	BufferManager& buff_man = messages.find(fd)->second;
-
-	/* read a chunk of the client's message into a buffer */
-	char buff[BUFFER_SIZE + 1];
-	int bytesRecv = read(fd, buff, BUFFER_SIZE);
-	buff[BUFFER_SIZE] = 0;
-
-	if (bytesRecv < BUFFER_SIZE)
-	{
-		if (DP_9 & DP_MASK)
-		std::cout << "CGI Client " << COL(ESC_COLOR_CYAN, fd) << " closed" << std::endl;
-
-		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE))
-			throw "Set filter error";
-
-		std::cout << "END OF CGI PARCING\n";
-		std::cout << buff_man.getRequest();
-
-		close(fd);
-		messages.erase(messages.find(fd)); /* this line can segfault if not found */
-		return ;
-	}
-
-	/*
-		see readHandlaer for explication
-	*/
-	buff_man.addInputBuffer(std::string(buff, 0, bytesRecv));
-}
-
-static void instance_cgi_buffman(int fd, int eqfd, std::map<int, BufferManager>& messages, BufferManager& buff_man)
-{
-	// if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE))
-	// 	throw "Set filter error";
-
-	std::cout << COL(ESC_COLOR_MAGENTA, "This cgi should be added here!\n");
-	BufferManager cgi_buffman(buff_man._config, buff_man.getResponse()._cgi_ret.fd);
-
-	cgi_buffman._req = buff_man.getRequest(); // TODO (znichola) : error case when client disconects and another takes it's place quickly
-
-	cgi_buffman._is_cgi_message = true;
-	cgi_buffman._finished =false;
-	cgi_buffman._client_fd = fd;
-	buff_man._finished = false;
-
-	messages.insert(std::pair<int, BufferManager>(cgi_buffman._fd, cgi_buffman));
-	addSocketToEventQueue(eqfd, cgi_buffman._fd);
-}
-
 void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 {
-	/*
-		Moved up here to check if we should be calling the cgi_version istead
-	*/
-	BufferManager& buff_man = messages.find(fd)->second;
-	if (buff_man.getResponse().is_cgi_used)
-	{
-		cgi_readHandler(fd, eqfd, messages);
-		return ;
-	}
-
 	/* read a chunk of the client's message into a buffer */
 	char buff[BUFFER_SIZE + 1];
 	int bytesRecv = read(fd, buff, BUFFER_SIZE);
@@ -116,25 +56,15 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 		Add the buffer to the HTTPParser, that stores the entire buffer.
 		We can then interrogate the HTTPParser to find out if we've received the entire message.
 	*/
+	BufferManager& buff_man = messages.find(fd)->second;
 	buff_man.addInputBuffer(std::string(buff, 0, bytesRecv));
 	if (buff_man.isFinished())
 	{
 		if (DP_2 & DP_MASK)
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
-
-		if (buff_man.getResponse().is_cgi_used)
-		{
-			instance_cgi_buffman(fd, eqfd, messages, buff_man);
-			std::string remaining_buffer = buff_man.input_buffer;
-			buff_man = BufferManager(buff_man._config, fd); /* reset the buffer manager */
-			buff_man.addInputBuffer(remaining_buffer);
-			if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE))
-				throw "Set filter error";
-		}
-		else
-			if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
-				|| setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
-				throw "Set filter error";
+		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
+			|| setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
+			throw "Set filter error";
 	}
 }
 
@@ -145,10 +75,6 @@ void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, cons
 	/* handle partial write */
 	std::string& response = buff_man.output_buffer;
 
-	if (buff_man.getResponse().is_cgi_used)
-	{
-		std::cout << "CGI_RESPONSE\n" << buff_man.getResponse() << "\n";
-	}
 	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
 	if (writtenBytes < 0)
 	{

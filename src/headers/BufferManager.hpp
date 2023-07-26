@@ -25,17 +25,13 @@ class BufferManager
 		const HTTPRequest&	getRequest() const;
 		const HTTPResponse&	getResponse() const;
 
-		bool						_is_cgi_message;
-
 		/* If something remains in this buffer after parsing, we'll put it in the next request */
 		std::string					input_buffer;
 
 		/* This buffer will be modified to keep what remains to be written */
 		std::string					output_buffer;
 
-	// private:
-
-		bool						_client_fd;
+	private:
 
 		int							_fd;
 
@@ -46,7 +42,6 @@ class BufferManager
 
 		bool						_finished;
 
-		private:
 		BufferManager();
 };
 
