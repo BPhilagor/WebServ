@@ -42,6 +42,7 @@ class HTTPRequest
 		t_methods_mask	getMethod() const;
 		std::string		getHeader(const std::string& name) const;
 		std::string		getBody() const;
+		HTTPHeaders		&getAllHeaders();
 
 		bool				isParsingHeadersFinished() const;
 		bool				isParsingBodyFinished() const;
@@ -51,6 +52,7 @@ class HTTPRequest
 		/* setters */
 		void					addChar(char c);
 		void					setBodyCGIgenerated(bool value);
+		void					setBody(const std::string &body);
 
 		/* serialize */
 		std::string	serialize() const;

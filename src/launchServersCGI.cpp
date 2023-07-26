@@ -11,55 +11,11 @@
 #include "debugDefs.hpp"
 #include "launchServers.hpp"
 
-// static void instance_cgi_buffman(int fd, int eqfd, std::map<int, BufferManager>& messages, BufferManager& buff_man)
+int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg);
+
+// void	registerCGI(int fd, int eqfd, std::map<int, cgi_buff> cgi_messages)
 // {
-// 	// if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE))
-// 	// 	throw "Set filter error";
-
-// 	std::cout << COL(ESC_COLOR_MAGENTA, "This cgi should be added here!\n");
-// 	BufferManager cgi_buffman(buff_man._config, buff_man.getResponse()._cgi_ret.fd);
-
-// 	cgi_buffman._req = buff_man.getRequest(); // TODO (znichola) : error case when client disconects and another takes it's place quickly
-
-// 	cgi_buffman._is_cgi_message = true;
-// 	cgi_buffman._finished =false;
-// 	cgi_buffman._client_fd = fd;
-// 	buff_man._finished = false;
-
-// 	messages.insert(std::pair<int, BufferManager>(cgi_buffman._fd, cgi_buffman));
-// 	addSocketToEventQueue(eqfd, cgi_buffman._fd);
-// }
-
-
-// static void	cgi_readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
-// {
-// 	BufferManager& buff_man = messages.find(fd)->second;
-
-// 	/* read a chunk of the client's message into a buffer */
-// 	char buff[BUFFER_SIZE + 1];
-// 	int bytesRecv = read(fd, buff, BUFFER_SIZE);
-// 	buff[BUFFER_SIZE] = 0;
-
-// 	if (bytesRecv < BUFFER_SIZE)
-// 	{
-// 		if (DP_9 & DP_MASK)
-// 		std::cout << "CGI Client " << COL(ESC_COLOR_CYAN, fd) << " closed" << std::endl;
-
-// 		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE))
-// 			throw "Set filter error";
-
-// 		std::cout << "END OF CGI PARCING\n";
-// 		std::cout << buff_man.getRequest();
-
-// 		close(fd);
-// 		messages.erase(messages.find(fd)); /* this line can segfault if not found */
-// 		return ;
-// 	}
-
-// 	/*
-// 		see readHandlaer for explication
-// 	*/
-// 	buff_man.addInputBuffer(std::string(buff, 0, bytesRecv));
+// 	// code to do this is currenly in the readHandler maybe we can refactor
 // }
 
 void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
@@ -70,39 +26,102 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 	int bytesRecv = read(fd, buff, BUFFER_SIZE);
 	buff[BUFFER_SIZE] = 0;
 
-	if (bytesRecv <= 0)
+	if (bytesRecv < BUFFER_SIZE)
 	{
 		if (DP_9 & DP_MASK)
 		std::cout << "CGI on fd " << COL(ESC_COLOR_CYAN, fd) << " finished" << std::endl;
+
+		close(fd);
 
 		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
 			|| setFilter(eqfd, msg->second.client_fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
 			throw "Set filter error";
 
-		std::cout << "CGI output\n" << msg->second.cgi_msg << std::endl;
-		close(fd);
+		if (bytesRecv < 0)
+			;
+		else
+		{
+			buff[bytesRecv] = '\0';
+			msg->second.cgi_msg += buff;
+		}
 
+		std::cout << "CGI output\n" << msg->second.cgi_msg << std::endl;
+		std::cout << buff;
+
+		prepair_response(msg);
+
+		cgi_messages[msg->second.client_fd] = msg->second;
+		cgi_messages.erase(fd);
 		return ;
 	}
 
 	buff[bytesRecv] = '\0';
+	std::cout << buff;
 	msg->second.cgi_msg += buff;
-
-	(void)cgi_messages;
 }
+
 void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 				std::map<int, cgi_buff> cgi_messages)
 {
-	(void)fd;
-	(void)eqfd;
-	(void)msg;
-	(void)cgi_messages;
-	std::cout << "we should be writing something to the correct socket here!\n";
+	std::string &response = msg->second.resp_msg;
+	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
+	if (writtenBytes < 0)
+	{
+		std::cerr << "send() failed: " << std::strerror(errno) << std::endl;
+	}
+	else
+	{
+		// if (DP_3 & DP_MASK)
+		std::cout<<"Wrote " << writtenBytes << " bytes: " << std::endl << ESC_COLOR_CYAN << response << ESC_COLOR_RESET << std::endl;
+		response = response.substr(writtenBytes, response.length() - writtenBytes);
+	}
+	if (writtenBytes < 0 || response.length() == 0)
+	{
+		cgi_messages.erase(fd);
+		if (setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE)
+			|| setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD))
+			throw "Set Filter Error";
+	}
 }
 
-
-std::string	prepair_resp(const std::string & cgi_ret)
+int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg)
 {
-	(void)cgi_ret;
-	return "";
+	// if (msg->second.virtual_server == NULL)
+	// {
+	// 	std::cout << "Host not found" << std::endl;
+	// 	msg->second.response.constructErrorReply(400);
+	// }
+	// else
+	{
+		std::string			line;
+		std::istringstream	input(msg->second.cgi_msg);
+
+		while (true)
+		{
+			std::getline(input, line);
+			utils::sanitizeline(line);
+
+			if (line == "")
+				break ;
+
+			/* process header here */
+			std::pair<std::string, std::string> header;
+			utils::parseHeader(line, header);
+
+			if (msg->second.request.getAllHeaders().contains(header.first))
+				msg->second.request.getAllHeaders().replace(header.first, header.second);
+			else
+				msg->second.request.getAllHeaders().insert(header.first, header.second);
+		}
+
+		/* get what remains of the cgi_body and put it in the body */
+		if (input.tellg() > 0)
+		{
+			std::string body = input.str().substr(input.tellg());
+			msg->second.request.setBody(body);
+			msg->second.request.getAllHeaders().replace("Content-length", SSTR(body.size()));
+		}
+		requestWorker(*msg->second.virtual_server, msg->second.request, msg->second.response);
+	}
+	return 0;
 }

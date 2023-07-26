@@ -55,6 +55,7 @@ typedef struct
 	int				client_fd;
 	HTTPRequest		request;
 	HTTPResponse	response;
+	const Server *	virtual_server;
 	std::string		cgi_msg;
 	std::string		resp_msg;
 } cgi_buff;
@@ -68,7 +69,8 @@ void    launchServers(const SuperServer &config, char **argv, char **env);
 
 void	addSocketToEventQueue(int eqfd, int socket_fd);
 void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets);
-void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages);
+void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
+					std::map<int, cgi_buff> &cgi_messages);
 void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config);
 void	establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int eqfd, const SuperServer& config);
 void	printClientAddress(int fd);

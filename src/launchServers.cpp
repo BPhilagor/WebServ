@@ -98,7 +98,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				}
 				else if (read_ev)
 				{
-					readHandler(ev_fd, eqfd, buffer_managers);
+					readHandler(ev_fd, eqfd, buffer_managers, cgi_messages);
 				}
 				else if (write_ev)
 				{

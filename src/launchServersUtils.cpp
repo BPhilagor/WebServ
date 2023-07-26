@@ -29,7 +29,8 @@ void	addPassiveSocketsToQueue(int eqfd, const std::set<int> listeningSockets)
 	}
 }
 
-void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
+void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
+					std::map<int, cgi_buff> &cgi_messages)
 {
 	/* read a chunk of the client's message into a buffer */
 	char buff[BUFFER_SIZE + 1];
@@ -62,7 +63,24 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 	{
 		if (DP_2 & DP_MASK)
 		std::cout << "END OF HTTP MESSAGE DETECTED" << std::endl;
-		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
+
+		if (buff_man.getResponse().is_cgi_used)
+		{
+			std::cout << "response should be cgi gened!\n";
+
+			cgi_buff cgi_msg;
+			cgi_msg.client_fd = fd;
+			cgi_msg.request = buff_man.getRequest();
+			cgi_msg.response = buff_man.getResponse();
+			cgi_msg.virtual_server = NULL;
+
+			cgi_messages[buff_man.getResponse()._cgi_ret.fd] = cgi_msg;
+
+			if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
+			|| setFilter(eqfd, buff_man.getResponse()._cgi_ret.fd, EVENT_FILTER_READ, EVENT_ACTION_ADD))
+			throw "Set filter error";
+		}
+		else if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
 			|| setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
 			throw "Set filter error";
 	}
