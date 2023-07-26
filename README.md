@@ -13,10 +13,25 @@ server billy {
 	listen = 8080
 	server_name = something www.something.com
 	location / {
-		root = html
+		alias = html
 	}
 }
 ```
+
+### Redirections
+It is possible to configure client HTTP redirects using the `redir` directive.
+Example:
+```
+server test-server {
+	listen = 8080
+	server_name = test
+	location /redirected {
+		redir = https://www.google.com temporary
+	}
+}
+```
+It is possible to configure a permanent redirect using `redir = https://www.google.com permanent`.
+The difference between `temporary` and `permanent` is the HTTP status code that is returned to the client.
 
 ### config file parsing
 
