@@ -72,8 +72,8 @@ static void instance_cgi_buffman(int fd, int eqfd, std::map<int, BufferManager>&
 
 	cgi_buffman._is_cgi_message = true;
 	cgi_buffman._finished =false;
+	cgi_buffman._client_fd = fd;
 	buff_man._finished = false;
-	// buff_man.getRequest().getBody().erase // not implemented but needed incase of post
 
 	messages.insert(std::pair<int, BufferManager>(cgi_buffman._fd, cgi_buffman));
 	addSocketToEventQueue(eqfd, cgi_buffman._fd);
@@ -128,11 +128,13 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 			std::string remaining_buffer = buff_man.input_buffer;
 			buff_man = BufferManager(buff_man._config, fd); /* reset the buffer manager */
 			buff_man.addInputBuffer(remaining_buffer);
+			if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE))
+				throw "Set filter error";
 		}
-		// else
-		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
-			|| setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
-			throw "Set filter error";
+		else
+			if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
+				|| setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
+				throw "Set filter error";
 	}
 }
 
@@ -144,7 +146,9 @@ void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, cons
 	std::string& response = buff_man.output_buffer;
 
 	if (buff_man.getResponse().is_cgi_used)
-		;
+	{
+		std::cout << "CGI_RESPONSE\n" << buff_man.getResponse() << "\n";
+	}
 	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
 	if (writtenBytes < 0)
 	{
