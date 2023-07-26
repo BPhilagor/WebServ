@@ -37,6 +37,26 @@
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
+// Define a macro to check for GCC version 12 or Clang version 9
+#if defined(__GNUC__) && ((__GNUC__ > 12) || (__GNUC__ == 12 && __GNUC_MINOR__ >= 0))
+    #define COMPILER_VERSION_CHECK_GCC_12_OR_CLANG_9
+#elif defined(__clang__) && ((__clang_major__ > 9) || (__clang_major__ == 9 && __clang_minor__ >= 0))
+    #define COMPILER_VERSION_CHECK_GCC_12_OR_CLANG_9
+#endif
+
+#ifndef COMPILER_VERSION_CHECK_GCC_12_OR_CLANG_9
+# define __FILE_NAME__ std::max<const char*>(__FILE__,\
+    std::max(strrchr(__FILE__, '\\')+1, strrchr(__FILE__, '/')+1))
+#endif
+
+#define PERR(msg) \
+	std::cerr << __FILE_NAME__ << ":" << __LINE__ << " " \
+	<< COL(ESC_COLOR_RED, "Error: ") << msg << std::endl \
+
+#define PERR2(msg, msg2) \
+	std::cerr << __FILE_NAME__ << ":" << __LINE__ << " " \
+	<< COL(ESC_COLOR_RED, "Error: ") << msg << " : " << msg2 << std::endl \
+
 int send_to_socket(const std::string &message, int socket_fd);
 int send_file_to_socket(const std::string &filename, int socket_fd);
 void trim_outside_whitespace(std::string &line);
