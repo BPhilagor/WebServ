@@ -97,11 +97,19 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				}
 			} catch (...)
 			{
+#ifdef __linux__
+				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
+				close(events[i].data.fd);
+				buffer_managers.erase(events[i].data.fd);
+				std::cerr << "Connection closed for : "
+					<< COL(ESC_COLOR_CYAN, SSTR(events[i].data.fd)) << std::endl << std::endl;
+#else
 				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
 				close(events[i].ident);
 				buffer_managers.erase(events[i].ident);
 				std::cerr << "Connection closed for : "
 					<< COL(ESC_COLOR_CYAN, SSTR(events[i].ident)) << std::endl << std::endl;
+#endif
 			}
 		}
 	}
