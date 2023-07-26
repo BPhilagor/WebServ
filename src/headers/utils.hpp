@@ -44,6 +44,7 @@
     #define COMPILER_VERSION_CHECK_GCC_12_OR_CLANG_9
 #endif
 
+// https://stackoverflow.com/a/68363326
 #ifndef COMPILER_VERSION_CHECK_GCC_12_OR_CLANG_9
 # define __FILE_NAME__ std::max<const char*>(__FILE__,\
     std::max(strrchr(__FILE__, '\\')+1, strrchr(__FILE__, '/')+1))
