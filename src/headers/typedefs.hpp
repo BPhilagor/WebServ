@@ -52,4 +52,10 @@ typedef struct
 	int	minor;
 }	t_version;
 
+typedef struct
+{
+	std::string location;
+	std::string	type;
+}	t_redir;
+
 #endif /* TYPEDEFS_HPP */

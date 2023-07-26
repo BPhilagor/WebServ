@@ -47,6 +47,7 @@ class HTTPResponse
 		std::string	serialize() const;
 
 		void	constructErrorReply(const int code, const Server *srv=NULL);
+		void	constructRedirect(t_redir redir);
 		void	serveStaticFile(const std::string& path);
 		void	serveDynamicFile(const Location& location, const std::string& path, const HTTPRequest& request);
 		void	parseCGIResponse(std::string cgi_body);

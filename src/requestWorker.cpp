@@ -22,6 +22,10 @@ void	requestWorker(const Server &srv, const HTTPRequest &req, HTTPResponse& res)
 	{
 		res.constructErrorReply(404, &srv);
 	}
+	else if (loc->isRedirSet())
+	{
+		res.constructRedirect(loc->getRedir());
+	}
 	else
 	{
 		switch (loc->isMethodAllowed(req.getMethod()))

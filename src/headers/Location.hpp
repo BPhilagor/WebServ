@@ -36,7 +36,7 @@ public:
 
 	const std::string &	getAlias()										const;
 	t_methods_mask		getMethods()									const;
-	const std::string &	getRedir()										const;
+	t_redir				getRedir()										const;
 	bool				getDirListing()									const;
 	const std::string & getDefaultFile()								const;
 	const cgiMap	  & getCGIMap()										const;
@@ -75,7 +75,7 @@ private:
 
 	std::string			_alias;
 	t_methods_mask		_methods;
-	std::string			_redir;
+	t_redir				_redir;
 	bool				_dir_listing;
 	std::string			_default_file;
 	cgiMap				_cgi;
@@ -88,5 +88,6 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const Location &l);
 std::ostream &operator<<(std::ostream &os, const cgiMap &map);
+std::ostream &operator<<(std::ostream &os, const t_redir redir);
 
 #endif /* LOCATION_HPP */

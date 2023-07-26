@@ -73,7 +73,7 @@ Location &Location::operator=(const Location &other)
 
 const std::string &	Location::getAlias()		const { return _alias;         }
 t_methods_mask		Location::getMethods()		const { return _methods;       }
-const std::string &	Location::getRedir()		const { return _redir;         }
+t_redir				Location::getRedir()		const { return _redir;         }
 bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
@@ -242,12 +242,21 @@ void Location::_setRedir(const Data &data)
 {
 	if (data.count("redir") == 0)
 	{
-		_redir = "";
 		return ;
 	}
-	_config_mask |= WS_REDIR;
 
-	_redir = data.find("redir").getContent();
+	std::string	location;
+	std::string	type;
+
+	std::string	redir_content = data.find("redir").getContent();
+	std::istringstream iss(redir_content);
+	iss >> location >> type;
+	if (iss && (type == "permanent" || type == "temporary"))
+	{
+		_config_mask |= WS_REDIR;
+		_redir.location = location;
+		_redir.type = type;
+	}
 }
 
 void Location::_setDirListing(const Data &data)
@@ -362,4 +371,10 @@ std::ostream &operator<<(std::ostream &os, const cgiMap &map)
 	}
 	os << "]";
 	return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const t_redir redir)
+{
+	os << redir.type << " redirect to " << redir.location;
+	return (os);
 }
