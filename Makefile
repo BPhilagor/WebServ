@@ -42,7 +42,8 @@ FILES	= main \
 		HTTPRequest HTTPHeaders HTTPResponse \
 		mimeTypes \
 		HTTPResponse_reason SuperServer \
-		cgi
+		cgi \
+		staticPostHandler
 
 OBJS_PATH = objs/
 SRCS_PATH = src/

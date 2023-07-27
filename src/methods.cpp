@@ -16,6 +16,7 @@
 #include "HTTPResponse.hpp"
 #include "methods.hpp"
 #include "debugDefs.hpp"
+#include "staticPostHandler.hpp"
 
 static int genDirListing(const HTTPRequest& req, const Location &loc, const std::string &path, HTTPResponse& response);
 static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder);
@@ -89,6 +90,11 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 		{
 			if (!response.serveDynamicFile(location, real_path, request))
 				response.setCode(403);
+		}
+		else if (request.getMethod() == WS_POST)
+		{
+			int code = staticPostHandler(request);
+			response.setCode(code);
 		}
 		else
 			response.serveStaticFile(real_path);
