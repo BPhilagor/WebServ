@@ -30,7 +30,7 @@ class BufferManager
 
 		/* This buffer will be modified to keep what remains to be written */
 		std::string					output_buffer;
-
+		const Server *				virtual_server;
 	private:
 
 		int							_fd;

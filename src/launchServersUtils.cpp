@@ -72,7 +72,7 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
 			cgi_msg.client_fd = fd;
 			cgi_msg.request = buff_man.getRequest();
 			cgi_msg.response = buff_man.getResponse();
-			cgi_msg.virtual_server = NULL;
+			cgi_msg.virtual_server = buff_man.virtual_server;
 
 			cgi_messages[buff_man.getResponse()._cgi_ret.fd] = cgi_msg;
 

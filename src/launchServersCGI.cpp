@@ -31,11 +31,12 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 		if (DP_9 & DP_MASK)
 		std::cout << "CGI on fd " << COL(ESC_COLOR_CYAN, fd) << " finished" << std::endl;
 
-		close(fd);
 
 		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
 			|| setFilter(eqfd, msg->second.client_fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
 			throw "Set filter error";
+
+		close(fd);
 
 		if (bytesRecv < 0)
 			;
@@ -46,23 +47,26 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 		}
 
 		std::cout << "CGI output\n" << msg->second.cgi_msg << std::endl;
-		std::cout << buff;
+		// std::cout << buff;
 
 		prepair_response(msg);
 
 		cgi_messages[msg->second.client_fd] = msg->second;
+		std::cout << "TRYING TO SEND THIS AS RESPONSE\n" << cgi_messages[msg->second.client_fd].resp_msg << "END RESP\n";
 		cgi_messages.erase(fd);
 		return ;
 	}
 
 	buff[bytesRecv] = '\0';
-	std::cout << buff;
+	// std::cout << buff;
 	msg->second.cgi_msg += buff;
 }
 
 void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 				std::map<int, cgi_buff> cgi_messages)
 {
+	std::cout << COL(ESC_COLOR_MAGENTA, "CGI write!\n");
+
 	std::string &response = msg->second.resp_msg;
 	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
 	if (writtenBytes < 0)
@@ -86,12 +90,12 @@ void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 
 int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg)
 {
-	// if (msg->second.virtual_server == NULL)
-	// {
-	// 	std::cout << "Host not found" << std::endl;
-	// 	msg->second.response.constructErrorReply(400);
-	// }
-	// else
+	if (msg->second.virtual_server == NULL)
+	{
+		std::cout << "Host not found" << std::endl;
+		msg->second.response.constructErrorReply(400);
+	}
+	else
 	{
 		std::string			line;
 		std::istringstream	input(msg->second.cgi_msg);
@@ -121,6 +125,7 @@ int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg)
 			msg->second.request.setBody(body);
 			msg->second.request.getAllHeaders().replace("Content-length", SSTR(body.size()));
 		}
+		std::cout << "new request to pass to request worker\n" << msg->second.request << "\n";
 		requestWorker(*msg->second.virtual_server, msg->second.request, msg->second.response);
 	}
 	return 0;

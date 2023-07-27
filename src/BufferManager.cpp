@@ -61,7 +61,7 @@ bool	BufferManager::isFinished() const
 void	BufferManager::addInputBuffer(const std::string& s)
 {
 	std::string		host;
-	const Server*	virtual_server;
+	// const Server*	virtual_server;
 
 	input_buffer = s; /* save the input buffer in case we read too much */
 	unsigned int i = 0;
@@ -90,6 +90,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 				goto phase_2;
 			}
 			virtual_server = _config.getServerForHostPortAndHostName(utils::fd_to_HostPort(_fd), host);
+			// this->virtual_server = static_cast<Server *>(virtual_server);
 			if (virtual_server == NULL)
 			{
 				std::cout << "Host not found" << std::endl;
