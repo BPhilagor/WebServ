@@ -23,7 +23,6 @@ endif
 endif
 ifdef __linux__
 LEAKS_CHECK = valgrind
-# CFLAGS	+= -Wno-unknown-pragmas -DWSL_DISTRO_NAME=Ubuntu # todo: detele if useless
 else
 LEAKS_CHECK = leaks -atExit --
 endif
@@ -39,6 +38,7 @@ FILES	= main \
 		BufferManager \
 		launchServers \
 		launchServersUtils \
+		launchServersCGI \
 		HTTPRequest HTTPHeaders HTTPResponse \
 		mimeTypes \
 		HTTPResponse_reason SuperServer \

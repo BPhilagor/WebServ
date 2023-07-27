@@ -17,28 +17,25 @@
 #include "HTTPRequest.hpp"
 #include "Location.hpp"
 #include "debugDefs.hpp"
-
-typedef enum {
-	ws_cgi_done,
-	ws_cgi_timeout
-} t_cgi_state;
-static t_cgi_state state = ws_cgi_done;
+#include "typedefs.hpp"
 
 static void creat_env(const Location &loc,
 				const HTTPRequest &req,
 				const std::string &file_path,
 				std::vector<std::string> &env);
 
-static void cgiStateHandler2(int event, siginfo_t *a, void *b);
-
-bool launchCGI(const Location &location,
+cgi_ret launchCGI(const Location &location,
 				const HTTPRequest &request,
 				const std::string &cgi_path,
-				const std::string &file_path,
-				std::string &body)
+				const std::string &file_path)
 {
 	if (DP_15 & DP_MASK)
 	std::cout << COL(ESC_COLOR_GREEN, "launching CGI ") << cgi_path << std::endl;
+
+	cgi_ret ret;
+
+	ret.fd = -1;
+	ret.pid = 0;
 
 	std::vector<const char *> env;
 
@@ -48,8 +45,8 @@ bool launchCGI(const Location &location,
 	FOREACH_VECTOR(std::string, tmp_env)
 	{
 		env.push_back(it->c_str());
-		if (DP_15 & DP_MASK)
-		std::cout << it->c_str() << std::endl;
+		// if (DP_15 & DP_MASK)
+		// std::cout << it->c_str() << std::endl;
 	}
 	env.push_back(NULL);
 
@@ -57,16 +54,16 @@ bool launchCGI(const Location &location,
 	if (pipe(fd) < 0)
 	{
 		std::cerr << "pipe() failed: "<< std::strerror(errno)<<std::endl;
-		return false;
+		return ret;
 	}
 	int pid = fork();
 	if (pid < 0)
 	{
 		std::cerr << "fork() failed: "<<std::strerror(errno)<<std::endl;
-		return false;
 	}
 	if (pid == 0)
 	{
+		//sleep(3);
 		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
 			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "
@@ -86,45 +83,18 @@ bool launchCGI(const Location &location,
 	if (bytes_written < 0)
 	{
 		std::cerr << "writing request body to pipe failed: "<< std::strerror(errno) << std::endl;
-		return (false);
+		return ret;
 	}
 
 	if (close(fd[1]) == -1)
 	{
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
-		return (false);
+		return ret;
 	}
 
-	sigset_t set;
-	sigemptyset(&set);
-	struct sigaction sig_handler;
-	sig_handler.sa_handler = 0;
-	sig_handler.sa_mask = set;
-	sig_handler.sa_flags = SA_RESTART;
-	sig_handler.sa_sigaction = &cgiStateHandler2;
-	sigaction(SIGCHLD, &sig_handler, NULL);
-
-	int child_status;
-	waitpid(pid, &child_status, 0);
-	if (WIFEXITED(child_status))
-	{
-		std::cout<<"CGI exited with status: "<<WEXITSTATUS(child_status)<<std::endl;
-		if (WEXITSTATUS(child_status) != 0)
-			return (false);
-	}
-	else
-	{
-		std::cout<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
-		return (false);
-	}
-
-	body = utils::fdToString(fd[0]);
-	if (close(fd[0]) == -1)
-	{
-		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
-		return (false);
-	}
-	return true;
+	ret.fd = fd[0];
+	ret.pid = pid;
+	return ret;
 }
 
 static void creat_env(const Location &loc,
@@ -165,14 +135,4 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("REDIRECT_STATUS="));
 	env.push_back(std::string("HTTP_COOKIE=" + req.getHeader("Cookie")));
 	env.push_back(std::string("POTATO=trucbidule"));
-}
-
-static void cgiStateHandler2(int event, siginfo_t *a, void *b)
-{
-	(void) a;
-	(void) b;
-	if (event == SIGALRM)
-		state = ws_cgi_timeout;
-	else if(event == SIGCHLD)
-		state = ws_cgi_done;
 }
