@@ -19,18 +19,10 @@
 #include "debugDefs.hpp"
 #include "typedefs.hpp"
 
-typedef enum {
-	ws_cgi_done,
-	ws_cgi_timeout
-} t_cgi_state;
-static t_cgi_state state = ws_cgi_done;
-
 static void creat_env(const Location &loc,
 				const HTTPRequest &req,
 				const std::string &file_path,
 				std::vector<std::string> &env);
-
-static void cgiStateHandler2(int event, siginfo_t *a, void *b);
 
 cgi_ret launchCGI(const Location &location,
 				const HTTPRequest &request,
@@ -71,6 +63,7 @@ cgi_ret launchCGI(const Location &location,
 	}
 	if (pid == 0)
 	{
+		//sleep(3);
 		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
 			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "
@@ -96,29 +89,6 @@ cgi_ret launchCGI(const Location &location,
 	if (close(fd[1]) == -1)
 	{
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
-		return ret;
-	}
-
-	sigset_t set;
-	sigemptyset(&set);
-	struct sigaction sig_handler;
-	sig_handler.sa_handler = 0;
-	sig_handler.sa_mask = set;
-	sig_handler.sa_flags = SA_RESTART;
-	sig_handler.sa_sigaction = &cgiStateHandler2;
-	sigaction(SIGCHLD, &sig_handler, NULL);
-
-	int child_status;
-	waitpid(pid, &child_status, 0);
-	if (WIFEXITED(child_status))
-	{
-		std::cout<<"CGI exited with status: "<<WEXITSTATUS(child_status)<<std::endl;
-		if (WEXITSTATUS(child_status) != 0)
-			return ret;
-	}
-	else
-	{
-		std::cout<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
 		return ret;
 	}
 
@@ -165,14 +135,4 @@ static void creat_env(const Location &loc,
 	env.push_back(std::string("REDIRECT_STATUS="));
 	env.push_back(std::string("HTTP_COOKIE=" + req.getHeader("Cookie")));
 	env.push_back(std::string("POTATO=trucbidule"));
-}
-
-static void cgiStateHandler2(int event, siginfo_t *a, void *b)
-{
-	(void) a;
-	(void) b;
-	if (event == SIGALRM)
-		state = ws_cgi_timeout;
-	else if(event == SIGCHLD)
-		state = ws_cgi_done;
 }

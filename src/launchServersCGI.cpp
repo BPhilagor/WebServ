@@ -31,6 +31,18 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 		if (DP_9 & DP_MASK)
 		std::cout << "CGI on fd " << COL(ESC_COLOR_CYAN, fd) << " finished" << std::endl;
 
+		int child_status;
+		waitpid(msg->second.response._cgi_ret.pid , &child_status, 0);
+		if (WIFEXITED(child_status))
+		{
+			std::cout<<"CGI exited with status: "<<WEXITSTATUS(child_status)<<std::endl;
+			if (WEXITSTATUS(child_status) != 0)
+				std::cerr << ESC_COLOR_RED << "Error with CGI execution !" << ESC_COLOR_RESET << std::endl;
+		}
+		else
+		{
+			std::cout<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
+		}
 
 		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
 			|| setFilter(eqfd, msg->second.client_fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))

@@ -87,10 +87,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				std::map<int, cgi_buff>::iterator cgi_msg = cgi_messages.find(ev_fd);
 				if (cgi_msg != cgi_messages.end())
 				{
-					if (read_ev)
-						CGIread(ev_fd, eqfd, cgi_msg, cgi_messages, buffer_managers);
-					// else if (write_ev)
-					// 	CGIwrite(ev_fd, eqfd, cgi_msg, cgi_messages);
+					CGIread(ev_fd, eqfd, cgi_msg, cgi_messages, buffer_managers);
 				}
 				else if (isListenSocket(ev_fd, config.getListeningSockets()))
 				{
