@@ -60,6 +60,17 @@ typedef struct
 	std::string		resp_msg;
 } cgi_buff;
 
+typedef struct
+{
+	int				fd;
+	HTTPRequest		request;
+	HTTPResponse	response;
+	const Server *	virtual_server;
+	int				cgi_fd;
+	int				cgi_pid;
+	std::string<>	cgi_message;
+} client_event;
+
 
 /* launchServers.hpp */
 
