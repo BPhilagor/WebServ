@@ -66,8 +66,6 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
 
 		if (buff_man.getResponse().is_cgi_used)
 		{
-			std::cout << "response should be cgi gened!\n";
-
 			cgi_buff cgi_msg;
 			cgi_msg.client_fd = fd;
 			cgi_msg.request = buff_man.getRequest();
@@ -107,6 +105,12 @@ void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, cons
 	if (writtenBytes < 0 || response.length() == 0)
 	{
 		std::string remaining_buffer = buff_man.input_buffer;
+
+			if (DP_14 & DP_MASK)
+			std::cout << COL(ESC_COLOR_MAGENTA, SSTR(buff_man.getResponse().getCode()))
+			<< " sent for client " << COL(ESC_COLOR_CYAN, SSTR(fd))
+			<< " request for " << COL(ESC_COLOR_CYAN, buff_man.getRequest().getURI().path)
+			<< std::endl << std::endl;
 
 		/* If we announced in the header of the response that we would close the connection, we close it */
 		const HTTPResponse& resp = buff_man.getResponse();

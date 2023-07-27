@@ -124,13 +124,6 @@ phase_2:
 			input_buffer = input_buffer.substr(i + 1, s.length() - i - 1);
 			output_buffer = _resp.serialize();
 			_finished = true;
-
-			if (DP_14 & DP_MASK)
-			std::cout << COL(ESC_COLOR_MAGENTA, SSTR(_resp.getCode()))
-			<< " sent for client " << COL(ESC_COLOR_CYAN, SSTR(_fd))
-			<< " request for " << COL(ESC_COLOR_CYAN, _req.getURI().path)
-			<< std::endl << std::endl;
-
 			break ;
 		}
 	}
@@ -145,4 +138,9 @@ const HTTPRequest&	BufferManager::getRequest() const
 const HTTPResponse&	BufferManager::getResponse() const
 {
 	return _resp;
+}
+
+void BufferManager::setCode(int code)
+{
+	_resp.setCode(code);
 }

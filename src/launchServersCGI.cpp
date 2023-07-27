@@ -29,19 +29,19 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 	if (bytesRecv < BUFFER_SIZE)
 	{
 		if (DP_9 & DP_MASK)
-		std::cout << "CGI on fd " << COL(ESC_COLOR_CYAN, fd) << " finished" << std::endl;
+		std::cout << COL(ESC_COLOR_GREEN, "CGI") << " on fd " << COL(ESC_COLOR_CYAN, fd) << " finished : ";
 
 		int child_status;
 		waitpid(msg->second.response._cgi_ret.pid , &child_status, 0);
 		if (WIFEXITED(child_status))
 		{
-			std::cout<<"CGI exited with status: "<<WEXITSTATUS(child_status)<<std::endl;
+			std::cout<<"status: "<< COL(ESC_COLOR_CYAN, WEXITSTATUS(child_status))<<std::endl;
 			if (WEXITSTATUS(child_status) != 0)
 				std::cerr << ESC_COLOR_RED << "Error with CGI execution !" << ESC_COLOR_RESET << std::endl;
 		}
 		else
 		{
-			std::cout<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
+			std::cerr<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
 		}
 
 		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
@@ -58,21 +58,21 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 			msg->second.cgi_msg += buff;
 		}
 
-		std::cout << "CGI output\n" << msg->second.cgi_msg << std::endl;
-
 		prepair_response(msg);
 
-		std::cout << "Client fd : " << msg->second.client_fd << ", cgi fd : " << fd << std::endl;
 		if (buffer_managers.find(msg->second.client_fd) == buffer_managers.end())
 			PERR2("Fd not found for sending message !, fd : ", fd);
 		else
+		{
+			// TODO (znichola) : correctly set the response to have the error code
 			buffer_managers.find(msg->second.client_fd)->second.output_buffer = msg->second.resp_msg;
+			buffer_managers.find(msg->second.client_fd)->second.setCode(200);
+		}
 		cgi_messages.erase(fd);
 		return ;
 	}
 
 	buff[bytesRecv] = '\0';
-	// std::cout << buff;
 	msg->second.cgi_msg += buff;
 }
 
@@ -141,7 +141,7 @@ int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg)
 		// 	msg->second.request.getAllHeaders().replace("Content-length", SSTR(body.size()));
 		// }
 		msg->second.response.parseCGIResponse(msg->second.cgi_msg);
-		std::cout << "new request to pass to request worker\n" << msg->second.request << "\n";
+		// std::cout << "new request to pass to request worker\n" << msg->second.request << "\n";
 		// requestWorker(*msg->second.virtual_server, msg->second.request, msg->second.response);
 		msg->second.resp_msg = msg->second.response.serialize();
 	}

@@ -45,8 +45,8 @@ cgi_ret launchCGI(const Location &location,
 	FOREACH_VECTOR(std::string, tmp_env)
 	{
 		env.push_back(it->c_str());
-		if (DP_15 & DP_MASK)
-		std::cout << it->c_str() << std::endl;
+		// if (DP_15 & DP_MASK)
+		// std::cout << it->c_str() << std::endl;
 	}
 	env.push_back(NULL);
 

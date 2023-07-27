@@ -25,6 +25,9 @@ class BufferManager
 		const HTTPRequest&	getRequest() const;
 		const HTTPResponse&	getResponse() const;
 
+		void	setCode(int code);
+
+
 		/* If something remains in this buffer after parsing, we'll put it in the next request */
 		std::string					input_buffer;
 
