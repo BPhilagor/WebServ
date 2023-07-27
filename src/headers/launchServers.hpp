@@ -81,8 +81,8 @@ int		setFilter(int eqfd, int socket_fd, int event, int action);
 /* launchServersCGI.hpp */
 
 void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> cgi_messages);
+				std::map<int, cgi_buff> &cgi_messages, std::map<int, BufferManager> &buffer_managers);
 void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> cgi_messages);
+				std::map<int, cgi_buff> &cgi_messages);
 
 #endif /* LAUNCHSERVERS_HPP */

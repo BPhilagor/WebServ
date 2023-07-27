@@ -88,9 +88,9 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				if (cgi_msg != cgi_messages.end())
 				{
 					if (read_ev)
-						CGIread(ev_fd, eqfd, cgi_msg, cgi_messages);
-					else if (write_ev)
-						CGIwrite(ev_fd, eqfd, cgi_msg, cgi_messages);
+						CGIread(ev_fd, eqfd, cgi_msg, cgi_messages, buffer_managers);
+					// else if (write_ev)
+					// 	CGIwrite(ev_fd, eqfd, cgi_msg, cgi_messages);
 				}
 				else if (isListenSocket(ev_fd, config.getListeningSockets()))
 				{
@@ -104,6 +104,8 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				{
 					writeHandler(ev_fd, eqfd, buffer_managers, config);
 				}
+				else
+					std::cerr << ESC_COLOR_RED << "Error, event not recognized" << ESC_COLOR_RESET << std::endl;
 			} catch (...)
 			{
 #ifdef __linux__

@@ -19,7 +19,7 @@ int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg);
 // }
 
 void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> cgi_messages)
+				std::map<int, cgi_buff> &cgi_messages, std::map<int, BufferManager> &buffer_managers)
 {
 	/* read a chunk of the client's message into a buffer */
 	char buff[BUFFER_SIZE + 1];
@@ -47,12 +47,14 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 		}
 
 		std::cout << "CGI output\n" << msg->second.cgi_msg << std::endl;
-		// std::cout << buff;
 
 		prepair_response(msg);
 
-		cgi_messages[msg->second.client_fd] = msg->second;
-		std::cout << "TRYING TO SEND THIS AS RESPONSE\n" << cgi_messages[msg->second.client_fd].resp_msg << "END RESP\n";
+		std::cout << "Client fd : " << msg->second.client_fd << ", cgi fd : " << fd << std::endl;
+		if (buffer_managers.find(msg->second.client_fd) == buffer_managers.end())
+			PERR2("Fd not found for sending message !, fd : ", fd);
+		else
+			buffer_managers.find(msg->second.client_fd)->second.output_buffer = msg->second.resp_msg;
 		cgi_messages.erase(fd);
 		return ;
 	}
@@ -63,7 +65,7 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 }
 
 void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> cgi_messages)
+				std::map<int, cgi_buff> &cgi_messages)
 {
 	std::cout << COL(ESC_COLOR_MAGENTA, "CGI write!\n");
 
@@ -71,7 +73,7 @@ void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
 	if (writtenBytes < 0)
 	{
-		std::cerr << "send() failed: " << std::strerror(errno) << std::endl;
+		std::cerr << "send(" << fd << ") failed: " << std::strerror(errno) << std::endl;
 	}
 	else
 	{
@@ -82,6 +84,7 @@ void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 	if (writtenBytes < 0 || response.length() == 0)
 	{
 		cgi_messages.erase(fd);
+
 		if (setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE)
 			|| setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD))
 			throw "Set Filter Error";
@@ -97,36 +100,38 @@ int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg)
 	}
 	else
 	{
-		std::string			line;
-		std::istringstream	input(msg->second.cgi_msg);
+		// std::string			line;
+		// std::istringstream	input(msg->second.cgi_msg);
 
-		while (true)
-		{
-			std::getline(input, line);
-			utils::sanitizeline(line);
+		// while (true)
+		// {
+		// 	std::getline(input, line);
+		// 	utils::sanitizeline(line);
 
-			if (line == "")
-				break ;
+		// 	if (line == "")
+		// 		break ;
 
-			/* process header here */
-			std::pair<std::string, std::string> header;
-			utils::parseHeader(line, header);
+		// 	/* process header here */
+		// 	std::pair<std::string, std::string> header;
+		// 	utils::parseHeader(line, header);
 
-			if (msg->second.request.getAllHeaders().contains(header.first))
-				msg->second.request.getAllHeaders().replace(header.first, header.second);
-			else
-				msg->second.request.getAllHeaders().insert(header.first, header.second);
-		}
+		// 	if (msg->second.request.getAllHeaders().contains(header.first))
+		// 		msg->second.request.getAllHeaders().replace(header.first, header.second);
+		// 	else
+		// 		msg->second.request.getAllHeaders().insert(header.first, header.second);
+		// }
 
-		/* get what remains of the cgi_body and put it in the body */
-		if (input.tellg() > 0)
-		{
-			std::string body = input.str().substr(input.tellg());
-			msg->second.request.setBody(body);
-			msg->second.request.getAllHeaders().replace("Content-length", SSTR(body.size()));
-		}
+		// /* get what remains of the cgi_body and put it in the body */
+		// if (input.tellg() > 0)
+		// {
+		// 	std::string body = input.str().substr(input.tellg());
+		// 	msg->second.request.setBody(body);
+		// 	msg->second.request.getAllHeaders().replace("Content-length", SSTR(body.size()));
+		// }
+		msg->second.response.parseCGIResponse(msg->second.cgi_msg);
 		std::cout << "new request to pass to request worker\n" << msg->second.request << "\n";
-		requestWorker(*msg->second.virtual_server, msg->second.request, msg->second.response);
+		// requestWorker(*msg->second.virtual_server, msg->second.request, msg->second.response);
+		msg->second.resp_msg = msg->second.response.serialize();
 	}
 	return 0;
 }
