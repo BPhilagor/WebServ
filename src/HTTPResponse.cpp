@@ -17,12 +17,14 @@
 std::map<int, std::string> HTTPResponse::_reasonMap = _initialiseReasonMap();
 
 HTTPResponse::HTTPResponse():
+	is_cgi_used(false),
 	_code(0)
 {
 	if (DP_12 & DP_MASK) std::cout << "HTTPResponse constructor" << std::endl;
 }
 
 HTTPResponse::HTTPResponse(const HTTPResponse& h):
+	is_cgi_used(h.is_cgi_used),
 	_version(h._version),
 	_code(h._code),
 	_reason(h._reason),
@@ -46,6 +48,7 @@ HTTPResponse&	HTTPResponse::operator=(const HTTPResponse& h)
 	_reason = h._reason;
 	_headers = h._headers;
 	_body = h._body;
+	is_cgi_used = h.is_cgi_used;
 
 	return (*this);
 }
@@ -186,13 +189,12 @@ void	HTTPResponse::serveStaticFile(const std::string& path)
 	setCode(200);
 }
 
-void	HTTPResponse::serveDynamicFile(const Location& location, const std::string& path, const HTTPRequest& request)
+bool	HTTPResponse::serveDynamicFile(const Location& location, const std::string& path, const HTTPRequest& request)
 {
 	std::string	cgi_response;
-	if (!launchCGI(location, request, location.getCGIpath(path), path, cgi_response))
-		setCode(500);
-	else
-		parseCGIResponse(cgi_response); /* this sets the res code */
+	_cgi_ret = launchCGI(location, request, location.getCGIpath(path), path);
+	is_cgi_used = _cgi_ret.fd != -1;
+	return (is_cgi_used);
 }
 
 void	HTTPResponse::parseCGIResponse(std::string cgi_body)

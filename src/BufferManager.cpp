@@ -61,7 +61,7 @@ bool	BufferManager::isFinished() const
 void	BufferManager::addInputBuffer(const std::string& s)
 {
 	std::string		host;
-	const Server*	virtual_server;
+	// const Server*	virtual_server;
 
 	input_buffer = s; /* save the input buffer in case we read too much */
 	unsigned int i = 0;
@@ -90,6 +90,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 				goto phase_2;
 			}
 			virtual_server = _config.getServerForHostPortAndHostName(utils::fd_to_HostPort(_fd), host);
+			// this->virtual_server = static_cast<Server *>(virtual_server);
 			if (virtual_server == NULL)
 			{
 				std::cout << "Host not found" << std::endl;
@@ -123,13 +124,6 @@ phase_2:
 			input_buffer = input_buffer.substr(i + 1, s.length() - i - 1);
 			output_buffer = _resp.serialize();
 			_finished = true;
-
-			if (DP_14 & DP_MASK)
-			std::cout << COL(ESC_COLOR_MAGENTA, SSTR(_resp.getCode()))
-			<< " sent for client " << COL(ESC_COLOR_CYAN, SSTR(_fd))
-			<< " request for " << COL(ESC_COLOR_CYAN, _req.getURI().path)
-			<< std::endl << std::endl;
-
 			break ;
 		}
 	}
@@ -144,4 +138,9 @@ const HTTPRequest&	BufferManager::getRequest() const
 const HTTPResponse&	BufferManager::getResponse() const
 {
 	return _resp;
+}
+
+void BufferManager::setCode(int code)
+{
+	_resp.setCode(code);
 }

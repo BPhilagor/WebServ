@@ -32,6 +32,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 	}
 	addPassiveSocketsToQueue(eqfd, config.getListeningSockets());
 	std::map<int, BufferManager> buffer_managers;
+	std::map<int, cgi_buff> cgi_messages;
 
 #ifdef __linux__
 	epoll_event events[MAX_EVENTS];
@@ -83,18 +84,25 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				bool read_ev = events[i].filter == EVFILT_READ;
 				bool write_ev = events[i].filter == EVFILT_WRITE;
 #endif
-				if (isListenSocket(ev_fd, config.getListeningSockets()))
+				std::map<int, cgi_buff>::iterator cgi_msg = cgi_messages.find(ev_fd);
+				if (cgi_msg != cgi_messages.end())
+				{
+					CGIread(ev_fd, eqfd, cgi_msg, cgi_messages, buffer_managers);
+				}
+				else if (isListenSocket(ev_fd, config.getListeningSockets()))
 				{
 					establishConnection(ev_fd, buffer_managers, eqfd, config);
 				}
 				else if (read_ev)
 				{
-					readHandler(ev_fd, eqfd, buffer_managers);
+					readHandler(ev_fd, eqfd, buffer_managers, cgi_messages);
 				}
 				else if (write_ev)
 				{
 					writeHandler(ev_fd, eqfd, buffer_managers, config);
 				}
+				else
+					std::cerr << ESC_COLOR_RED << "Error, event not recognized" << ESC_COLOR_RESET << std::endl;
 			} catch (...)
 			{
 #ifdef __linux__

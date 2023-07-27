@@ -52,6 +52,11 @@ typedef struct
 	int	minor;
 }	t_version;
 
+typedef struct {
+	int fd;
+	int pid;
+} cgi_ret;
+
 typedef struct
 {
 	std::string location;

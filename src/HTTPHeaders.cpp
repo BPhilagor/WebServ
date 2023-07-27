@@ -10,6 +10,7 @@
 #include <iostream>
 #include "HTTPHeaders.hpp"
 #include "debugDefs.hpp"
+#include "utils.hpp"
 
 HTTPHeaders::HTTPHeaders()
 {
@@ -81,6 +82,16 @@ void	HTTPHeaders::replace(const std::string& name, const std::string& value)
 	}
 
 	_headers[key] = value;
+}
+
+bool HTTPHeaders::contains(const std::string &name)
+{
+	FOREACH_MAP(std::string, _headers)
+	{
+		if (utils::streq_ci(name, it->first))
+			return true;
+	}
+	return false;
 }
 
 std::string	HTTPHeaders::serialize() const

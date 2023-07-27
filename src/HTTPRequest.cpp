@@ -96,6 +96,11 @@ std::string				HTTPRequest::getBody() const
 	return _body;
 }
 
+HTTPHeaders &HTTPRequest::getAllHeaders()
+{
+	return _headers;
+}
+
 bool					HTTPRequest::isParsingHeadersFinished() const
 {
 	return (!_valid_syntax || _state >= 2);
@@ -116,6 +121,11 @@ bool					HTTPRequest::isBodyCGIgenerated() const
 void					HTTPRequest::setBodyCGIgenerated(bool value)
 {
 	_isBodyCGIgenerated = value;
+}
+
+void HTTPRequest::setBody(const std::string &body)
+{
+	_body = body;
 }
 
 void	HTTPRequest::addChar(char c)

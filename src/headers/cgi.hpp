@@ -14,11 +14,11 @@
 
 #include "HTTPRequest.hpp"
 #include "Location.hpp"
+#include "utils.hpp"
 
-bool launchCGI(const Location &location,
+cgi_ret launchCGI(const Location &location,
 				const HTTPRequest &request,
 				const std::string &cgi_path,
-				const std::string &file_path,
-				std::string &body);
+				const std::string &file_path);
 
 #endif /* CGI_HPP */

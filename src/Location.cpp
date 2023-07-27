@@ -99,15 +99,16 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 	(void)request;
 	std::string real_path = getRealPath(path);
 	if (DP_11 & DP_MASK)
-	std::cout << "Path : " << real_path << std::endl;
-	t_getfile_response return_val = utils::getFile(real_path, body);
+		std::cout << "Path : " << real_path << std::endl;
+	t_getfile_response return_val = utils::getFile(real_path, body); // TODO juste verifier si existe
 
 	if (return_val != ws_file_found)
 		return return_val;
 
 	if (isCGIrequired(real_path))
 	{
-		if (launchCGI(*this, request, getCGIpath(real_path), real_path, body) == false)
+		cgi_ret cgi_return = launchCGI(*this, request, getCGIpath(real_path), real_path);
+		if (cgi_return.fd == -1)
 		{
 			//should return internal server error
 		}

@@ -86,7 +86,10 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 	{
 		file_is_found:
 		if (location.isCGIrequired(real_path))
-			response.serveDynamicFile(location, real_path, request);
+		{
+			if (!response.serveDynamicFile(location, real_path, request))
+				response.setCode(403);
+		}
 		else
 			response.serveStaticFile(real_path);
 	}

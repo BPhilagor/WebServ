@@ -42,20 +42,22 @@ class HTTPResponse
 		void			setHeader(const std::string &name, const std::string &value);
 		void			setBody(const std::string &body);
 		void			setDate();
-
+		void			set();
 
 		std::string	serialize() const;
 
 		void	constructErrorReply(const int code, const Server *srv=NULL);
 		void	constructRedirect(t_redir redir);
 		void	serveStaticFile(const std::string& path);
-		void	serveDynamicFile(const Location& location, const std::string& path, const HTTPRequest& request);
+		bool	serveDynamicFile(const Location& location, const std::string& path, const HTTPRequest& request);
 		void	parseCGIResponse(std::string cgi_body);
 		void	finalize();
 
 		std::string genPage(int code) const;
 		std::string getErrorPage(const Server &srv, int code) const;
 
+		bool	is_cgi_used;
+		cgi_ret	_cgi_ret;
 
 	private:
 		/* status line */
