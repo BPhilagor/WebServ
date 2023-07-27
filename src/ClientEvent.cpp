@@ -10,7 +10,7 @@
 #include "ClientEvent.hpp"
 
 ClientEvent::ClientEvent(int fd)
-	: fd(fd), last_activity(clock()), virtual_server(0)
+	: fd(fd), last_activity(clock()), buffer_manager(fd)
 {
 	cgi_fd = 0;
 	cgi_pid = 0;
@@ -19,4 +19,4 @@ ClientEvent::ClientEvent(int fd)
 ClientEvent::~ClientEvent()
 {
 	close(fd);
-};
+}

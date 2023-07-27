@@ -37,6 +37,7 @@ int main(int argc, char** argv, char **env)
 
 	SuperServer config(data);
 
+	BufferManager::config = &config;
 	if (DP_8 & DP_MASK)
 	std::cout << config << "\n";
 

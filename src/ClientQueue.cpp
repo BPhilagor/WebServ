@@ -37,6 +37,7 @@ void		ClientQueue::refresh(ClientNode *node)
 
 void		ClientQueue::remove(ClientNode *node)
 {
+	size -= 1;
 	if (node->next)
 		node->next->prev = node->prev;
 	else
@@ -52,6 +53,7 @@ void		ClientQueue::remove(ClientNode *node)
 }
 void		ClientQueue::append(ClientNode *node)
 {
+	size += 1;
 	if (start)
 	{
 		end->next = node;
@@ -69,4 +71,17 @@ ClientNode*	ClientQueue::newNode(int fd)
 {
 	ClientNode *newEvent = new ClientNode(fd);
 	this->append(newEvent);
+	return newEvent;
+}
+
+void	ClientQueue::print()
+{
+	ClientNode *tmp = start;
+	std::cout << "ClientQueue of size " << size << " :" << std::endl;
+	while (tmp)
+	{
+		std::cout << "Client Event for fd : " << tmp->fd << std::endl;
+		tmp = tmp->next;
+	}
+	std::cout << std::endl;
 }

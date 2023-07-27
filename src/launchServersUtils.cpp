@@ -11,9 +11,9 @@
 #include "debugDefs.hpp"
 #include "utils.hpp"
 
-void	addSocketToEventQueue(int eqfd, int socket_fd)
+void	addSocketToEventQueue(int eqfd, int socket_fd, ClientNode *node)
 {
-	setFilter(eqfd, socket_fd, EVENT_FILTER_READ, EVENT_ACTION_ADD);
+	setFilter(eqfd, socket_fd, EVENT_FILTER_READ, EVENT_ACTION_ADD, node);
 }
 
 void	addPassiveSocketsToQueue(int eqfd, const std::set<int> listeningSockets)
@@ -84,7 +84,7 @@ void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
 	}
 }
 
-void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config)
+void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages)
 {
 	BufferManager& buff_man = messages.find(fd)->second;
 
@@ -121,7 +121,7 @@ void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, cons
 			return ;
 		}
 
-		buff_man = BufferManager(config, fd); /* reset the buffer manager */
+		buff_man = BufferManager(fd); /* reset the buffer manager */
 		buff_man.addInputBuffer(remaining_buffer);
 
 		if (setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE)
@@ -209,9 +209,10 @@ bool	isListenSocket(int fd, const std::set<int>& listenSockets)
 	return (listenSockets.find(fd) != listenSockets.end());
 }
 
-void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int eqfd, const SuperServer& config)
+void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, ClientQueue &clientQueue, int eqfd)
 {
 	int new_socket_fd = accept(ev_fd, NULL, NULL);
+	ClientNode *newNode = clientQueue.newNode(new_socket_fd);
 	if (new_socket_fd < 0)
 	{
 		std::cerr << ESC_COLOR_RED << "Error when accepting request: "
@@ -232,16 +233,16 @@ void establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int 
 #endif
 
 	printClientAddress(new_socket_fd);
-	addSocketToEventQueue(eqfd, new_socket_fd);
+	addSocketToEventQueue(eqfd, new_socket_fd, newNode);
 
 	/* create an HTTPParser instance for that connection */
-	messages.insert(std::pair<int, BufferManager>(new_socket_fd, BufferManager(config, new_socket_fd)));
+	messages.insert(std::pair<int, BufferManager>(new_socket_fd, BufferManager(new_socket_fd)));
 	if (DP_9 & DP_MASK)
 	std::cout << "Connection established on socket "
 	<< COL(ESC_COLOR_CYAN, new_socket_fd) << std::endl << std::endl;
 }
 
-int	setFilter(int eqfd, int socket_fd, int event, int action)
+int	setFilter(int eqfd, int socket_fd, int event, int action, ClientNode *node)
 {
 #ifdef __linux__
 	struct epoll_event ev;
@@ -250,7 +251,7 @@ int	setFilter(int eqfd, int socket_fd, int event, int action)
 	int res = epoll_ctl(eqfd, (action == EVENT_ACTION_ADD) ? EPOLL_CTL_ADD : EPOLL_CTL_DEL, socket_fd, &ev);
 #else
 	struct kevent ev;
-	EV_SET(&ev, socket_fd, (event == EVENT_FILTER_READ) ? EVFILT_READ : EVFILT_WRITE, (action == EVENT_ACTION_ADD) ? EV_ADD : EV_DELETE, 0, 0, NULL);
+	EV_SET(&ev, socket_fd, (event == EVENT_FILTER_READ) ? EVFILT_READ : EVFILT_WRITE, (action == EVENT_ACTION_ADD) ? EV_ADD : EV_DELETE, 0, 0, node);
 	int res = kevent(eqfd, &ev, 1, NULL, 0, NULL);
 #endif
 	if (res < 0)

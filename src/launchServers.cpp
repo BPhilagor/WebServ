@@ -39,6 +39,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 #else
 	struct kevent events[MAX_EVENTS];
 #endif
+	ClientQueue clientQueue;
 	while (true)
 	{
 		int ev_count;
@@ -83,6 +84,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				int ev_fd = events[i].ident;
 				bool read_ev = events[i].filter == EVFILT_READ;
 				bool write_ev = events[i].filter == EVFILT_WRITE;
+				ClientNode *node = (ClientNode *)events[i].udata;
 #endif
 				std::map<int, cgi_buff>::iterator cgi_msg = cgi_messages.find(ev_fd);
 				if (cgi_msg != cgi_messages.end())
@@ -91,7 +93,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				}
 				else if (isListenSocket(ev_fd, config.getListeningSockets()))
 				{
-					establishConnection(ev_fd, buffer_managers, eqfd, config);
+					establishConnection(ev_fd, buffer_managers, clientQueue, eqfd);
 				}
 				else if (read_ev)
 				{
@@ -99,7 +101,8 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				}
 				else if (write_ev)
 				{
-					writeHandler(ev_fd, eqfd, buffer_managers, config);
+					(void) node;
+					writeHandler(ev_fd, eqfd, buffer_managers);
 				}
 				else
 					std::cerr << ESC_COLOR_RED << "Error, event not recognized" << ESC_COLOR_RESET << std::endl;
@@ -120,5 +123,6 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 #endif
 			}
 		}
+		clientQueue.print();
 	}
 }

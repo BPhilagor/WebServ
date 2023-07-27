@@ -11,11 +11,12 @@
 #include "utils.hpp"
 #include "debugDefs.hpp"
 
-BufferManager::BufferManager(const SuperServer& config, int fd):
+const SuperServer *BufferManager::config = NULL;
+
+BufferManager::BufferManager(int fd):
 	input_buffer(""),
 	output_buffer(""),
-	_fd(fd),
-	_config(config),
+	_hostPort(utils::fd_to_HostPort(fd)),
 	_req(),
 	_resp(),
 	_finished(false)
@@ -26,8 +27,6 @@ BufferManager::BufferManager(const SuperServer& config, int fd):
 BufferManager::BufferManager(const BufferManager& h):
 	input_buffer(h.input_buffer),
 	output_buffer(h.output_buffer),
-	_fd(h._fd),
-	_config(h._config),
 	_req(h._req),
 	_resp(h._resp),
 	_finished(h._finished)
@@ -44,7 +43,6 @@ BufferManager& BufferManager::operator=(const BufferManager& h)
 {
 	input_buffer = h.input_buffer;
 	output_buffer = h.output_buffer;
-	_fd = h._fd;
 	/* _config is const ! */
 	_req = h._req;
 	_resp = h._resp;
@@ -89,7 +87,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 				_resp.constructErrorReply(400);
 				goto phase_2;
 			}
-			virtual_server = _config.getServerForHostPortAndHostName(utils::fd_to_HostPort(_fd), host);
+			virtual_server = config->getServerForHostPortAndHostName(_hostPort, host);
 			// this->virtual_server = static_cast<Server *>(virtual_server);
 			if (virtual_server == NULL)
 			{
@@ -115,9 +113,9 @@ void	BufferManager::addInputBuffer(const std::string& s)
 		if (_req.isParsingBodyFinished())
 		{
 phase_2:
-			if (DP_14 & DP_MASK)
-			std::cout << "Client " << COL(ESC_COLOR_CYAN ,_fd) << " is requesting "
-			<< COL(ESC_COLOR_CYAN, _req.getURI().path) << std::endl;
+			// if (DP_14 & DP_MASK)
+			// std::cout << "Client " << COL(ESC_COLOR_CYAN ,_fd) << " is requesting "
+			// << COL(ESC_COLOR_CYAN, _req.getURI().path) << std::endl;
 
 			if (_resp.getCode() == 0)
 				requestWorker(*virtual_server, _req, _resp);

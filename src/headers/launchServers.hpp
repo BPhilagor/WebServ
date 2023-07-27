@@ -33,6 +33,7 @@
 # include "HTTPRequest.hpp"
 # include "BufferManager.hpp"
 # include "requestWorker.hpp"
+# include "ClientQueue.hpp"
 
 # define BUFFER_SIZE	128
 # define MAX_EVENTS		10
@@ -68,7 +69,7 @@ typedef struct
 	const Server *	virtual_server;
 	int				cgi_fd;
 	int				cgi_pid;
-	std::string<>	cgi_message;
+	std::string		cgi_message;
 } client_event;
 
 
@@ -78,16 +79,16 @@ void    launchServers(const SuperServer &config, char **argv, char **env);
 
 /* launchServersUtils.hpp */
 
-void	addSocketToEventQueue(int eqfd, int socket_fd);
+void	addSocketToEventQueue(int eqfd, int socket_fd, ClientNode *node);
 void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets);
 void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
 					std::map<int, cgi_buff> &cgi_messages);
-void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config);
-void	establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int eqfd, const SuperServer& config);
+void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages);
+void	establishConnection(int ev_fd, std::map<int, BufferManager> &messages, ClientQueue &clientQueue, int eqfd);
 void	printClientAddress(int fd);
 int		openSockets(const std::set<int>& ports, SuperServer &config);
 bool	isListenSocket(int fd, const std::set<int>& listenSockets);
-int		setFilter(int eqfd, int socket_fd, int event, int action);
+int		setFilter(int eqfd, int socket_fd, int event, int action, ClientNode *node = NULL);
 
 /* launchServersCGI.hpp */
 

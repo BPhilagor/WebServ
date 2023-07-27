@@ -35,6 +35,7 @@ class ClientQueue
 		void		append(ClientNode *node);
 		ClientNode*	newNode(int fd);
 		void		refresh(ClientNode *node);
+		void		print();
 };
 
 #endif

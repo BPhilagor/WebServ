@@ -14,7 +14,7 @@
 # include "HTTPRequest.hpp"
 # include "HTTPResponse.hpp"
 # include "Server.hpp"
-
+# include "BufferManager.hpp"
 
 class ClientEvent
 {
@@ -24,12 +24,10 @@ class ClientEvent
 
 		int				fd;
 		clock_t			last_activity;
-		HTTPRequest		request;
-		HTTPResponse	response;
-		const Server	*virtual_server;
 		int				cgi_fd;
 		int				cgi_pid;
 		std::string		cgi_message;
+		BufferManager	buffer_manager;
 };
 
 #endif
