@@ -12,6 +12,6 @@
 
 #include <string>
 
-std::string getMimeFromExtension(std::string& ext);
+const std::string &getMimeFromExtension(std::string& ext);
 
 #endif /* MIME_TYPES_H */

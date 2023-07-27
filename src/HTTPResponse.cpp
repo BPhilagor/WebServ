@@ -160,6 +160,23 @@ void	HTTPResponse::constructErrorReply(int code, const Server *srv)
 	setHeader("Content-length", SSTR(getBody().size()));
 }
 
+void	HTTPResponse::constructRedirect(t_redir redir)
+{
+	if (redir.type == "temporary")
+		setCode(302);
+	else
+		setCode(301);
+
+	setHeader("Location", redir.location);
+
+	//set a body in case auto-redirect is not activated in the browser
+
+	std::string	body = "<html><head><title>" + SSTR(getCode()) + " " + _reasonMap[getCode()] +"</title></head><body>Please follow <a href=\"" + redir.location + "\">this link</a><body></html>";
+	setBody(body);
+	setHeader("Content-length", SSTR(body.size()));
+	setHeader("Content-type", "text/html");
+}
+
 void	HTTPResponse::serveStaticFile(const std::string& path)
 {
 	std::string body;

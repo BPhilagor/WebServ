@@ -57,4 +57,10 @@ typedef struct {
 	int pid;
 } cgi_ret;
 
+typedef struct
+{
+	std::string location;
+	std::string	type;
+}	t_redir;
+
 #endif /* TYPEDEFS_HPP */
