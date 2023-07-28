@@ -76,7 +76,9 @@ std::string&	utils::sanitizeline(std::string& s)
 	if (s.length() > 0 && s[s.length() - 1] == '\r')
 		s.resize(s.length() - 1);
 	while (size_t pos = s.find("\r") != std::string::npos)
+	{
 		s.replace(pos, 1, " ");
+	}
 	return (s);
 }
 
@@ -292,6 +294,44 @@ int	utils::parseHeader(const std::string& line, std::pair<std::string, std::stri
 	return (0);
 }
 
+int	utils::parseList(const std::string &content, std::vector<std::string>& list)
+{
+	size_t		pos;
+	std::string	contentCpy = content;
+	std::string	listItem;
+
+	while (contentCpy != "")
+	{
+		pos = contentCpy.find_first_of(';');
+		listItem = contentCpy.substr(0, pos);
+		utils::trim(listItem);
+		list.push_back(listItem);
+		if (pos < contentCpy.size() - 1)
+			contentCpy = contentCpy.substr(pos + 1, contentCpy.size());
+		else
+			contentCpy = "";
+	}
+	return (0);
+}
+
+int	utils::parseKeyValue(const std::string &item, std::pair<std::string, std::string> &keyValue)
+{
+	size_t	pos;
+
+	pos = item.find_first_of('=');
+	keyValue.first = item.substr(0, pos);
+	keyValue.second = item.substr(pos + 1, item.size());
+
+	utils::trim(keyValue.first);
+	utils::trim(keyValue.second);
+
+	if (keyValue.second.size() >= 2 && keyValue.second[0] == '"' && keyValue.second[keyValue.second.size() - 1] == '"')
+		keyValue.second = keyValue.second.substr(1, keyValue.second.size() - 2);
+
+	return (0);
+}
+
+/* check if 2 strings are equal, case insensitive */
 bool	utils::streq_ci(const std::string& s1, const std::string& s2)
 {
 	if (s1.size() != s2.size())
@@ -304,6 +344,16 @@ bool	utils::streq_ci(const std::string& s1, const std::string& s2)
 	return (true);
 }
 
+std::string	utils::toUpper(const std::string& str)
+{
+	std::string res = str;
+	for (unsigned int i = 0; i < str.size(); i++)
+	{
+		res[i] = std::toupper(str[i]);
+	}
+	return (res);
+}
+
 std::string	utils::getFileExtension(const std::string& file)
 {
 	std::string ext;
@@ -313,4 +363,17 @@ std::string	utils::getFileExtension(const std::string& file)
 		ext = file.substr(pos + 1, file.length() - pos - 1);
 	}
 	return (ext);
+}
+
+std::string	utils::randomString(size_t len)
+{
+	const char alnum[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	std::string	str;
+
+	for (size_t i = 0; i < len; i++)
+	{
+		str += alnum[rand() % (sizeof(alnum) - 1)];
+	}
+
+	return (str);
 }

@@ -8,15 +8,16 @@
 /* ************************************************************************** */
 
 #include "staticPostHandler.hpp"
-#include <iostream>
 
-static int	multipartFormDataParser(const std::string boundary, const std::string data, std::vector<t_file> files);
+std::istream &operator>>(std::istream &is, char const *s);
+static int	multipartFormDataParser(const std::string boundary, const std::string data, std::vector<t_file> &files);
 
 int	staticPostHandler(const HTTPRequest& req)
 {
 	// check if content-type is multipart/form-data and that it has a boundary
-	std::string	contentType = req.getHeader("content-type");
+	std::string	contentType = utils::toUpper(req.getHeader("content-type"));
 	std::string	boundary;
+	std::cout <<contentType<<std::endl;
 	std::istringstream iss(contentType);
 	iss >> "MULTIPART/FORM-DATA; BOUNDARY=">>boundary;
 	if (!iss || boundary == "")
@@ -41,9 +42,9 @@ int	staticPostHandler(const HTTPRequest& req)
 	// try to put them in the right location
 	for (unsigned int i = 0; i < files.size(); i++)
 	{
-		std::string strFilename = "somerandomfilename_" + files[0].filename;
+		std::string strFilename = "somerandomfilename_" + files[i].filename;
 		const char	*filename = strFilename.c_str();
-		int fd = open(filename, OWRONLY | OCREAT, 0644);
+		int fd = open(filename, O_WRONLY | O_CREAT, 0644);
 		if (fd < 0)
 		{
 			//error
@@ -68,15 +69,126 @@ int	staticPostHandler(const HTTPRequest& req)
 	return (204);
 }
 
+std::string copyLine(std::string input);
+bool	matchBoundary(const std::string &str, const std::string &boundary);
+bool	matchEndBoundary(const std::string &str, const std::string &boundary);
+int	formDataParser(std::string &data, const std::string &boundary, t_file &parsed_file);
+
 /* generate a list of files from some multipart/form-data POST request body */
-static int	multipartFormDataParser(const std::string boundary, const std::string data, std::vector<t_file> files)
+static int	multipartFormDataParser(const std::string boundary, const std::string data, std::vector<t_file> &files)
 {
-	/* placeholder code, no actual parsing is done yet */
-	(void)boundary;
-	(void)data;
-	t_file uploaded_file;
-	uploaded_file.filename = "stupidTestFile.txt";
-	uploaded_file.content = "Hello, world!";
-	files.push_back(uploaded_file);
+	std::string	line;
+	std::string	dataCpy = data;
+
+	/* Ignore anything that comes before the initial boundary */
+	do {
+		line = copyLine(dataCpy);
+		dataCpy = dataCpy.substr(line.size(), dataCpy.size());
+	} while (!matchBoundary(line, boundary));
+
+
+	/* start parsing the multiple parts */
+	while (true)
+	{
+
+		files.push_back(t_file());
+		if (formDataParser(dataCpy, boundary, files[files.size() - 1]) != 0)
+			return (-1);
+
+		line = copyLine(dataCpy);
+		if (matchEndBoundary(line, boundary))
+		{
+			break ;
+		}
+		else
+		{
+			dataCpy = dataCpy.substr(line.size(), data.size());
+		}
+	}
+
+	/* Ignore anything that comes after the end boundary */
 	return (0);
+}
+
+int	formDataParser(std::string &data, const std::string &boundary, t_file &parsed_file)
+{
+	std::string	line;
+	std::string	trimmedLine;
+	int			state = 0; //header state
+
+	/* create some random file name in case there is no filename provided */
+	parsed_file.filename = "no_filename_provided_" + utils::randomString(15);
+
+	while (true)
+	{
+		line = copyLine(data);
+
+		if (matchBoundary(line, boundary))
+			break;
+
+		//are we in header or body state?
+		if (state == 0)
+		{
+			trimmedLine = line;
+			utils::trim(trimmedLine, "\n\r\t\v\f ");
+
+			if (trimmedLine == "")
+			{
+				state = 1;
+			}
+			else
+			{
+				std::pair<std::string, std::string> header;
+				if (utils::parseHeader(trimmedLine, header) != 0)
+					return (-1);
+				if (utils::streq_ci(header.first, "Content-disposition"))
+				{
+					std::vector<std::string> list;
+					if (utils::parseList(header.second, list) != 0)
+						return (-1);
+					for (unsigned int i = 0; i < list.size(); i++)
+					{
+						std::pair<std::string, std::string> keyValue;
+						if (utils::parseKeyValue(list[i], keyValue) != 0)
+							return (-1);
+						if (utils::streq_ci(keyValue.first, "filename"))
+						{
+							parsed_file.filename = keyValue.second;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			parsed_file.content += line;
+		}
+		data = data.substr(line.size(), data.size());
+	}
+	return (0);
+}
+
+/* copies the first line, with the newline character */
+std::string copyLine(std::string input)
+{
+	size_t pos = input.find_first_of('\n');
+	if (pos == std::string::npos)
+		return (std::string(input));
+	else
+		return (input.substr(0, pos + 1));
+}
+
+//check if start of string matches boundary
+bool	matchBoundary(const std::string &str, const std::string &boundary)
+{
+	std::string boundaryPlus = "--" + boundary;
+	unsigned int boundaryLength = boundaryPlus.size();
+	return (str.substr(0, boundaryLength) == boundaryPlus);
+}
+
+bool	matchEndBoundary(const std::string &str, const std::string &boundary)
+{
+	std::string boundaryPlus = "--" + boundary + "--";
+	unsigned int boundaryLength = boundaryPlus.size();
+	return (str.substr(0, boundaryLength) == boundaryPlus);
 }

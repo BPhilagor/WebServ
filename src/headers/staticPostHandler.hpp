@@ -12,12 +12,15 @@
 
 # include "HTTPRequest.hpp"
 # include "typedefs.hpp"
+# include "utils.hpp"
 # include <string>
 # include <vector>
 # include <fcntl.h>
 # include <unistd.h>
 # include <sstream>
 # include <fstream>
+# include <iostream>
+# include <sys/time.h>
 
 int	staticPostHandler(const HTTPRequest& req);
 
