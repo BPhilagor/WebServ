@@ -27,7 +27,7 @@ int check_file(const char *path)
 {
 	if (access(path, R_OK) != 0)
 	{
-		std::cout << std::strerror(errno) <<std::endl;
+		std::cout << path << " : "<< std::strerror(errno) <<std::endl;
 		if (errno == ENOENT || errno == ENOTDIR)
 			return (ENOENT);
 		else
@@ -93,11 +93,13 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 		}
 		else if (request.getMethod() == WS_POST)
 		{
-			int code = staticPostHandler(request);
+			int code = staticPostHandler(request, location);
 			response.setCode(code);
 		}
 		else
+		{
 			response.serveStaticFile(real_path);
+		}
 	}
 
 	/* check the status code produced in the operations above. If necessary, serve an error reply */

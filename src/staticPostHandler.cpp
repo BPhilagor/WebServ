@@ -12,7 +12,7 @@
 std::istream &operator>>(std::istream &is, char const *s);
 static int	multipartFormDataParser(const std::string boundary, const std::string data, std::vector<t_file> &files);
 
-int	staticPostHandler(const HTTPRequest& req)
+int	staticPostHandler(const HTTPRequest& req, const Location& location)
 {
 	// check if content-type is multipart/form-data and that it has a boundary
 	std::string	contentType = utils::toUpper(req.getHeader("content-type"));
@@ -42,7 +42,22 @@ int	staticPostHandler(const HTTPRequest& req)
 	// try to put them in the right location
 	for (unsigned int i = 0; i < files.size(); i++)
 	{
-		std::string	randomDir = utils::randomString(15);
+		std::string uploadDir;
+		if (location.isUploadDirSet())
+		{
+			uploadDir = location.getUploadDir();
+			if (mkdir(uploadDir.c_str(), 0766) != 0 && errno != EEXIST)
+			{
+				std::cout << "Error when creating directory "<<uploadDir<<" : "<<std::strerror(errno)<<std::endl;
+				return (500);
+			}
+		}
+		else
+		{
+			std::cout << "Error: upload_dir directive is not set" << std::endl;
+			return (500);
+		}
+		std::string	randomDir = uploadDir + "/" + utils::randomString(15);
 		if (mkdir(randomDir.c_str(), 0766) != 0 && errno != EEXIST)
 		{
 			std::cout << "Error when creating directory "<<randomDir<<" : "<<std::strerror(errno)<<std::endl;

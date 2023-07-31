@@ -13,6 +13,7 @@
 # include "HTTPRequest.hpp"
 # include "typedefs.hpp"
 # include "utils.hpp"
+# include "Location.hpp"
 # include <string>
 # include <vector>
 # include <fcntl.h>
@@ -22,6 +23,6 @@
 # include <iostream>
 # include <sys/time.h>
 
-int	staticPostHandler(const HTTPRequest& req);
+int	staticPostHandler(const HTTPRequest& req, const Location& location);
 
 #endif
