@@ -121,6 +121,8 @@ phase_2:
 
 			if (_resp.getCode() == 0)
 				requestWorker(*virtual_server, _req, _resp);
+			else
+				_resp.finalize();
 			input_buffer = input_buffer.substr(i + 1, s.length() - i - 1);
 			output_buffer = _resp.serialize();
 			_finished = true;
