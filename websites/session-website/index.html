@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Management Example</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function login() {
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            $.ajax({
+                type: "POST",
+                url: "login",
+                data: JSON.stringify({ username: username, password: password }),
+                contentType: "application/json",
+                success: function (data) {
+                    if (data.success) {
+                        alert("Login successful!");
+                        document.getElementById("loginForm").style.display = "none";
+                        document.getElementById("welcomeMessage").innerText = "Welcome, " + data.username + "!";
+                        document.getElementById("welcomeMessage").style.display = "block";
+                    } else {
+                        alert("Login failed. Please check your credentials.");
+                    }
+                },
+                error: function () {
+                    alert("Error during login request.");
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="loginForm">
+        <h2>Login</h2>
+        <label for="username">Username:</label>
+        <input type="text" id="username" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" required><br>
+        <button onclick="login()">Login</button>
+    </div>
+    <div id="welcomeMessage" style="display: none;">
+        <!-- Will be displayed after successful login -->
+    </div>
+</body>
+</html>
