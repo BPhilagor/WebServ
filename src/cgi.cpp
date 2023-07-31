@@ -63,7 +63,7 @@ cgi_ret launchCGI(const Location &location,
 	}
 	if (pid == 0)
 	{
-		//sleep(3);
+		//sleep(2);
 		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
 			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "

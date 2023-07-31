@@ -11,28 +11,29 @@
 #include "debugDefs.hpp"
 #include "launchServers.hpp"
 
-int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg);
+int8_t	prepair_response(ClientNode *node);
 
 // void	registerCGI(int fd, int eqfd, std::map<int, cgi_buff> cgi_messages)
 // {
 // 	// code to do this is currenly in the readHandler maybe we can refactor
 // }
 
-void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> &cgi_messages, std::map<int, BufferManager> &buffer_managers)
+void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 {
 	/* read a chunk of the client's message into a buffer */
 	char buff[BUFFER_SIZE + 1];
-	int bytesRecv = read(fd, buff, BUFFER_SIZE);
+	int bytesRecv = read(node->cgi_fd, buff, BUFFER_SIZE);
 	buff[BUFFER_SIZE] = 0;
 
 	if (bytesRecv < BUFFER_SIZE)
 	{
 		if (DP_9 & DP_MASK)
-		std::cout << COL(ESC_COLOR_GREEN, "CGI") << " on fd " << COL(ESC_COLOR_CYAN, fd) << " finished : ";
+		std::cout << COL(ESC_COLOR_GREEN, "CGI") << " on fd " << COL(ESC_COLOR_CYAN, node->cgi_fd) << " finished : ";
 
 		int child_status;
-		waitpid(msg->second.response._cgi_ret.pid , &child_status, 0);
+		std::cout << "Wait for pid : " << node->cgi_pid << std::endl;
+		waitpid(node->cgi_pid , &child_status, 0);
+		std::cout << "Finished waiting for: " << node->cgi_pid << std::endl;
 		if (WIFEXITED(child_status))
 		{
 			std::cout<<"status: "<< COL(ESC_COLOR_CYAN, WEXITSTATUS(child_status))<<std::endl;
@@ -44,71 +45,33 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 			std::cerr<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
 		}
 
-		if (setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
-			|| setFilter(eqfd, msg->second.client_fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD))
+		if (setFilter(eqfd, node->cgi_fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
+			|| setFilter(eqfd, node->fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD, node))
 			throw "Set filter error";
-
-		close(fd);
 
 		if (bytesRecv < 0)
 			;
 		else
 		{
 			buff[bytesRecv] = '\0';
-			msg->second.cgi_msg += buff;
+			node->cgi_message += buff;
 		}
 
-		prepair_response(msg);
-
-		if (buffer_managers.find(msg->second.client_fd) == buffer_managers.end())
-			PERR2("Fd not found for sending message !, fd : ", fd);
-		else
-		{
-			// TODO (znichola) : correctly set the response to have the error code
-			buffer_managers.find(msg->second.client_fd)->second.output_buffer = msg->second.resp_msg;
-			buffer_managers.find(msg->second.client_fd)->second.setCode(200);
-		}
-		cgi_messages.erase(fd);
+		prepair_response(node);
+		client_queue.unsetRunningCgi(node);
 		return ;
 	}
 
 	buff[bytesRecv] = '\0';
-	msg->second.cgi_msg += buff;
+	node->cgi_message += buff;
 }
 
-void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> &cgi_messages)
+int8_t	prepair_response(ClientNode *node)
 {
-	std::cout << COL(ESC_COLOR_MAGENTA, "CGI write!\n");
-
-	std::string &response = msg->second.resp_msg;
-	int writtenBytes = send(fd, response.c_str(), response.length(), SEND_FLAGS);
-	if (writtenBytes < 0)
-	{
-		std::cerr << "send(" << fd << ") failed: " << std::strerror(errno) << std::endl;
-	}
-	else
-	{
-		// if (DP_3 & DP_MASK)
-		std::cout<<"Wrote " << writtenBytes << " bytes: " << std::endl << ESC_COLOR_CYAN << response << ESC_COLOR_RESET << std::endl;
-		response = response.substr(writtenBytes, response.length() - writtenBytes);
-	}
-	if (writtenBytes < 0 || response.length() == 0)
-	{
-		cgi_messages.erase(fd);
-
-		if (setFilter(eqfd, fd, EVENT_FILTER_WRITE, EVENT_ACTION_DELETE)
-			|| setFilter(eqfd, fd, EVENT_FILTER_READ, EVENT_ACTION_ADD))
-			throw "Set Filter Error";
-	}
-}
-
-int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg)
-{
-	if (msg->second.virtual_server == NULL)
+	if (node->buffer_manager.virtual_server == NULL)
 	{
 		std::cout << "Host not found" << std::endl;
-		msg->second.response.constructErrorReply(400);
+		// TODO : node->buffer_manager.getResponse().constructErrorReply(400);
 	}
 	else
 	{
@@ -140,10 +103,10 @@ int8_t	prepair_response(std::map<int, cgi_buff>::iterator msg)
 		// 	msg->second.request.setBody(body);
 		// 	msg->second.request.getAllHeaders().replace("Content-length", SSTR(body.size()));
 		// }
-		msg->second.response.parseCGIResponse(msg->second.cgi_msg);
+		node->buffer_manager.getResponse().parseCGIResponse(node->cgi_message);
 		// std::cout << "new request to pass to request worker\n" << msg->second.request << "\n";
 		// requestWorker(*msg->second.virtual_server, msg->second.request, msg->second.response);
-		msg->second.resp_msg = msg->second.response.serialize();
+		node->buffer_manager.output_buffer = node->buffer_manager.getResponse().serialize(); // TODO : faire fonction dans buff man
 	}
 	return 0;
 }

@@ -27,11 +27,12 @@ BufferManager::BufferManager(int fd):
 BufferManager::BufferManager(const BufferManager& h):
 	input_buffer(h.input_buffer),
 	output_buffer(h.output_buffer),
+	_hostPort(h._hostPort),
 	_req(h._req),
 	_resp(h._resp),
 	_finished(h._finished)
 {
-
+	std::cout << ESC_COLOR_CYAN << "duplicating buff man " << std::endl;
 }
 
 BufferManager::~BufferManager()
@@ -128,12 +129,12 @@ phase_2:
 	input_buffer = "";
 }
 
-const HTTPRequest&	BufferManager::getRequest() const
+HTTPRequest&	BufferManager::getRequest()
 {
 	return _req;
 }
 
-const HTTPResponse&	BufferManager::getResponse() const
+HTTPResponse&	BufferManager::getResponse()
 {
 	return _resp;
 }

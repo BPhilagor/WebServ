@@ -9,6 +9,9 @@
 
 #ifndef CLIENT_QUEUE_HPP
 # define CLIENT_QUEUE_HPP
+# define MAX_INACTIVITY_UTIME 60000000
+# define MAX_CGI_UTIME 2000000
+# define MILLION 1000000
 
 #include "ClientEvent.hpp"
 
@@ -31,10 +34,16 @@ class ClientQueue
 		size_t		size;
 		ClientNode	*start;
 		ClientNode	*end;
+		ClientNode	*running_cgi_start;
+		ClientNode	*running_cgi_end;
+		void		setRunningCgi(ClientNode *node, int cgi_fd, int cgi_pid);
+		void		unsetRunningCgi(ClientNode *node);
 		void		remove(ClientNode *node);
 		void		append(ClientNode *node);
 		ClientNode*	newNode(int fd);
 		void		refresh(ClientNode *node);
+		void		removeDeadConnections();
+		void		fclear();
 		void		print();
 };
 

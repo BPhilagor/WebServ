@@ -37,6 +37,7 @@
 
 # define BUFFER_SIZE	128
 # define MAX_EVENTS		10
+# define TIMER_PERIODE	1000
 
 
 # ifdef __linux__
@@ -81,10 +82,9 @@ void    launchServers(const SuperServer &config, char **argv, char **env);
 
 void	addSocketToEventQueue(int eqfd, int socket_fd, ClientNode *node);
 void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets);
-void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
-					std::map<int, cgi_buff> &cgi_messages);
-void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages);
-void	establishConnection(int ev_fd, std::map<int, BufferManager> &messages, ClientQueue &clientQueue, int eqfd);
+void	readHandler(int eqfd, ClientQueue &client_queue, ClientNode *node);
+void	writeHandler(int eqfd, ClientQueue &client_queue, ClientNode *node);
+void	establishConnection(int ev_fd, ClientQueue &clientQueue, int eqfd);
 void	printClientAddress(int fd);
 int		openSockets(const std::set<int>& ports, SuperServer &config);
 bool	isListenSocket(int fd, const std::set<int>& listenSockets);
@@ -92,9 +92,6 @@ int		setFilter(int eqfd, int socket_fd, int event, int action, ClientNode *node 
 
 /* launchServersCGI.hpp */
 
-void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> &cgi_messages, std::map<int, BufferManager> &buffer_managers);
-void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> &cgi_messages);
+void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node);
 
 #endif /* LAUNCHSERVERS_HPP */

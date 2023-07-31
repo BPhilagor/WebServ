@@ -10,11 +10,14 @@
 
 #ifndef CLIENT_EVENT_HPP
 # define CLIENT_EVENT_HPP
-# include <chrono>
+# include <sys/time.h>
+# include "signal.h"
 # include "HTTPRequest.hpp"
 # include "HTTPResponse.hpp"
 # include "Server.hpp"
 # include "BufferManager.hpp"
+
+typedef struct timeval t_timeval;
 
 class ClientEvent
 {
@@ -23,7 +26,7 @@ class ClientEvent
 		~ClientEvent();
 
 		int				fd;
-		clock_t			last_activity;
+		t_timeval		last_activity;
 		int				cgi_fd;
 		int				cgi_pid;
 		std::string		cgi_message;

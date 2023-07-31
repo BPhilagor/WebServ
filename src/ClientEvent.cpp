@@ -10,13 +10,17 @@
 #include "ClientEvent.hpp"
 
 ClientEvent::ClientEvent(int fd)
-	: fd(fd), last_activity(clock()), buffer_manager(fd)
+	: fd(fd), cgi_fd(-1), cgi_pid(-1), buffer_manager(fd)
 {
-	cgi_fd = 0;
-	cgi_pid = 0;
+	gettimeofday(&last_activity, 0);
 }
 
 ClientEvent::~ClientEvent()
 {
 	close(fd);
+	if (cgi_fd != -1)
+		close(cgi_fd);
+	if (cgi_pid != -1)
+		kill(cgi_pid, SIGKILL);
+	std::cout << "Client " << fd << " closed" << std::endl;
 }

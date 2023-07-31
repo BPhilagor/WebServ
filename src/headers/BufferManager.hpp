@@ -22,8 +22,8 @@ class BufferManager
 
 		void	addInputBuffer(const std::string& s);
 
-		const HTTPRequest&	getRequest() const;
-		const HTTPResponse&	getResponse() const;
+		HTTPRequest&	getRequest();
+		HTTPResponse&	getResponse();
 
 		void	setCode(int code);
 
