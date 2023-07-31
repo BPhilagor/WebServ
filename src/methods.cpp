@@ -17,7 +17,7 @@
 #include "methods.hpp"
 #include "debugDefs.hpp"
 
-static int genDirListing(const Location &loc, const std::string &path, HTTPResponse& response);
+static int genDirListing(const HTTPRequest& req, const Location &loc, const std::string &path, HTTPResponse& response);
 static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder);
 
 /* return ENOENT, EPERM, EISDIR or 0*/
@@ -79,7 +79,7 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 			if (!location.isDirListingSet())
 				response.setCode(403);
 			else
-				response.setCode(genDirListing(location, path, response));
+				response.setCode(genDirListing(request, location, path, response));
 		}
 	}
 	else
@@ -177,10 +177,10 @@ int	DELETE(HTTPResponse &response,
 	return 0;
 }
 
-static int genDirListing(const Location &loc, const std::string &path, HTTPResponse& response)
+static int genDirListing(const HTTPRequest& req, const Location &loc, const std::string &path, HTTPResponse& response)
 {
 	std::string	real_path = loc.getRealPath(path);
-	std::string	path_to_file;
+	std::string	url_to_file;
 
 	DIR *dir;
 	struct dirent *dp;
@@ -195,8 +195,8 @@ static int genDirListing(const Location &loc, const std::string &path, HTTPRespo
 	std::string content("");
 	FOREACH_VECTOR(std::string, entry_name)
 	{
-		path_to_file = path + ((path != "")?"/":"") + *it;
-		content += "<li><a href=\"/" + path_to_file + "\">" + *it + "</a></li>";
+		url_to_file = req.getURI().path + ((req.getURI().path != "/")?"/":"") + *it;
+		content += "<li><a href=\"" + url_to_file + "\">" + *it + "</a></li>";
 	}
 	std::string foot("</ul></body></html>");
 
