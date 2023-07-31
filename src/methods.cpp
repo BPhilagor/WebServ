@@ -179,7 +179,8 @@ int	DELETE(HTTPResponse &response,
 
 static int genDirListing(const Location &loc, const std::string &path, HTTPResponse& response)
 {
-	std::string real_path = loc.getRealPath(path);
+	std::string	real_path = loc.getRealPath(path);
+	std::string	path_to_file;
 
 	DIR *dir;
 	struct dirent *dp;
@@ -190,11 +191,14 @@ static int genDirListing(const Location &loc, const std::string &path, HTTPRespo
 	while ((dp = readdir(dir)) != NULL)
 		entry_name.push_back(std::string(dp->d_name));
 
-	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>index of " + path + "</h1>\n");
+	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>Index of /" + path + "</h1><ul>");
 	std::string content("");
 	FOREACH_VECTOR(std::string, entry_name)
-		content += "<h3><a href=\"/" + path + "/" + *it + "\">" + *it + "</a></h3>\n";
-	std::string foot("</body></html>");
+	{
+		path_to_file = path + ((path != "")?"/":"") + *it;
+		content += "<li><a href=\"/" + path_to_file + "\">" + *it + "</a></li>";
+	}
+	std::string foot("</ul></body></html>");
 
 	closedir(dir);
 
