@@ -191,7 +191,7 @@ static int genDirListing(const HTTPRequest& req, const Location &loc, const std:
 	while ((dp = readdir(dir)) != NULL)
 		entry_name.push_back(std::string(dp->d_name));
 
-	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>Index of /" + path + "</h1><ul>");
+	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>Index of " + req.getURI().path + "</h1><ul>");
 	std::string content("");
 	FOREACH_VECTOR(std::string, entry_name)
 	{
