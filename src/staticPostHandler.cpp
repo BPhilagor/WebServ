@@ -42,8 +42,14 @@ int	staticPostHandler(const HTTPRequest& req)
 	// try to put them in the right location
 	for (unsigned int i = 0; i < files.size(); i++)
 	{
-		std::string strFilename = "somerandomfilename_" + files[i].filename;
-		const char	*filename = strFilename.c_str();
+		std::string	randomDir = utils::randomString(15);
+		if (mkdir(randomDir.c_str(), 0766) != 0 && errno != EEXIST)
+		{
+			std::cout << "Error when creating directory "<<randomDir<<" : "<<std::strerror(errno)<<std::endl;
+			return (500);
+		}
+		std::string uploadPath = randomDir + "/" + files[i].filename;
+		const char	*filename = uploadPath.c_str();
 		int fd = open(filename, O_WRONLY | O_CREAT, 0644);
 		if (fd < 0)
 		{
@@ -94,6 +100,8 @@ static int	multipartFormDataParser(const std::string boundary, const std::string
 		files.push_back(t_file());
 		if (formDataParser(dataCpy, boundary, files[files.size() - 1]) != 0)
 			return (-1);
+		if (files[files.size() - 1].filename == "")
+			files.pop_back();
 
 		line = copyLine(dataCpy);
 		if (matchEndBoundary(line, boundary))
@@ -115,9 +123,6 @@ int	formDataParser(std::string &data, const std::string &boundary, t_file &parse
 	std::string	line;
 	std::string	trimmedLine;
 	int			state = 0; //header state
-
-	/* create some random file name in case there is no filename provided */
-	parsed_file.filename = "no_filename_provided_" + utils::randomString(15);
 
 	while (true)
 	{

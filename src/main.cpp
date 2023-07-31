@@ -18,6 +18,7 @@
 
 int main(int argc, char** argv, char **env)
 {
+	srand((unsigned)time(NULL) * getpid());
 	Data data;
 	if (argc != 2)
 	{
