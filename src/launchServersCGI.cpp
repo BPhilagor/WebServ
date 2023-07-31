@@ -58,7 +58,13 @@ void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
 			msg->second.cgi_msg += buff;
 		}
 
-		prepair_response(msg);
+		if (child_status == 0)
+			prepair_response(msg);
+		else
+		{
+			msg->second.response.constructErrorReply(500);
+			msg->second.resp_msg = msg->second.response.serialize();
+		}
 
 		if (buffer_managers.find(msg->second.client_fd) == buffer_managers.end())
 			PERR2("Fd not found for sending message !, fd : ", fd);
