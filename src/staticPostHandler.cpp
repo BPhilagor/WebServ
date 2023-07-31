@@ -14,6 +14,8 @@ static int	multipartFormDataParser(const std::string boundary, const std::string
 
 int	staticPostHandler(const HTTPRequest& req, const Location& location)
 {
+	if (!location.isUploadDirSet())
+		return (405);
 	// check if content-type is multipart/form-data and that it has a boundary
 	std::string	contentType = utils::toUpper(req.getHeader("content-type"));
 	std::string	boundary;
