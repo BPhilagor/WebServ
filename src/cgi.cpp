@@ -73,6 +73,14 @@ cgi_ret launchCGI(const Location &location,
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
+
+		std::string dirname = utils::getDirname(file_path);
+		std::cout << "directory: "<<dirname <<std::endl;
+		if (chdir(dirname.c_str()) != 0)
+		{
+			std::cerr << ESC_COLOR_RED << "Failed to change to directory "<<dirname<<" : "<<std::strerror(errno)<<std::endl;
+			exit(1);
+		}
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
 		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
 			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
