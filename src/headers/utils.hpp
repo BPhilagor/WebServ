@@ -96,6 +96,8 @@ namespace utils
 	std::string	getFileExtension(const std::string& file);
 
 	std::string	randomString(size_t len);
+
+	std::string	getDirname(const std::string &path);
 }
 
 /* use it variable to itterate */
