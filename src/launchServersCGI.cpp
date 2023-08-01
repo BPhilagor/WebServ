@@ -34,7 +34,7 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 			if (WEXITSTATUS(child_status) != 0)
 			{
 				std::cerr << ESC_COLOR_RED << "Error with CGI execution !" << ESC_COLOR_RESET << std::endl;
-				return;
+				// return;
 			}
 			else
 				cgi_exit_sucess = true;
@@ -42,7 +42,8 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 		else
 		{
 			std::cerr<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
-			return;
+			// client_queue.unsetRunningCgi(node);
+			// return;
 		}
 
 		if (setFilter(eqfd, node->cgi_fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
@@ -56,7 +57,8 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 
 		node->buffer_manager.getResponse().finalize();
 		node->buffer_manager.output_buffer = node->buffer_manager.getResponse().serialize();
-  	client_queue.unsetRunningCgi(node);
+		std::cout << ESC_COLOR_CYAN << node->buffer_manager.output_buffer << ESC_COLOR_RESET << std::endl;
+		client_queue.unsetRunningCgi(node);
 		return ;
 	}
 

@@ -8,6 +8,7 @@
 /* ************************************************************************** */
 
 #include "launchServers.hpp"
+#include "debugDefs.hpp"
 
 #ifdef __linux__
 	#define	pollEvents(eqfd, events, max) epoll_wait(eqfd, events, max, -1)
@@ -129,7 +130,6 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 #else
 				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
 				client_queue.remove(node);
-				//client_queue.remove(node);
 				std::cerr << "Connection closed for : "
 					<< COL(ESC_COLOR_CYAN, SSTR(events[i].ident)) << std::endl << std::endl;
 #endif
@@ -137,6 +137,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 		}
 		if (has_timer_event)
 			client_queue.removeDeadConnections();
-		//client_queue.print();
+		if (DP_17 & DP_MASK)
+			client_queue.print();
 	}
 }

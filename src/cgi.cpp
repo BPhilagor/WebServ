@@ -63,7 +63,7 @@ cgi_ret launchCGI(const Location &location,
 	}
 	if (pid == 0)
 	{
-    //sleep(3);
+		//sleep(3);
 		std::string dirname = utils::getDirname(file_path);
 		std::cerr << "New working directory: "<<dirname <<std::endl;
 		if (chdir(dirname.c_str()) != 0)

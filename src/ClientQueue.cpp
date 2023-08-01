@@ -23,9 +23,8 @@ ClientNode::~ClientNode() {}
 
 void		ClientQueue::refresh(ClientNode *node)
 {
-	std::cout << "Refresh " << node->fd << std::endl;
 	if (node->cgi_fd != -1)
-		std::cout << ESC_COLOR_RED << "Error with refresh" << ESC_COLOR_RESET << std::endl;
+		std::cerr << ESC_COLOR_RED << "Error with refresh" << ESC_COLOR_RESET << std::endl;
 	gettimeofday(&node->last_activity, 0);
 	unlink(node);
 	append(node);
@@ -50,6 +49,7 @@ void	ClientQueue::setRunningCgi(ClientNode *node, int cgi_fd, int cgi_pid)
 */
 void		ClientQueue::unsetRunningCgi(ClientNode *node)
 {
+	close(node->cgi_fd);
 	node->cgi_fd = -1;
 	node->cgi_pid = -1;
 	node->cgi_message.clear();
@@ -65,7 +65,6 @@ void		ClientQueue::unsetRunningCgi(ClientNode *node)
 */
 static void	unlinkFromList(ClientNode *node, ClientNode *&start, ClientNode *&end)
 {
-	std::cout << "Unlink a node" << std::endl;
 	if (node->next)
 		node->next->prev = node->prev;
 	else
@@ -97,7 +96,6 @@ void	ClientQueue::unlink(ClientNode *node)
 */
 void	ClientQueue::remove(ClientNode *node)
 {
-	std::cout << "Remove a node" << std::endl;
 	size -= 1;
 	if (node->cgi_fd != -1)
 		unlinkCGI(node);
@@ -119,13 +117,11 @@ static void	appendToList(ClientNode *node, ClientNode *&start, ClientNode *&end)
 
 void	ClientQueue::appendCGI(ClientNode *node)
 {
-	std::cout << "Try to append CGI node" << std::endl;
 	appendToList(node, running_cgi_start, running_cgi_end);
 }
 
 void	ClientQueue::append(ClientNode *node)
 {
-	std::cout << "Try to append node" << std::endl;
 	appendToList(node, start, end);
 }
 
@@ -134,7 +130,6 @@ void	ClientQueue::append(ClientNode *node)
 */
 ClientNode*	ClientQueue::newNode(int fd)
 {
-	std::cout << "New node" << std::endl;
 	size += 1;
 	ClientNode *newEvent = new ClientNode(fd);
 	this->append(newEvent);
@@ -147,7 +142,6 @@ ClientNode*	ClientQueue::newNode(int fd)
 // TODO : tester si tout marche bien
 void		ClientQueue::fclear()
 {
-	std::cout << "Removing all connections" << std::endl;
 	ClientNode *tmp;
 	while (start)
 	{
@@ -161,7 +155,6 @@ void		ClientQueue::fclear()
 		delete tmp;
 		start = tmp;
 	}
-	std::cout << std::endl;
 }
 
 /*
@@ -169,7 +162,6 @@ void		ClientQueue::fclear()
 */
 void	ClientQueue::removeDeadConnections()
 {
-	std::cout << "Remove dead co" << std::endl;
 	ClientNode	*tmp = start;
 	timeval		current_time;
 
@@ -200,7 +192,7 @@ void	ClientQueue::removeDeadConnections()
 		if (running_time > MAX_CGI_UTIME)
 		{
 			std::cout << ESC_COLOR_MAGENTA << "Remove cgi " << tmp->fd << " for innactivity (" << MAX_CGI_UTIME / 1000 << "ms max)" <<  ESC_COLOR_RESET << std::endl;
-			remove(tmp);
+			kill(tmp->cgi_pid, SIGKILL);
 			tmp = next;
 		}
 		else

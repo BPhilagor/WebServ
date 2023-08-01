@@ -32,7 +32,6 @@ BufferManager::BufferManager(const BufferManager& h):
 	_resp(h._resp),
 	_finished(h._finished)
 {
-	std::cout << ESC_COLOR_CYAN << "duplicating buff man " << std::endl;
 }
 
 BufferManager::~BufferManager()
@@ -74,7 +73,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 
 			if (!_req.hasValidSyntax())
 			{
-				std::cout << "Invalid syntax" << std::endl;
+				std::cerr << COL(ESC_COLOR_RED, "Invalid syntax") << std::endl;
 				_resp.constructErrorReply(400);
 				goto phase_2;
 			}
@@ -84,7 +83,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 				host = _req.getHeader("Host");
 			if (host == "")
 			{
-				std::cout << "Host not set" << std::endl;
+				std::cerr << COL(ESC_COLOR_RED, "Host not set") << std::endl;
 				_resp.constructErrorReply(400);
 				goto phase_2;
 			}
@@ -92,7 +91,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 			// this->virtual_server = static_cast<Server *>(virtual_server);
 			if (virtual_server == NULL)
 			{
-				std::cout << "Host not found" << std::endl;
+				std::cerr << COL(ESC_COLOR_RED, "Host not found") << std::endl;
 				_resp.constructErrorReply(400);
 				goto phase_2;
 			}
