@@ -27,6 +27,7 @@
 # define DP_13  (1U << 13) /* methods:                                        */
 # define DP_14  (1U << 14) /* bufferManager: message info                     */
 # define DP_15  (1U << 15) /* CGI:                                            */
+# define DP_16  (1U << 16) /* CGI: in out debuging prints                     */
 
 
 /* debug print options mask */

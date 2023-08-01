@@ -16,8 +16,9 @@
 #include "HTTPResponse.hpp"
 #include "methods.hpp"
 #include "debugDefs.hpp"
+#include "staticPostHandler.hpp"
 
-static int genDirListing(const Location &loc, const std::string &path, HTTPResponse& response);
+static int genDirListing(const HTTPRequest& req, const Location &loc, const std::string &path, HTTPResponse& response);
 static std::string	deletedFileName(const std::string& path, const std::string& deleted_folder);
 
 /* return ENOENT, EPERM, EISDIR or 0*/
@@ -26,7 +27,7 @@ int check_file(const char *path)
 {
 	if (access(path, R_OK) != 0)
 	{
-		std::cout << std::strerror(errno) <<std::endl;
+		std::cout << path << " : "<< std::strerror(errno) <<std::endl;
 		if (errno == ENOENT || errno == ENOTDIR)
 			return (ENOENT);
 		else
@@ -79,7 +80,7 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 			if (!location.isDirListingSet())
 				response.setCode(403);
 			else
-				response.setCode(genDirListing(location, path, response));
+				response.setCode(genDirListing(request, location, path, response));
 		}
 	}
 	else
@@ -90,8 +91,15 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 			if (!response.serveDynamicFile(location, real_path, request))
 				response.setCode(403);
 		}
+		else if (request.getMethod() == WS_POST)
+		{
+			int code = staticPostHandler(request, location);
+			response.setCode(code);
+		}
 		else
+		{
 			response.serveStaticFile(real_path);
+		}
 	}
 
 	/* check the status code produced in the operations above. If necessary, serve an error reply */
@@ -177,9 +185,10 @@ int	DELETE(HTTPResponse &response,
 	return 0;
 }
 
-static int genDirListing(const Location &loc, const std::string &path, HTTPResponse& response)
+static int genDirListing(const HTTPRequest& req, const Location &loc, const std::string &path, HTTPResponse& response)
 {
-	std::string real_path = loc.getRealPath(path);
+	std::string	real_path = loc.getRealPath(path);
+	std::string	url_to_file;
 
 	DIR *dir;
 	struct dirent *dp;
@@ -190,11 +199,14 @@ static int genDirListing(const Location &loc, const std::string &path, HTTPRespo
 	while ((dp = readdir(dir)) != NULL)
 		entry_name.push_back(std::string(dp->d_name));
 
-	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>index of " + path + "</h1>\n");
+	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>Index of " + req.getURI().path + "</h1><ul>");
 	std::string content("");
 	FOREACH_VECTOR(std::string, entry_name)
-		content += "<h3><a href=\"/" + path + "/" + *it + "\">" + *it + "</a></h3>\n";
-	std::string foot("</body></html>");
+	{
+		url_to_file = req.getURI().path + ((req.getURI().path != "/")?"/":"") + *it;
+		content += "<li><a href=\"" + url_to_file + "\">" + *it + "</a></li>";
+	}
+	std::string foot("</ul></body></html>");
 
 	closedir(dir);
 

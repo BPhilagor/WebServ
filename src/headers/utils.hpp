@@ -86,11 +86,18 @@ namespace utils
 	bool isValideURL(const std::string &str);
 
 	int	parseHeader(const std::string& line, std::pair<std::string, std::string>& header);
+	int	parseList(const std::string &content, std::vector<std::string>& list);
+	int	parseKeyValue(const std::string &item, std::pair<std::string, std::string> &keyValue);
 
 	/* case-insensitive string comparison */
 	bool	streq_ci(const std::string& s1, const std::string& s2);
+	std::string	toUpper(const std::string& str);
 
 	std::string	getFileExtension(const std::string& file);
+
+	std::string	randomString(size_t len);
+
+	std::string	getDirname(const std::string &path);
 }
 
 /* use it variable to itterate */

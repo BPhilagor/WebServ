@@ -24,14 +24,16 @@ def generate_directory_index(directory_path):
 		<title>Directory For Python WebSite</title>
 	</head>
 	<body>
-		<h2> THIS IS FAKE, path is hard coded! we should be setting the DOCUMENT_ROOT variable</h>
 		{content}
 	</body>
 	</html>
 	'''
 	print(html)
 
-directory_path = '/Users/znichola/Documents/WebServ/websites/python-website/'
+env = os.environ
+
+script_path = env.get('PATH_TRANSLATED')
+directory_path = script_path.replace(env.get('SCRIPT_NAME'), '')
 
 print("Content-Type: text/html; charset=UTF-8")
 print("")

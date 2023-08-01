@@ -45,7 +45,7 @@ cgi_ret launchCGI(const Location &location,
 	FOREACH_VECTOR(std::string, tmp_env)
 	{
 		env.push_back(it->c_str());
-		// if (DP_15 & DP_MASK)
+		// if (DP_16 & DP_MASK)
 		// std::cout << it->c_str() << std::endl;
 	}
 	env.push_back(NULL);
@@ -63,22 +63,36 @@ cgi_ret launchCGI(const Location &location,
 	}
 	if (pid == 0)
 	{
-		sleep(2);
+    //sleep(3);
+		std::string dirname = utils::getDirname(file_path);
+		std::cerr << "New working directory: "<<dirname <<std::endl;
+		if (chdir(dirname.c_str()) != 0)
+		{
+			std::cerr << ESC_COLOR_RED << "Failed to change to directory "<<dirname<<" : "<<std::strerror(errno)<<std::endl;
+			exit(1);
+		}
 		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
 			std::cerr << ESC_COLOR_RED << "Pipe error when trying to execute : "
 				<< cgi_path << ESC_COLOR_RESET << std::endl;
 			exit(1);
 		}
+
+		std::cerr << "Executing script: "<<file_path<<std::endl;
+
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
+		if (DP_16 & DP_MASK)
+		std::cerr << "CGI args:\"" << argv[0] << "\", \""	<< argv[1] << "\"\n" << std::endl;
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
 		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
 			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
 		exit(1);
 	}
 
+	if (DP_16 & DP_MASK)
+	std::cerr << "CGI writing body to it's stdin\n";
 	int bytes_written = write(fd[1], request.getBody().c_str(), request.getBody().size());
 	if (bytes_written < 0)
 	{
@@ -91,7 +105,8 @@ cgi_ret launchCGI(const Location &location,
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
 		return ret;
 	}
-
+	if (DP_16 & DP_MASK)
+	std::cerr << "CGI finished with cgi process\n";
 	ret.fd = fd[0];
 	ret.pid = pid;
 	return ret;

@@ -63,4 +63,10 @@ typedef struct
 	std::string	type;
 }	t_redir;
 
+typedef struct
+{
+	std::string	filename;
+	std::string	content;
+}	t_file;
+
 #endif /* TYPEDEFS_HPP */

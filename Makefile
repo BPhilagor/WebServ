@@ -44,6 +44,7 @@ FILES	= main \
 		HTTPResponse_reason SuperServer \
 		cgi \
 		ClientQueue ClientEvent \
+		staticPostHandler
 
 OBJS_PATH = objs/
 SRCS_PATH = src/

@@ -33,6 +33,12 @@ server test-server {
 It is possible to configure a permanent redirect using `redir = https://www.google.com permanent`.
 The difference between `temporary` and `permanent` is the HTTP status code that is returned to the client.
 
+## Static file uploads using POST methods
+It is possible to accept uploaded files without a CGI.
+For this to work, the `upload_dir` directive must be set. Else, a "405 Method not allowed" error will be returned.
+Files uploaded using the POST method with a content-type of `multipart/form-data` will be saved in a random folder inside the `upload_dir` in order to prevent conflicts.
+If content-type is not `multipart/form-data`, a "400 Bad request" error will be returned. (That means that in an html form, the `enctype` attribute must be set to `multipart/form-data`.)
+
 ### config file parsing
 
 The config file is parsed using recursion and the Data class as the singular node that holds data. The hierarchy produced from parsing is what later needs to be interogated to configure the server.
