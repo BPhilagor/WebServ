@@ -78,8 +78,26 @@ bool				Location::getDirListing()	const { return _dir_listing;   }
 const std::string &	Location::getDefaultFile()	const { return _default_file;  }
 const std::string &	Location::getUploadDir()	const { return _upload_dir;    }
 const cgiMap	  &	Location::getCGIMap()		const { return _cgi;           }
-std::string			Location::getRealPath(const std::string& path)
-												const { return _alias + path;  }
+
+std::string			Location::getRealPath(const std::string& path) const
+{
+	char		cwd_buf[100];
+	size_t		s = sizeof(cwd_buf);
+
+	if (_alias.size() == 0 || _alias[0] != '/')
+	{
+		if (getcwd(cwd_buf, s) == NULL)
+		{
+			PERR2("getcwd", std::strerror(errno));
+			exit(1);
+		}
+		return cwd_buf + std::string("/") + _alias + std::string("/") + path;
+	}
+	else
+	{
+		return _alias + std::string("/") + path;
+	}
+}
 
 std::string Location::getCGI(const std::string &key) const
 {

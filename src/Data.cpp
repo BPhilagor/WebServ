@@ -46,6 +46,7 @@ void Data::readFile(Data &n, const char *path)
 {
 	if (path)
 	{
+		n.setConfigFilePath(path);
 		std::ifstream file(path);
 		if (!file.is_open())
 		{
@@ -62,7 +63,6 @@ void Data::readFile(Data &n, const char *path)
 		emptyDataObj.first = "server";
 		emptyDataObj.second = utils::constructDefaultServer();
 		n.pushBack(emptyDataObj);
-
 	}
 }
 
@@ -181,6 +181,12 @@ size_t Data::getObjSize() const { return _vecObjs.size(); }
 
 // returns the object at index or throw excpetion
 const dataObj &Data::getObj(size_t index) const { return _vecObjs.at(index); }
+
+const std::string	&Data::getConfigFilePath() const { return _config_file_path; }
+void				Data::setConfigFilePath(const char *path)
+{
+	_config_file_path = path;
+}
 
 /* ************************************************************************** */
 /* os oppperators and print functions                                         */

@@ -39,8 +39,9 @@ typedef std::pair<std::string, Data> dataObj;
 class Data // a = 1, 2, 4, 5
 {
 private:
-	std::string _content;
-	std::vector<dataObj> _vecObjs;
+	std::string				_content;
+	std::vector<dataObj>	_vecObjs;
+	std::string				_config_file_path; //used to resolve relative paths
 
 	// parse in config file
 	static void read_ifstream(Data &n, std::ifstream &file);
@@ -66,6 +67,8 @@ public:
 	const std::string	&getContentRef() const;
 	const dataObj & 	getObj(size_t index) const;
 	size_t				getObjSize() const;
+	const std::string	&getConfigFilePath() const;
+	void				setConfigFilePath(const char *path);
 
 	// opperators and print functions
 	Data & operator=(const Data &other);

@@ -63,6 +63,14 @@ cgi_ret launchCGI(const Location &location,
 	}
 	if (pid == 0)
 	{
+		std::string dirname = utils::getDirname(file_path);
+		std::cerr << "New working directory: "<<dirname <<std::endl;
+		if (chdir(dirname.c_str()) != 0)
+		{
+			std::cerr << ESC_COLOR_RED << "Failed to change to directory "<<dirname<<" : "<<std::strerror(errno)<<std::endl;
+			exit(1);
+		}
+
 		//sleep(3);
 		if (dup2(fd[0], STDIN_FILENO) || dup2(fd[1], STDOUT_FILENO) == -1 || close(fd[0]) == -1 || close(fd[1]) == -1)
 		{
@@ -70,17 +78,14 @@ cgi_ret launchCGI(const Location &location,
 				<< cgi_path << ESC_COLOR_RESET << std::endl;
 			exit(1);
 		}
+
+		std::cerr << "Executing script: "<<file_path<<std::endl;
+
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
 
-		std::string dirname = utils::getDirname(file_path);
-		std::cout << "directory: "<<dirname <<std::endl;
-		if (chdir(dirname.c_str()) != 0)
-		{
-			std::cerr << ESC_COLOR_RED << "Failed to change to directory "<<dirname<<" : "<<std::strerror(errno)<<std::endl;
-			exit(1);
-		}
+
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
 		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
 			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
