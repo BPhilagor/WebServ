@@ -35,6 +35,7 @@ void		ClientQueue::refresh(ClientNode *node)
 	node->next = 0;
 	end = node;
 }
+
 /*
 	Moves the node in cgi list and set it's last activity
 */
@@ -44,26 +45,9 @@ void	ClientQueue::setRunningCgi(ClientNode *node, int cgi_fd, int cgi_pid)
 	node->cgi_pid = cgi_pid;
 	gettimeofday(&node->last_activity, 0);
 	//Remove from normal list
-	if (node->next)
-		node->next->prev = node->prev;
-	else
-		end = node->prev;
-	if (node->prev)
-		node->prev->next = node->next;
-	else
-		start = node->next;
+	unlink(node);
 	// Adding to cgi list
-	if (running_cgi_start)
-	{
-		running_cgi_end->next = node;
-		node->prev = running_cgi_end;
-	} else
-	{
-		node->prev = 0;
-		running_cgi_start = node;
-	}
-	running_cgi_end = node;
-	node->next = 0;
+	appendCGI(node);
 }
 
 /*
@@ -76,32 +60,13 @@ void		ClientQueue::unsetRunningCgi(ClientNode *node)
 	node->cgi_message.clear();
 	gettimeofday(&node->last_activity, 0);
 	//Remove from cgi list
-	if (node->next)
-		node->next->prev = node->prev;
-	else
-		running_cgi_end = node->prev;
-	if (node->prev)
-		node->prev->next = node->next;
-	else
-		running_cgi_start = node->next;
+	unlinkCGI(node);
 	// Adding to normal list
-	if (start)
-	{
-		end->next = node;
-		node->prev = end;
-	} else
-	{
-		node->prev = 0;
-		start = node;
-	}
-	end = node;
-	node->next = 0;
+	append(node);
 }
 
-void		ClientQueue::remove(ClientNode *node)
+static void	unlinkFromList(ClientNode *node, ClientNode *&start, ClientNode *&end)
 {
-	std::cout << ESC_COLOR_GREEN << "Removing node : " << node << ESC_COLOR_RESET << std::endl;
-	size -= 1;
 	if (node->next)
 		node->next->prev = node->prev;
 	else
@@ -110,28 +75,66 @@ void		ClientQueue::remove(ClientNode *node)
 		node->prev->next = node->next;
 	else
 		start = node->next;
+}
+
+/*
+	Unlink node from CGI list. This does not modify the ClientQueue size
+*/
+void		ClientQueue::unlinkCGI(ClientNode *node)
+{
+	unlinkFromList(node, running_cgi_start, running_cgi_end);
+}
+
+/*
+	Unlink node from client List. This does not modify the ClientQueue size
+*/
+void	ClientQueue::unlink(ClientNode *node)
+{
+	unlinkFromList(node, start, end);
+}
+
+/*
+	Remove the node from the ClientQueue. The node is freed.
+*/
+void	ClientQueue::remove(ClientNode *node)
+{
+	size -= 1;
+	if (node->cgi_fd != -1)
+		unlinkCGI(node);
+	else
+		unlink(node);
 	delete node;
 }
 
-void		ClientQueue::append(ClientNode *node)
+static void	appendToList(ClientNode *node, ClientNode *&start, ClientNode *&end)
 {
-	std::cout << "Try to append node" << std::endl;
-	size += 1;
-	if (start)
-	{
+	if (end)
 		end->next = node;
-		node->prev = end;
-	} else
-	{
-		node->prev = 0;
+	else
 		start = node;
-	}
-	end = node;
+	node->prev = end;
 	node->next = 0;
+	end = node;
 }
 
+void	ClientQueue::appendCGI(ClientNode *node)
+{
+	std::cout << "Try to append CGI node" << std::endl;
+	appendToList(node, running_cgi_start, running_cgi_end);
+}
+
+void	ClientQueue::append(ClientNode *node)
+{
+	std::cout << "Try to append node" << std::endl;
+	appendToList(node, start, end);
+}
+
+/*
+	Create a new node and add it to the ClientQueue
+*/
 ClientNode*	ClientQueue::newNode(int fd)
 {
+	size += 1;
 	ClientNode *newEvent = new ClientNode(fd);
 	this->append(newEvent);
 	return newEvent;
@@ -192,17 +195,7 @@ void	ClientQueue::removeDeadConnections()
 		if (running_time > MAX_CGI_UTIME)
 		{
 			std::cout << ESC_COLOR_MAGENTA << "Remove cgi " << tmp->fd << " for innactivity (" << MAX_CGI_UTIME / 1000 << "ms max)" <<  ESC_COLOR_RESET << std::endl;
-			// Custom remove cgi
-			size -= 1;
-			if (tmp->next)
-				tmp->next->prev = tmp->prev;
-			else
-				running_cgi_end = tmp->prev;
-			if (tmp->prev)
-				tmp->prev->next = tmp->next;
-			else
-				running_cgi_start = tmp->next;
-			delete tmp;
+			remove(tmp);
 			tmp = next;
 		}
 		else

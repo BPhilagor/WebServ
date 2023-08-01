@@ -39,12 +39,17 @@ class ClientQueue
 		void		setRunningCgi(ClientNode *node, int cgi_fd, int cgi_pid);
 		void		unsetRunningCgi(ClientNode *node);
 		void		remove(ClientNode *node);
-		void		append(ClientNode *node);
 		ClientNode*	newNode(int fd);
 		void		refresh(ClientNode *node);
 		void		removeDeadConnections();
 		void		fclear();
 		void		print();
+	private :
+		void	appendCGI(ClientNode *node);
+		void	append(ClientNode *node);
+		void	unlinkCGI(ClientNode *node);
+		void	unlink(ClientNode *node);
+
 };
 
 #endif

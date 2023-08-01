@@ -233,9 +233,10 @@ void establishConnection(int ev_fd, ClientQueue &client_queue, int eqfd)
 int	setFilter(int eqfd, int socket_fd, int event, int action, ClientNode *node)
 {
 #ifdef __linux__
+	(void) socket_fd;
 	struct epoll_event ev;
 	ev.events = (event == EVENT_FILTER_READ) ? EPOLLIN : EPOLLOUT;
-	ev.data.fd = socket_fd;
+	ev.data.ptr = node;
 	int res = epoll_ctl(eqfd, (action == EVENT_ACTION_ADD) ? EPOLL_CTL_ADD : EPOLL_CTL_DEL, socket_fd, &ev);
 #else
 	struct kevent ev;

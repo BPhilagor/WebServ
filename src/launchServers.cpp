@@ -78,18 +78,21 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 		for (int i = 0; i < ev_count; i++)
 		{
 #ifdef __linux__
-			int ev_fd = events[i].data.fd;
 			bool read_ev = events[i].events & EPOLLIN;
 			bool write_ev = events[i].events & EPOLLOUT;
+			ClientNode *node = (ClientNode *)events[i].data.ptr; // Not fully implemented and not working
+			bool is_timer_event = node == 0; // not working
+			int ev_fd = events[i].data.fd; // not working
 #else
-			int ev_fd = events[i].ident;
+			int ev_fd = events[i].filter.indent;
 			bool read_ev = events[i].filter == EVFILT_READ;
 			bool write_ev = events[i].filter == EVFILT_WRITE;
 			ClientNode *node = (ClientNode *)events[i].udata;
+			bool is_timer_event = events[i].filter == EVFILT_TIMER || node == 0;
 #endif
 			try
 			{
-				if (events[i].filter == EVFILT_TIMER)
+				if (is_timer_event)
 				{
 					std::cout << ESC_COLOR_RED << "TIMER !!!" << ESC_COLOR_RESET << std::endl;
 					client_queue.removeDeadConnections();
@@ -118,8 +121,6 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 			{
 #ifdef __linux__
 				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
-				close(events[i].data.fd);
-				buffer_managers.erase(events[i].data.fd);
 				client_queue.remove(node);
 				std::cerr << "Connection closed for : "
 					<< COL(ESC_COLOR_CYAN, SSTR(events[i].data.fd)) << std::endl << std::endl;

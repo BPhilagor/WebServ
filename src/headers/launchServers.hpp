@@ -14,6 +14,7 @@
 
 # ifdef __linux__
 #  include <sys/epoll.h>
+#  include <sys/wait.h>
 # else
 #  include <sys/event.h>
 # endif
