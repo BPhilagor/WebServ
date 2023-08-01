@@ -30,9 +30,9 @@ def generate_html_page(title, content, server_name):
 
 
 env = os.environ
-page_title = env.get('title') if env.get('title') is not None else 'real title not found, My Generated Page'
-page_content = env.get('content') if env.get('content') is not None else  'This is a dynamically generated HTML page.'
-server_name = env.get('SERVER_SOFTWARE') if env.get('SERVER_SOFTWARE') is not None else 'no server content'
+page_title = 'My Generated Page'
+page_content = 'This is a dynamically generated HTML page.'
+server_name = env.get('SERVER_SOFTWARE') if env.get('SERVER_SOFTWARE') is not None else 'no server info'
 
 # Generate HTML page
 generated_html = generate_html_page(page_title, page_content, server_name)
