@@ -40,6 +40,7 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 				cgi_exit_sucess = true;
 		}
 		else
+		{
 			std::cerr<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
 			return;
 		}
