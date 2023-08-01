@@ -45,7 +45,7 @@ cgi_ret launchCGI(const Location &location,
 	FOREACH_VECTOR(std::string, tmp_env)
 	{
 		env.push_back(it->c_str());
-		// if (DP_15 & DP_MASK)
+		// if (DP_16 & DP_MASK)
 		// std::cout << it->c_str() << std::endl;
 	}
 	env.push_back(NULL);
@@ -73,12 +73,16 @@ cgi_ret launchCGI(const Location &location,
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
+		if (DP_16 & DP_MASK)
+		std::cerr << "CGI args:\"" << argv[0] << "\", \""	<< argv[1] << "\"\n" << std::endl;
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
 		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
 			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
 		exit(1);
 	}
 
+	if (DP_16 & DP_MASK)
+	std::cerr << "CGI writing body to it's stdin\n";
 	int bytes_written = write(fd[1], request.getBody().c_str(), request.getBody().size());
 	if (bytes_written < 0)
 	{
@@ -91,7 +95,8 @@ cgi_ret launchCGI(const Location &location,
 		std::cerr << "Error when closing pipe for : " << cgi_path << std::endl;
 		return ret;
 	}
-
+	if (DP_16 & DP_MASK)
+	std::cerr << "CGI finished with cgi process\n";
 	ret.fd = fd[0];
 	ret.pid = pid;
 	return ret;

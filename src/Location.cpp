@@ -107,6 +107,7 @@ t_getfile_response	Location::getBody(const HTTPRequest &request,
 
 	if (isCGIrequired(real_path))
 	{
+		std::cout << "DELETE ME WHEN DONE: cgi should not be launched from here!\n";
 		cgi_ret cgi_return = launchCGI(*this, request, getCGIpath(real_path), real_path);
 		if (cgi_return.fd == -1)
 		{

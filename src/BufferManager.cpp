@@ -137,7 +137,7 @@ const HTTPRequest&	BufferManager::getRequest() const
 	return _req;
 }
 
-const HTTPResponse&	BufferManager::getResponse() const
+HTTPResponse&	BufferManager::getResponse()
 {
 	return _resp;
 }

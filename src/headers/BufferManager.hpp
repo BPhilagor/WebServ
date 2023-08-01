@@ -23,7 +23,7 @@ class BufferManager
 		void	addInputBuffer(const std::string& s);
 
 		const HTTPRequest&	getRequest() const;
-		const HTTPResponse&	getResponse() const;
+		HTTPResponse&		getResponse();
 
 		void	setCode(int code);
 
