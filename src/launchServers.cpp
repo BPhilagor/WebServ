@@ -47,6 +47,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 	while (true)
 	{
 		int ev_count;
+		bool has_timer_event = false;
 
 		ev_count = pollEvents(eqfd, events, MAX_EVENTS);
 
@@ -84,18 +85,19 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 			bool is_timer_event = node == 0; // not working
 			int ev_fd = events[i].data.fd; // not working
 #else
-			int ev_fd = events[i].filter.indent;
+			int ev_fd = events[i].ident;
 			bool read_ev = events[i].filter == EVFILT_READ;
 			bool write_ev = events[i].filter == EVFILT_WRITE;
 			ClientNode *node = (ClientNode *)events[i].udata;
-			bool is_timer_event = events[i].filter == EVFILT_TIMER || node == 0;
+			bool is_timer_event = events[i].filter == EVFILT_TIMER;
 #endif
 			try
 			{
+				std::cout << "Event " << ev_fd << std::endl;
 				if (is_timer_event)
 				{
 					std::cout << ESC_COLOR_RED << "TIMER !!!" << ESC_COLOR_RESET << std::endl;
-					client_queue.removeDeadConnections();
+					has_timer_event = true;
 				}
 				else if (!node && isListenSocket(ev_fd, config.getListeningSockets()))
 				{
@@ -133,6 +135,8 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 #endif
 			}
 		}
-		client_queue.print();
+		if (has_timer_event)
+			client_queue.removeDeadConnections();
+		//client_queue.print();
 	}
 }

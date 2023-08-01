@@ -36,8 +36,8 @@
 # include "requestWorker.hpp"
 # include "ClientQueue.hpp"
 
-# define BUFFER_SIZE	128
-# define MAX_EVENTS		10
+# define BUFFER_SIZE	1024
+# define MAX_EVENTS		100
 # define TIMER_PERIODE	1000
 
 

@@ -9,7 +9,7 @@
 
 #ifndef CLIENT_QUEUE_HPP
 # define CLIENT_QUEUE_HPP
-# define MAX_INACTIVITY_UTIME 60000000
+# define MAX_INACTIVITY_UTIME 10000000
 # define MAX_CGI_UTIME 2000000
 # define MILLION 1000000
 
@@ -43,7 +43,7 @@ class ClientQueue
 		void		refresh(ClientNode *node);
 		void		removeDeadConnections();
 		void		fclear();
-		void		print();
+		void		print() const;
 	private :
 		void	appendCGI(ClientNode *node);
 		void	append(ClientNode *node);

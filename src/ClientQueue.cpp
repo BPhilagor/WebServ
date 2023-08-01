@@ -20,20 +20,12 @@ ClientNode::~ClientNode() {}
 
 void		ClientQueue::refresh(ClientNode *node)
 {
+	std::cout << "Refresh " << node->fd << std::endl;
+	if (node->cgi_fd != -1)
+		std::cout << ESC_COLOR_RED << "Error with refresh" << ESC_COLOR_RESET << std::endl;
 	gettimeofday(&node->last_activity, 0);
-	if (node->next)
-		node->next->prev = node->prev;
-	else
-		return ;
-
-	if (node->prev)
-		node->prev->next = node->next;
-	else
-		start = node->next;
-
-	node->prev = end;
-	node->next = 0;
-	end = node;
+	unlink(node);
+	append(node);
 }
 
 /*
@@ -65,8 +57,12 @@ void		ClientQueue::unsetRunningCgi(ClientNode *node)
 	append(node);
 }
 
+/*
+	Unlink a node from a list passed with start and end
+*/
 static void	unlinkFromList(ClientNode *node, ClientNode *&start, ClientNode *&end)
 {
+	std::cout << "Unlink a node" << std::endl;
 	if (node->next)
 		node->next->prev = node->prev;
 	else
@@ -98,6 +94,7 @@ void	ClientQueue::unlink(ClientNode *node)
 */
 void	ClientQueue::remove(ClientNode *node)
 {
+	std::cout << "Remove a node" << std::endl;
 	size -= 1;
 	if (node->cgi_fd != -1)
 		unlinkCGI(node);
@@ -134,6 +131,7 @@ void	ClientQueue::append(ClientNode *node)
 */
 ClientNode*	ClientQueue::newNode(int fd)
 {
+	std::cout << "New node" << std::endl;
 	size += 1;
 	ClientNode *newEvent = new ClientNode(fd);
 	this->append(newEvent);
@@ -165,6 +163,7 @@ void		ClientQueue::fclear()
 */
 void	ClientQueue::removeDeadConnections()
 {
+	std::cout << "Remove dead co" << std::endl;
 	ClientNode	*tmp = start;
 	timeval		current_time;
 
@@ -204,7 +203,7 @@ void	ClientQueue::removeDeadConnections()
 	std::cout << std::endl;
 }
 
-void	ClientQueue::print()
+void	ClientQueue::print() const
 {
 	ClientNode *tmp = start;
 	std::cout << "ClientQueue of size " << size << " : " << std::endl;

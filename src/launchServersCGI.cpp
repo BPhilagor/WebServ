@@ -32,17 +32,22 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 
 		int child_status;
 		std::cout << "Wait for pid : " << node->cgi_pid << std::endl;
-		waitpid(node->cgi_pid , &child_status, 0);
+		if (waitpid(node->cgi_pid , &child_status, WNOHANG) == -1)
+			;// TODO kill le process
 		std::cout << "Finished waiting for: " << node->cgi_pid << std::endl;
 		if (WIFEXITED(child_status))
 		{
 			std::cout<<"status: "<< COL(ESC_COLOR_CYAN, WEXITSTATUS(child_status))<<std::endl;
 			if (WEXITSTATUS(child_status) != 0)
+			{
 				std::cerr << ESC_COLOR_RED << "Error with CGI execution !" << ESC_COLOR_RESET << std::endl;
+				return;
+			}
 		}
 		else
 		{
 			std::cerr<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
+			return;
 		}
 
 		if (setFilter(eqfd, node->cgi_fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)

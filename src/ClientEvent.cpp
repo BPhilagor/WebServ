@@ -17,9 +17,13 @@ ClientEvent::ClientEvent(int fd)
 
 ClientEvent::~ClientEvent()
 {
+	std::cout << "Closing " << fd << std::endl;
 	close(fd);
 	if (cgi_fd != -1)
+	{
+		std::cout << "Closing " << cgi_fd << std::endl;
 		close(cgi_fd);
+	}
 	if (cgi_pid != -1)
 		kill(cgi_pid, SIGKILL);
 	std::cout << "Client " << fd << " closed" << std::endl;
