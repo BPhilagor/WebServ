@@ -202,13 +202,13 @@ bool	isListenSocket(int fd, const std::set<int>& listenSockets)
 void establishConnection(int ev_fd, ClientQueue &client_queue, int eqfd)
 {
 	int new_socket_fd = accept(ev_fd, NULL, NULL);
-	ClientNode *newNode = client_queue.newNode(new_socket_fd);
 	if (new_socket_fd < 0)
 	{
 		std::cerr << ESC_COLOR_RED << "Error when accepting request: "
 			<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;
 		return ;
 	}
+	ClientNode *newNode = client_queue.newNode(new_socket_fd);
 
 #ifndef __linux__
 	/* suppress SIGPIPE on the socket */

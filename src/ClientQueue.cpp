@@ -12,7 +12,10 @@
 
 ClientQueue::ClientQueue()
 	: size(0), start(0), end(0), running_cgi_start(0), running_cgi_end(0) {}
-ClientQueue::~ClientQueue() {}
+ClientQueue::~ClientQueue()
+{
+	fclear();
+}
 
 ClientNode::ClientNode(int fd)
 	: ClientEvent(fd), next(0), prev(0) {}
@@ -150,7 +153,10 @@ void		ClientQueue::fclear()
 	{
 		close(start->fd);
 		if (start->cgi_fd != -1)
+		{
+			close(start->cgi_fd);
 			kill(start->cgi_pid, SIGKILL);
+		}
 		tmp = start->next;
 		delete tmp;
 		start = tmp;
