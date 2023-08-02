@@ -69,7 +69,6 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				for(std::set<int>::const_iterator it =config.getListeningSockets().begin(); it != config.getListeningSockets().end(); ++it)
 					close(*it);
 				close(eqfd);
-				sleep(1);
 				execve(*argv, argv, env);
 				std::cerr << ESC_COLOR_RED << "Fatal error : Restart failed with error : " << strerror(errno)
 					<< ESC_COLOR_RESET << std::endl;

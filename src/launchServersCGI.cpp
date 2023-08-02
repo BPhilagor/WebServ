@@ -27,7 +27,6 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 		std::cout << "Wait for pid : " << node->cgi_pid << std::endl;
 		if (!waitpid(node->cgi_pid , &child_status, WNOHANG)) // Pipe is closed but pro
 		{
-			std::cout << "Bytes received : " << bytesRecv << std::endl;
 			return ;
 		}
 		std::cout << "Finished waiting for: " << node->cgi_pid << std::endl;

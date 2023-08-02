@@ -83,11 +83,11 @@ void	writeHandler(int eqfd, ClientQueue &client_queue, ClientNode *node)
 	int writtenBytes = send(node->fd, response.c_str(), response.length(), SEND_FLAGS);
 	if (writtenBytes < 0)
 	{
-		std::cerr << "send() failed: " << std::strerror(errno) << std::endl;
+		std::cerr << ESC_COLOR_RED << "send() failed: " << std::strerror(errno) << ESC_COLOR_RESET << std::endl;
 	}
 	else
 	{
-		if (DP_3 & DP_MASK)
+		//if (DP_3 & DP_MASK)
 		//std::cout<<"Wrote " << writtenBytes << " bytes: " << std::endl << ESC_COLOR_CYAN << response << ESC_COLOR_RESET << std::endl;
 		response = response.substr(writtenBytes, response.length() - writtenBytes);
 	}
@@ -102,7 +102,7 @@ void	writeHandler(int eqfd, ClientQueue &client_queue, ClientNode *node)
 			<< std::endl << std::endl;
 
 		/* If we announced in the header of the response that we would close the connection, we close it */
-		if (node->buffer_manager.getRequest().getHeader("Connection") == "close")
+		if (node->buffer_manager.getRequest().getHeader("Connection") == "close" || true)
 		{
 			client_queue.remove(node);
 			return ;
@@ -199,6 +199,8 @@ bool	isListenSocket(int fd, const std::set<int>& listenSockets)
 void establishConnection(int ev_fd, ClientQueue &client_queue, int eqfd)
 {
 	int new_socket_fd = accept(ev_fd, NULL, NULL);
+	std::cout << "Connection established !!!" << std::endl;
+	//usleep(500000);
 	if (new_socket_fd < 0)
 	{
 		std::cerr << ESC_COLOR_RED << "Error when accepting request: "
