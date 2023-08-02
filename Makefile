@@ -43,6 +43,7 @@ FILES	= main \
 		mimeTypes \
 		HTTPResponse_reason SuperServer \
 		cgi \
+		ClientQueue ClientEvent \
 		staticPostHandler
 
 OBJS_PATH = objs/

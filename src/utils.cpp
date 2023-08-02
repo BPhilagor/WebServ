@@ -212,22 +212,6 @@ std::string utils::ifstreamToString(std::ifstream &stream)
 	return buffer.str();
 }
 
-std::string utils::fdToString(int fd)
-{
-	std::string result;
-	char buffer[1001];
-	int byte_nbr;
-
-	while ((byte_nbr = read(fd, buffer, 1000))) {
-		if (byte_nbr != 1000 && byte_nbr > 0) {
-			buffer[byte_nbr] = 0;
-		}
-		buffer[1000] = '\0';
-		result.append(buffer);
-	}
-	return result;
-}
-
 t_getfile_response utils::getFile(const std::string &path, std::string &body)
 {
 	std::ifstream stream;
@@ -249,7 +233,7 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 
 	body = utils::ifstreamToString(stream);
 	if (DP_7 & DP_MASK)
-	std::cout << "file {" << body << "}" << std::endl;
+	//std::cout << "file {" << body << "}" << std::endl;
 	stream.close();
 
 	return ws_file_found;

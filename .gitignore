@@ -6,3 +6,4 @@ webserv
 cgi/
 w3/
 cgi-bin/
+*.DS_Store

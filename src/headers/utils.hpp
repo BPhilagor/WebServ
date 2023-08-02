@@ -78,7 +78,6 @@ namespace utils
 	std::string addrIntToString(u_int32_t addr_int);
 	u_int32_t addrStringToInt(const std::string &addr_string);
 	pairHostPort fd_to_HostPort(int fd);
-	std::string fdToString(int fd);
 	std::string ifstreamToString(std::ifstream &stream);
 	t_getfile_response getFile(const std::string &path, std::string &body);
 

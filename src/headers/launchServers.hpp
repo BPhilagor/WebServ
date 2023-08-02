@@ -10,10 +10,11 @@
 #ifndef LAUNCHSERVERS_HPP
 # define LAUNCHSERVERS_HPP
 
-# define BACK_LOG 10 /* is this used??*/
+# define BACK_LOG 1000 /* is this used??*/
 
 # ifdef __linux__
 #  include <sys/epoll.h>
+#  include <sys/wait.h>
 # else
 #  include <sys/event.h>
 # endif
@@ -33,9 +34,11 @@
 # include "HTTPRequest.hpp"
 # include "BufferManager.hpp"
 # include "requestWorker.hpp"
+# include "ClientQueue.hpp"
 
-# define BUFFER_SIZE	128
-# define MAX_EVENTS		10
+# define BUFFER_SIZE	1024
+# define MAX_EVENTS		1000
+# define TIMER_PERIODE	1000
 
 
 # ifdef __linux__
@@ -60,6 +63,17 @@ typedef struct
 	std::string		resp_msg;
 } cgi_buff;
 
+typedef struct
+{
+	int				fd;
+	HTTPRequest		request;
+	HTTPResponse	response;
+	const Server *	virtual_server;
+	int				cgi_fd;
+	int				cgi_pid;
+	std::string		cgi_message;
+} client_event;
+
 
 /* launchServers.hpp */
 
@@ -67,22 +81,18 @@ void    launchServers(const SuperServer &config, char **argv, char **env);
 
 /* launchServersUtils.hpp */
 
-void	addSocketToEventQueue(int eqfd, int socket_fd);
+void	addSocketToEventQueue(int eqfd, int socket_fd, ClientNode *node);
 void	addPassiveSocketsToQueue(int eqfd, std::set<int> listeningSockets);
-void	readHandler(int fd, int eqfd, std::map<int, BufferManager>& messages,
-					std::map<int, cgi_buff> &cgi_messages);
-void	writeHandler(int fd, int eqfd, std::map<int, BufferManager>& messages, const SuperServer& config);
-void	establishConnection(int ev_fd, std::map<int, BufferManager> &messages, int eqfd, const SuperServer& config);
+void	readHandler(int eqfd, ClientQueue &client_queue, ClientNode *node);
+void	writeHandler(int eqfd, ClientQueue &client_queue, ClientNode *node);
+void	establishConnection(int ev_fd, ClientQueue &clientQueue, int eqfd);
 void	printClientAddress(int fd);
 int		openSockets(const std::set<int>& ports, SuperServer &config);
 bool	isListenSocket(int fd, const std::set<int>& listenSockets);
-int		setFilter(int eqfd, int socket_fd, int event, int action);
+int		setFilter(int eqfd, int socket_fd, int event, int action, ClientNode *node = NULL);
 
 /* launchServersCGI.hpp */
 
-void	CGIread(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> &cgi_messages, std::map<int, BufferManager> &buffer_managers);
-void	CGIwrite(int fd, int eqfd, std::map<int, cgi_buff>::iterator msg,
-				std::map<int, cgi_buff> &cgi_messages);
+void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node);
 
 #endif /* LAUNCHSERVERS_HPP */

@@ -13,7 +13,7 @@
 class BufferManager
 {
 	public:
-		BufferManager(const SuperServer& config, int fd);
+		BufferManager(int fd);
 		BufferManager(const BufferManager& h);
 		~BufferManager();
 		BufferManager&	operator=(const BufferManager& h);
@@ -22,8 +22,8 @@ class BufferManager
 
 		void	addInputBuffer(const std::string& s);
 
-		const HTTPRequest&	getRequest() const;
-		HTTPResponse&		getResponse();
+		HTTPRequest&	getRequest();
+		HTTPResponse&	getResponse();
 
 		void	setCode(int code);
 
@@ -34,18 +34,14 @@ class BufferManager
 		/* This buffer will be modified to keep what remains to be written */
 		std::string					output_buffer;
 		const Server *				virtual_server;
+		static const SuperServer	*config;
+
 	private:
-
-		int							_fd;
-
-		const SuperServer&			_config;
-
+		pairHostPort				_hostPort;
 		HTTPRequest					_req;
 		HTTPResponse				_resp;
 
 		bool						_finished;
-
-		BufferManager();
 };
 
 #endif

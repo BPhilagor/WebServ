@@ -8,6 +8,7 @@
 /* ************************************************************************** */
 
 #include "launchServers.hpp"
+#include "debugDefs.hpp"
 
 #ifdef __linux__
 	#define	pollEvents(eqfd, events, max) epoll_wait(eqfd, events, max, -1)
@@ -31,17 +32,23 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 		exit(1);
 	}
 	addPassiveSocketsToQueue(eqfd, config.getListeningSockets());
-	std::map<int, BufferManager> buffer_managers;
-	std::map<int, cgi_buff> cgi_messages;
 
 #ifdef __linux__
-	epoll_event events[MAX_EVENTS];
+	epoll_event events[MAX_EVENTS]; // TODO create timer for linux version
 #else
 	struct kevent events[MAX_EVENTS];
+	{
+		struct kevent time_event;
+		EV_SET(&time_event, 1024, EVFILT_TIMER, EV_ADD | EV_ENABLE, 0, TIMER_PERIODE, 0);
+		kevent(eqfd, &time_event, 1, NULL, 0, NULL);
+	}
 #endif
+	ClientQueue client_queue;
+	bool		last_event_was_timer = false;
 	while (true)
 	{
 		int ev_count;
+		bool has_timer_event = false;
 
 		ev_count = pollEvents(eqfd, events, MAX_EVENTS);
 
@@ -58,12 +65,10 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 				std::cerr << ESC_COLOR_RED << "Retry failed, : "
 				<< strerror(errno) << "." << ESC_COLOR_RESET << std::endl;
 				std::cerr << ESC_COLOR_GREEN << "Restarting server ..." << ESC_COLOR_RESET << std::endl;
-				for(std::map<int, BufferManager>::const_iterator it =buffer_managers.begin(); it != buffer_managers.end(); ++it)
-					close(it->first);
+				client_queue.fclear();
 				for(std::set<int>::const_iterator it =config.getListeningSockets().begin(); it != config.getListeningSockets().end(); ++it)
 					close(*it);
 				close(eqfd);
-				sleep(1);
 				execve(*argv, argv, env);
 				std::cerr << ESC_COLOR_RED << "Fatal error : Restart failed with error : " << strerror(errno)
 					<< ESC_COLOR_RESET << std::endl;
@@ -73,52 +78,57 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 		}
 		for (int i = 0; i < ev_count; i++)
 		{
+#ifdef __linux__
+			bool read_ev = events[i].events & EPOLLIN;
+			bool write_ev = events[i].events & EPOLLOUT;
+			ClientNode *node = (ClientNode *)events[i].data.ptr; // Not fully implemented and not working
+			bool is_timer_event = node == 0; // not working
+			int ev_fd = events[i].data.fd; // not working
+#else
+			int ev_fd = events[i].ident;
+			bool read_ev = events[i].filter == EVFILT_READ;
+			bool write_ev = events[i].filter == EVFILT_WRITE;
+			ClientNode *node = (ClientNode *)events[i].udata;
+			bool is_timer_event = events[i].filter == EVFILT_TIMER;
+#endif
 			try
 			{
-#ifdef __linux__
-				int ev_fd = events[i].data.fd;
-				bool read_ev = events[i].events & EPOLLIN;
-				bool write_ev = events[i].events & EPOLLOUT;
-#else
-				int ev_fd = events[i].ident;
-				bool read_ev = events[i].filter == EVFILT_READ;
-				bool write_ev = events[i].filter == EVFILT_WRITE;
-#endif
-				std::map<int, cgi_buff>::iterator cgi_msg = cgi_messages.find(ev_fd);
-				if (cgi_msg != cgi_messages.end())
+				if (is_timer_event || (last_event_was_timer = false))
 				{
-					CGIread(ev_fd, eqfd, cgi_msg, cgi_messages, buffer_managers);
+					if (last_event_was_timer == false)
+					std::cout << COL(ESC_COLOR_RED, "TIMER !!!") << std::endl;
+					has_timer_event = true;
+					last_event_was_timer = true;
 				}
-				else if (isListenSocket(ev_fd, config.getListeningSockets()))
+				else if (!node && isListenSocket(ev_fd, config.getListeningSockets()))
 				{
-					establishConnection(ev_fd, buffer_managers, eqfd, config);
+					//std::cout << "Establishing connection" << std::endl;
+					establishConnection(ev_fd, client_queue, eqfd);
+				}
+				else if (node->cgi_fd != -1 && read_ev)
+				{
+					CGIread(eqfd, client_queue, node);
 				}
 				else if (read_ev)
 				{
-					readHandler(ev_fd, eqfd, buffer_managers, cgi_messages);
+					//std::cout << "Node : " << node << std::endl;
+					readHandler(eqfd, client_queue, node);
 				}
 				else if (write_ev)
 				{
-					writeHandler(ev_fd, eqfd, buffer_managers, config);
+					writeHandler(eqfd, client_queue, node);
 				}
 				else
-					std::cerr << ESC_COLOR_RED << "Error, event not recognized" << ESC_COLOR_RESET << std::endl;
+					std::cerr << COL(ESC_COLOR_RED, "Error, event not recognized") << std::endl;
 			} catch (...)
 			{
-#ifdef __linux__
-				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
-				close(events[i].data.fd);
-				buffer_managers.erase(events[i].data.fd);
-				std::cerr << "Connection closed for : "
-					<< COL(ESC_COLOR_CYAN, SSTR(events[i].data.fd)) << std::endl << std::endl;
-#else
-				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
-				close(events[i].ident);
-				buffer_managers.erase(events[i].ident);
-				std::cerr << "Connection closed for : "
-					<< COL(ESC_COLOR_CYAN, SSTR(events[i].ident)) << std::endl << std::endl;
-#endif
+				PERR("An error occured !");
+				client_queue.remove(node);
 			}
 		}
+		if (has_timer_event)
+			client_queue.removeDeadConnections();
+		if (DP_17 & DP_MASK)
+			client_queue.print();
 	}
 }

@@ -15,10 +15,11 @@
 #include "HTTPResponse.hpp"
 #include "SuperServer.hpp"
 #include "debugDefs.hpp"
+#include <errno.h>
 
 int main(int argc, char** argv, char **env)
 {
-	srand((unsigned)time(NULL) * getpid());
+	srand((unsigned)time(NULL) * getpid()); // TODO enlever ?
 	Data data;
 	if (argc != 2)
 	{
@@ -38,6 +39,7 @@ int main(int argc, char** argv, char **env)
 
 	SuperServer config(data);
 
+	BufferManager::config = &config;
 	if (DP_8 & DP_MASK)
 	std::cout << config << "\n";
 

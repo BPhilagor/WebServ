@@ -32,12 +32,9 @@ def generate_directory_index(directory_path):
 
 env = os.environ
 
-script_path = env.get('PATH_TRANSLATED')
-directory_path = script_path.replace(env.get('SCRIPT_NAME'), '')
-
 print("Content-Type: text/html; charset=UTF-8")
 print("")
 
 
 
-generate_directory_index(directory_path)
+generate_directory_index(os.getcwd())
