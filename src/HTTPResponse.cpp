@@ -135,7 +135,8 @@ void HTTPResponse::setDate()
 // TODO: rename to genPage
 std::string HTTPResponse::genPage(int code) const
 {
-	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1></body></html>\n");
+	std::string page("<!DOCTYPE html><html><head><title>EEE RRR</title></head><body><h1>EEE RRR</h1><img src=\"https://http.cat/EEE\"></body></html>\n");
+	page.replace(page.find("EEE"), 3, SSTR(code));
 	page.replace(page.find("EEE"), 3, SSTR(code));
 	page.replace(page.find("EEE"), 3, SSTR(code));
 	page.replace(page.find("RRR"), 3, _reasonMap[code]);
