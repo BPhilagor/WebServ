@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CGI testing</title>
+</head>
+<body>
+	<h1>CGI testing</h1>
+	<ul>
+		<li>In <a href="/folder1">folder1</a>, .alibaba will pass through PHP CGI and .php will not.</li>
+		<li>In <a href="/folder2">folder2</a>, both .alibaba and .php will pass through PHP CGI.</li>
+		<li>In <a href="/folder3">folder3</a>, .42 will pass through Python and .1337 will pass through PHP CGI.</li>
+		<li>In <a href="/folder4">folder4</a>, .broken will attempt to pass through a CGI executable that does not exist.</li>
+		<li>In <a href="/folder5">folder5</a>, there is a php file that does a very long sleep.</li>
+	</ul>
+</body>
+</html>

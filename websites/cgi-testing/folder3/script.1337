@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CGI testing</title>
+</head>
+<body>
+	<h1>A weird .1337 extension, but this will execute PHP</h1>
+	<p><?php echo "this is written by php";?></i><p>
+	<p>The current date is: <?php echo date("d-m-Y"); ?></p>
+</body>
+</html>
