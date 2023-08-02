@@ -8,6 +8,7 @@
 /* ************************************************************************** */
 
 #include "ClientEvent.hpp"
+#include "debugDefs.hpp"
 
 ClientEvent::ClientEvent(int fd)
 	: fd(fd), cgi_fd(-1), cgi_pid(-1), buffer_manager(fd)
@@ -17,14 +18,13 @@ ClientEvent::ClientEvent(int fd)
 
 ClientEvent::~ClientEvent()
 {
-	//std::cout << "Closing " << fd << std::endl;
 	close(fd);
 	if (cgi_fd != -1)
 	{
-		//std::cout << "Closing " << cgi_fd << std::endl;
 		close(cgi_fd);
 	}
 	if (cgi_pid != -1)
 		kill(cgi_pid, SIGKILL);
-	//std::cout << "Client " << fd << " closed" << std::endl;
+	if (DP_9 & DP_MASK)
+	std::cout << "Client " << COL(ESC_COLOR_CYAN, fd) << " closed\n" << std::endl;
 }

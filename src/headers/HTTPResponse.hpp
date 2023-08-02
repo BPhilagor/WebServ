@@ -51,7 +51,7 @@ class HTTPResponse
 		void	serveStaticFile(const std::string& path);
 		bool	serveDynamicFile(const Location& location, const std::string& path, const HTTPRequest& request);
 		void	parseCGIResponse(std::string cgi_body);
-		void	finalize();
+		void	finalize(const HTTPRequest & resp);
 
 		std::string genPage(int code) const;
 		std::string getErrorPage(const Server &srv, int code) const;

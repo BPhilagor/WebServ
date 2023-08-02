@@ -12,7 +12,7 @@ NAME	= webserv
 CC		= c++
 CFLAGS	= -Wall -Wextra
 CFLAGS	+= -Werror
-CFLAGS	+= -std=c++98 -pedantic -g
+CFLAGS	+= -std=c++98 -pedantic
 
 ifdef DEBUG
 CFLAGS	+= -g3 -fsanitize=address

@@ -55,7 +55,7 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 		else
 			node->buffer_manager.getResponse().constructErrorReply(500);
 
-		node->buffer_manager.getResponse().finalize();
+		node->buffer_manager.getResponse().finalize(node->buffer_manager.getRequest());
 		node->buffer_manager.output_buffer = node->buffer_manager.getResponse().serialize();
 		std::cout << ESC_COLOR_CYAN << node->buffer_manager.output_buffer << ESC_COLOR_RESET << std::endl;
 		client_queue.unsetRunningCgi(node);
