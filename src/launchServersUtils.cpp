@@ -39,8 +39,6 @@ void	readHandler(int eqfd, ClientQueue &client_queue, ClientNode *node)
 
 	if (bytesRecv <= 0)
 	{
-		if (DP_9 & DP_MASK)
-		std::cout << "Client " << COL(ESC_COLOR_CYAN, node->fd) << " closed" << std::endl;
 		client_queue.remove(node);
 		return ;
 	}
@@ -109,7 +107,6 @@ void	writeHandler(int eqfd, ClientQueue &client_queue, ClientNode *node)
 			client_queue.remove(node);
 			return ;
 		}
-		std::cout << COL(ESC_COLOR_RED, node->buffer_manager.getRequest().getHeader("Connection")) << std::endl;
 
 		node->buffer_manager = BufferManager(node->fd); /* reset the buffer manager */
 		node->buffer_manager.addInputBuffer(remaining_buffer);

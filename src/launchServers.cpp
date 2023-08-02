@@ -44,7 +44,7 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 	}
 #endif
 	ClientQueue client_queue;
-
+	bool		last_event_was_timer = false;
 	while (true)
 	{
 		int ev_count;
@@ -94,11 +94,12 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 #endif
 			try
 			{
-				std::cout << "Event " << ev_fd << std::endl;
-				if (is_timer_event)
+				if (is_timer_event || (last_event_was_timer = false))
 				{
-					std::cout << ESC_COLOR_RED << "TIMER !!!" << ESC_COLOR_RESET << std::endl;
+					if (last_event_was_timer == false)
+					std::cout << COL(ESC_COLOR_RED, "TIMER !!!") << std::endl;
 					has_timer_event = true;
+					last_event_was_timer = true;
 				}
 				else if (!node && isListenSocket(ev_fd, config.getListeningSockets()))
 				{
@@ -119,20 +120,11 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 					writeHandler(eqfd, client_queue, node);
 				}
 				else
-					std::cerr << ESC_COLOR_RED << "Error, event not recognized" << ESC_COLOR_RESET << std::endl;
+					std::cerr << COL(ESC_COLOR_RED, "Error, event not recognized") << std::endl;
 			} catch (...)
 			{
-#ifdef __linux__
-				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
+				PERR("An error occured !");
 				client_queue.remove(node);
-				std::cerr << "Connection closed for : "
-					<< COL(ESC_COLOR_CYAN, SSTR(events[i].data.fd)) << std::endl << std::endl;
-#else
-				std::cerr << COL(ESC_COLOR_RED , "An error occured !") << std::endl;
-				client_queue.remove(node);
-				std::cerr << "Connection closed for : "
-					<< COL(ESC_COLOR_CYAN, SSTR(events[i].ident)) << std::endl << std::endl;
-#endif
 			}
 		}
 		if (has_timer_event)

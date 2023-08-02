@@ -244,14 +244,15 @@ void	HTTPResponse::parseCGIResponse(std::string cgi_body)
 	}
 }
 
-void	HTTPResponse::finalize()
+void	HTTPResponse::finalize(const HTTPRequest & resp)
 {
 	int code = getCode();
 	setVersion(1, 1);
 	setReason(_reasonMap[code]);
 	setDate();
 	setHeader("Server", "Webserv");
-	if (code == 400 || code == 413 || code == 414 || code >= 500)
+	if (resp.getHeader("Connection") == "close"
+	|| code == 400 || code == 413 || code == 414 || code >= 500)
 		setHeader("Connection", "close");
 	else
 		setHeader("Connection", "keep-alive");

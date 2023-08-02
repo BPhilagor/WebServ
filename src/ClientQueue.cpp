@@ -164,7 +164,6 @@ void	ClientQueue::removeDeadConnections()
 {
 	ClientNode	*tmp = start;
 	timeval		current_time;
-
 	gettimeofday(&current_time, 0);
 	// Remove dead connections
 	while (tmp)
@@ -198,7 +197,6 @@ void	ClientQueue::removeDeadConnections()
 		else
 			break;
 	}
-	std::cout << std::endl;
 }
 
 void	ClientQueue::print() const
