@@ -90,7 +90,7 @@ void	writeHandler(int eqfd, ClientQueue &client_queue, ClientNode *node)
 	else
 	{
 		if (DP_3 & DP_MASK)
-		std::cout<<"Wrote " << writtenBytes << " bytes: " << std::endl << ESC_COLOR_CYAN << response << ESC_COLOR_RESET << std::endl;
+		//std::cout<<"Wrote " << writtenBytes << " bytes: " << std::endl << ESC_COLOR_CYAN << response << ESC_COLOR_RESET << std::endl;
 		response = response.substr(writtenBytes, response.length() - writtenBytes);
 	}
 	if (writtenBytes < 0 || response.length() == 0)

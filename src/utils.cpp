@@ -249,7 +249,7 @@ t_getfile_response utils::getFile(const std::string &path, std::string &body)
 
 	body = utils::ifstreamToString(stream);
 	if (DP_7 & DP_MASK)
-	std::cout << "file {" << body << "}" << std::endl;
+	//std::cout << "file {" << body << "}" << std::endl;
 	stream.close();
 
 	return ws_file_found;

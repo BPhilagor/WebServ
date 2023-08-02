@@ -25,26 +25,22 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 
 		int child_status;
 		std::cout << "Wait for pid : " << node->cgi_pid << std::endl;
-		if (waitpid(node->cgi_pid , &child_status, WNOHANG) == -1)
-			;// TODO kill le process
+		if (!waitpid(node->cgi_pid , &child_status, WNOHANG)) // Pipe is closed but pro
+		{
+			std::cout << "Bytes received : " << bytesRecv << std::endl;
+			return ;
+		}
 		std::cout << "Finished waiting for: " << node->cgi_pid << std::endl;
 		if (WIFEXITED(child_status))
 		{
 			std::cout<<"status: "<< COL(ESC_COLOR_CYAN, WEXITSTATUS(child_status))<<std::endl;
 			if (WEXITSTATUS(child_status) != 0)
-			{
 				std::cerr << ESC_COLOR_RED << "Error with CGI execution !" << ESC_COLOR_RESET << std::endl;
-				// return;
-			}
 			else
 				cgi_exit_sucess = true;
 		}
 		else
-		{
-			std::cerr<<"CGI was killed by signal: "<<WTERMSIG(child_status)<<std::endl;
-			// client_queue.unsetRunningCgi(node);
-			// return;
-		}
+			std::cerr << "CGI was killed by signal: " << WTERMSIG(child_status) << std::endl;
 
 		if (setFilter(eqfd, node->cgi_fd, EVENT_FILTER_READ, EVENT_ACTION_DELETE)
 			|| setFilter(eqfd, node->fd, EVENT_FILTER_WRITE, EVENT_ACTION_ADD, node))
@@ -57,7 +53,7 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 
 		node->buffer_manager.getResponse().finalize();
 		node->buffer_manager.output_buffer = node->buffer_manager.getResponse().serialize();
-		std::cout << ESC_COLOR_CYAN << node->buffer_manager.output_buffer << ESC_COLOR_RESET << std::endl;
+		//std::cout << ESC_COLOR_CYAN << node->buffer_manager.output_buffer << ESC_COLOR_RESET << std::endl;
 		client_queue.unsetRunningCgi(node);
 		return ;
 	}
