@@ -141,7 +141,6 @@ static int openSocket(SuperServer &config, int port_nbr)
 	int option = 1;
 	setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
-
 	// Creating the sockaddr_in struct
 	struct sockaddr_in	addr;
 	memset(&addr, 0, sizeof(addr));
@@ -150,7 +149,7 @@ static int openSocket(SuperServer &config, int port_nbr)
 	addr.sin_port = port_nbr;
 
 	//Binding the socket with the wanted port
-	while (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
+	if (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)))
 	{
 		std::cerr << "Error when binding socket: port "
 		<< COL(ESC_COLOR_CYAN, ntohs(port_nbr)) << " .. "

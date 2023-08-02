@@ -37,7 +37,7 @@
 # include "ClientQueue.hpp"
 
 # define BUFFER_SIZE	1024
-# define MAX_EVENTS		100
+# define MAX_EVENTS		1000
 # define TIMER_PERIODE	1000
 
 
