@@ -199,8 +199,6 @@ bool	isListenSocket(int fd, const std::set<int>& listenSockets)
 void establishConnection(int ev_fd, ClientQueue &client_queue, int eqfd)
 {
 	int new_socket_fd = accept(ev_fd, NULL, NULL);
-	std::cout << "Connection established !!!" << std::endl;
-	//usleep(500000);
 	if (new_socket_fd < 0)
 	{
 		std::cerr << ESC_COLOR_RED << "Error when accepting request: "

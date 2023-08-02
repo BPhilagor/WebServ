@@ -58,5 +58,6 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 	}
 
 	buff[bytesRecv] = '\0';
+	std::cout << "CGI:\n[" << buff << "]\n";
 	node->cgi_message += buff;
 }
