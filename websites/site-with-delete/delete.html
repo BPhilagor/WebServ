@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Site with DELETE</title>
+</head>
+<body>
+	<h1>Site with DELETE</h1>
+	<p>This website supports the static DELETE method. On locations that are configured to accept the DELETE method, when sending a:</p>
+	<code>
+		DELETE /this/that HTTP/1.1	<br>
+		Host: localhost				<br>
+									<br>
+	</code>
+	<p>
+		It delete the resource identified by /this/that if possible.
+	</p>
+	<form onsubmit="event.preventDefault;">
+		<label>Enter the resource you'd like to DELETE: </label><br>
+		<input type="text" name="location">
+		<input type="submit" name="submit">
+	</form>
+	<div id="http-response"></div>
+	<script>
+		var submitBtn = document.querySelector('input[name="submit"]');
+		var respZone = document.querySelector('div#http-response');
+		submitBtn.addEventListener("click", async (e) => {
+			e.preventDefault();
+			const location = document.querySelector('input[name="location"]').value;
+			var res = await fetch(location, {method: "DELETE"});
+			console.log(res);
+		});
+	</script>
+</body>
+</html>
