@@ -202,10 +202,11 @@ static int genDirListing(const HTTPRequest& req, const Location &loc, const std:
 	std::string head("<!DOCTYPE html><html><head><title>index of " + path + "</title></head><body><h1>Index of " + req.getURI().path + "</h1><ul>");
 	std::string content("");
 	FOREACH_VECTOR(std::string, entry_name)
-	{
-		url_to_file = req.getURI().path + ((req.getURI().path != "/")?"/":"") + *it;
-		content += "<li><a href=\"" + url_to_file + "\">" + *it + "</a></li>";
-	}
+		if (*it != "." && *it != "..")
+		{
+			url_to_file = req.getURI().path + ((req.getURI().path != "/")?"/":"") + *it;
+			content += "<li><a href=\"" + url_to_file + "\">" + *it + "</a></li>";
+		}
 	std::string foot("</ul></body></html>");
 
 	closedir(dir);
