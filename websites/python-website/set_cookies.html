@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" type="text/css" href="styles.py">
+	<title>Set Cookies Example</title>
+</head>
+<body>
+	<h1>Cookie Setter</h1>
+	<p>Enter the value for the cookie:</p>
+	<input type="color" id="cookieValueInput" />
+	<button onclick="setCookie()">Set Cookie</button>
+	<p id="message"></p>
+
+	<script>
+		function setCookie() {
+			var cookieName = "bg_color";
+			var cookieValue = document.getElementById("cookieValueInput").value;
+			var expirationDays = 30;
+
+			var date = new Date();
+			date.setTime(date.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
+			var expires = "expires=" + date.toUTCString();
+
+			document.cookie = cookieName + "=" + cookieValue + ";" + expires + ";path=/";
+			location.reload();
+		}
+	</script>
+</body>
+</html>

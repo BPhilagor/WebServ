@@ -40,7 +40,7 @@
 # ifdef DEBUG_PRINT
 #  define DP_MASK (1U << 31) - 1
 # else
-#  define DP_MASK (DP_9 | DP_15 | DP_14)
+#  define DP_MASK (DP_5 | DP_9 | DP_15 | DP_14)
 # endif
 
 
