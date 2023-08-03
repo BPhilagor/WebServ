@@ -18,18 +18,6 @@ int send_to_socket(const std::string &message, int socket_fd) {
 	return write(socket_fd, message.c_str(), message.length());
 }
 
-int send_file_to_socket(const std::string &filename, int socket_fd) {
-	std::ifstream file;
-	file.open(filename.c_str());
-
-	std::string line;
-	std::string message;
-	while (std::getline(file, line)) {
-		message += line + "\r\n";
-	}
-	return send_to_socket(message, socket_fd);
-}
-
 void trim_outside_whitespace(std::string &line)
 {
 	size_t start = line.find_first_not_of("\t\n\v\f\r ");
