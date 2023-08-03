@@ -87,7 +87,7 @@ const std::string &Server::getUploadDir() const
 	return getPropOrDefaultStr("upload_dir");
 }
 
-bool Server::getDirListing() const
+bool Server::isUploadDirSet() const
 {
 	if (_data.count("upload_dir") == 0)
 		return getDefault("upload_dir") == "true" ? true : false;

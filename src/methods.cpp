@@ -77,7 +77,7 @@ void	getOrPost(HTTPResponse &response, const Server &server, const Location& loc
 		else
 		{
 			generate_dir_listing:
-			if (!location.isDirListingSet())
+			if (!location.getDirListing())
 				response.setCode(403);
 			else
 				response.setCode(genDirListing(request, location, path, response));

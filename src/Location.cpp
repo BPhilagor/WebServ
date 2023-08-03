@@ -281,23 +281,16 @@ void Location::_setRedir(const Data &data)
 
 void Location::_setDirListing(const Data &data)
 {
+	_dir_listing = false;
 	if (data.count("dir_listing") == 0)
-	{
-		_dir_listing = false;
 		return ;
-	}
 	_config_mask |= WS_DIR_LISTING;
 
 	std::string str = data.find("dir_listing").getContent();
-	if (str == "false")
-		_dir_listing = false;
-	else if (str == "true")
+	if (str == "true")
 		_dir_listing = true;
-	else
-	{
-		_dir_listing = false;
+	else if (str != "false")
 		std::cerr << "Invalid dir listing bool: " << str << std::endl;
-	}
 }
 
 void Location::_setDefaultFile(const Data &data)

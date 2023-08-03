@@ -38,7 +38,7 @@ public:
 	int getBodyLimit() const;
 	const std::string &getErrorDir() const;
 	const std::string &getUploadDir() const;
-	bool getDirListing() const;
+	bool isUploadDirSet() const;
 
 	/* property interrogation */
 	int isHostPortMatch(const std::string &hostPort) const;
