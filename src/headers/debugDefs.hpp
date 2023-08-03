@@ -29,6 +29,7 @@
 # define DP_15  (1U << 15) /* CGI:                                            */
 # define DP_16  (1U << 16) /* CGI: in out debuging prints                     */
 # define DP_17  (1U << 17) /* ClientQueue activity                            */
+# define DP_18  (1U << 18) /* Timer Activation                            */
 
 
 /* debug print options mask */
@@ -37,7 +38,7 @@
 #  define DP_MASK (DP_1 | DP_2 | DP_3 | DP_4 | DP_5 | DP_6 | DP_7 | DP_8 | DP_9\
 				DP_10 | DP_11 | DP_12 | DP_13)
 # else
-#  define DP_MASK (DP_5 | DP_9 | DP_14 | DP_15)
+#  define DP_MASK (DP_9)
 # endif
 
 

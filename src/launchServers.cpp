@@ -95,8 +95,8 @@ void launchServers(const SuperServer &config, char **argv, char **env)
 			{
 				if (is_timer_event || (last_event_was_timer = false))
 				{
-					if (last_event_was_timer == false)
-					std::cout << COL(ESC_COLOR_RED, "TIMER !!!") << std::endl;
+					if (last_event_was_timer == false && (DP_18 & DP_MASK))
+						std::cout << COL(ESC_COLOR_RED, "TIMER !!!") << std::endl;
 					has_timer_event = true;
 					last_event_was_timer = true;
 				}

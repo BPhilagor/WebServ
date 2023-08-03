@@ -63,7 +63,8 @@ inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<c
 	{
 		//sleep(3);
 		std::string dirname = utils::getDirname(file_path);
-		std::cerr << "New working directory: "<<dirname <<std::endl;
+		if (DP_16 & DP_MASK)
+			std::cout << "New working directory: "<<dirname <<std::endl;
 		if (chdir(dirname.c_str()) != 0)
 		{
 			std::cerr << ESC_COLOR_RED << "Failed to change to directory "<<dirname<<" : "<<std::strerror(errno)<<std::endl;
@@ -77,13 +78,14 @@ inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<c
 			exit(1);
 		}
 
-		std::cerr << "Executing script: "<<file_path<<std::endl;
+		if (DP_16 & DP_MASK)
+			std::cerr << "Executing script: "<<file_path<<std::endl;
 
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
 		if (DP_16 & DP_MASK)
-		std::cerr << "CGI args:\"" << argv[0] << "\", \""	<< argv[1] << "\"\n" << std::endl;
+			std::cerr << "CGI args:\"" << argv[0] << "\", \""	<< argv[1] << "\"\n" << std::endl;
 		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
 		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
 			<< strerror(errno) << ESC_COLOR_RESET << std::endl;

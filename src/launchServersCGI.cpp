@@ -24,12 +24,8 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 		std::cout << COL(ESC_COLOR_GREEN, "CGI") << " on fd " << COL(ESC_COLOR_CYAN, node->cgi_fd) << " finished : ";
 
 		int child_status;
-		std::cout << "Wait for pid : " << node->cgi_pid << std::endl;
 		if (!waitpid(node->cgi_pid , &child_status, WNOHANG)) // Pipe is closed but pro
-		{
 			return ;
-		}
-		std::cout << "Finished waiting for: " << node->cgi_pid << std::endl;
 		if (WIFEXITED(child_status))
 		{
 			std::cout<<"status: "<< COL(ESC_COLOR_CYAN, WEXITSTATUS(child_status))<<std::endl;
@@ -58,6 +54,5 @@ void	CGIread(int eqfd, ClientQueue &client_queue, ClientNode *node)
 	}
 
 	buff[bytesRecv] = '\0';
-	std::cout << "CGI:\n[" << buff << "]\n";
 	node->cgi_message += buff;
 }
