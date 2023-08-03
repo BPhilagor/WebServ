@@ -27,6 +27,7 @@ int check_file(const char *path)
 {
 	if (access(path, R_OK) != 0)
 	{
+		if (DP_19 & DP_MASK)
 		std::cout << path << " : "<< std::strerror(errno) <<std::endl;
 		if (errno == ENOENT || errno == ENOTDIR)
 			return (ENOENT);

@@ -88,7 +88,7 @@ void	BufferManager::addInputBuffer(const std::string& s)
 				goto phase_2;
 			}
 			host = host.substr(0, host.find_last_of(":"));
-			if (DP_9 & DP_MASK)
+			if (DP_10 & DP_MASK)
 				std::cout << "Host name = " << host << std::endl;
 			virtual_server = config->getServerForHostPortAndHostName(_hostPort, host);
 			// this->virtual_server = static_cast<Server *>(virtual_server);

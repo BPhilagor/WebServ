@@ -29,17 +29,18 @@
 # define DP_15  (1U << 15) /* CGI:                                            */
 # define DP_16  (1U << 16) /* CGI: in out debuging prints                     */
 # define DP_17  (1U << 17) /* ClientQueue activity                            */
-# define DP_18  (1U << 18) /* Timer Activation                            */
+# define DP_18  (1U << 18) /* Timer Activation                                */
+# define DP_19  (1U << 19) /* no such file or directory                       */
 
 
 /* debug print options mask */
 
-# define DEBUG_PRINT
+// # define DEBUG_PRINT
 
 # ifdef DEBUG_PRINT
-#  define DP_MASK (-1)
+#  define DP_MASK (1U << 31) - 1
 # else
-#  define DP_MASK (DP_9)
+#  define DP_MASK (DP_9 | DP_15)
 # endif
 
 

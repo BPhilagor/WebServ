@@ -138,19 +138,18 @@ inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<c
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
-		// if (DP_16 & DP_MASK)
-			std::cerr << "CGI args:\"" << argv[0] << "\", \""	<< argv[1] << "\"\n" << std::endl;
-		// std::cerr << "exeve args:{\n" << argv[0] << "\n" << argv[1] << "\n}\n";
-		std::cerr << "env:{\n";
-		FOREACH_VECTOR(const char *, env)
+		if (DP_16 & DP_MASK)
 		{
-			if (it != env.end() - 1)
-				std::cerr << "{"<< *it << "}\n";
+			std::cerr << "exeve args:{\n" << argv[0] << "\n" << argv[1] << "\n}\n";
+			std::cerr << "env:{\n";
+			FOREACH_VECTOR(const char *, env)
+				if (it != env.end() - 1)
+					std::cerr << "{"<< *it << "}\n";
+			std::cerr << "\n}\n";
 		}
-		std::cerr << "\n}\n";
 		execve(cgi_path.c_str(), argv, env.data());
 		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
-			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
+			<< " " << strerror(errno) << ESC_COLOR_RESET << std::endl;
 		exit(1);
 	}
 	return pid;

@@ -327,7 +327,7 @@ void Location::_setCGI(const Data &data)
 			{
 				std::cerr << COL(ESC_COLOR_RED, "Cannot resolve cgi env variable:")
 				<< " $" << s2 << std::endl;
-				s2 = "";
+				s2 = "set_me!";
 			}
 			else
 				s2 = new_cgi_path;
