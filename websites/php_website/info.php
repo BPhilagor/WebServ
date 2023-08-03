@@ -16,10 +16,6 @@
 	</ul>
 
 	<?php
-		//echo '$argc:  '.$argc.' $argv: ';
-		echo $argc;
-		echo $argv;
-		//vardump($argv);
 	?>
 
 	<h1> Contents of the $_SERVER variable </h1>
@@ -60,6 +56,10 @@
 		<li>POTATO = <?php echo $_SERVER["potato"] ?? "UNDEFINED"; ?></li>
 </ul>
 	</table>
+
+	<h2>Contents of $_SERVER</h2>
+	<p><?php print_r($_SERVER); ?></p>
+
 	<h2>Contents of $_ENV</h2>
 	<p><?php print_r($_ENV);?>
 

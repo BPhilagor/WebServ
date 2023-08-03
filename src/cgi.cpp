@@ -19,10 +19,64 @@
 #include "debugDefs.hpp"
 #include "typedefs.hpp"
 
-static void create_env(const Location &loc,
+static int open_pipe(int *fd);
+static int close_pipe(int *fd);
+
+inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<char *> &env,
+				const std::string &cgi_path, const std::string &file_path);
+
+static std::vector<std::string> create_env(const Location &loc,
 				const HTTPRequest &req,
-				const std::string &file_path,
-				std::vector<const char *> &env);
+				const std::string &file_path);
+
+static std::vector<char *> convert_env(std::vector<std::string> &string_env);
+
+cgi_ret launchCGI(const Location &location,
+				const HTTPRequest &request,
+				const std::string &cgi_path,
+				const std::string &file_path)
+{
+	if (DP_15 & DP_MASK)
+		std::cout << COL(ESC_COLOR_GREEN, "launching CGI ") << cgi_path << std::endl;
+	int							server_cgi[2];
+	int							cgi_server[2];
+	cgi_ret						ret;
+	std::vector<std::string> string_env = create_env(location, request, file_path);
+	std::vector<char*>	cstring_env = convert_env(string_env);
+	ret.fd = -1;
+	ret.pid = -1;
+
+	// Opening pipes
+	if (open_pipe(server_cgi) == -1)
+		return ret;
+	if (open_pipe(cgi_server) == -1)
+	{
+		close_pipe(server_cgi);
+		return ret;
+	}
+
+	// Launching CGI
+	ret.fd = cgi_server[0];
+	ret.pid = fork_cgi(server_cgi, cgi_server, cstring_env, cgi_path, file_path);
+
+	// Parent Process
+	if (DP_16 & DP_MASK)
+		std::cerr << "CGI writing body to it's stdin\n";
+	// Send body to child
+	int bytes_written = write(server_cgi[1], request.getBody().c_str(), request.getBody().size());
+	if (bytes_written < 0)
+	{
+		std::cerr << "Writing request body to pipe failed: "<< std::strerror(errno) << std::endl;
+		return ret;
+	}
+
+	// Closing unused pipes
+	close_pipe(server_cgi);
+	close(cgi_server[1]);
+	if (DP_16 & DP_MASK)
+		std::cerr << "CGI finished with cgi process\n";
+	return ret;
+}
 
 static int open_pipe(int *fd)
 {
@@ -50,7 +104,7 @@ static int close_pipe(int *fd)
 	return ret_value;
 }
 
-inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<const char *> &env,
+inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<char *> &env,
 				const std::string &cgi_path, const std::string &file_path)
 {
 	int pid = fork();
@@ -84,9 +138,17 @@ inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<c
 		char * const argv[3] = {const_cast<char *>(cgi_path.c_str()),
 								const_cast<char *>(file_path.c_str()),
 								NULL};
-		if (DP_16 & DP_MASK)
+		// if (DP_16 & DP_MASK)
 			std::cerr << "CGI args:\"" << argv[0] << "\", \""	<< argv[1] << "\"\n" << std::endl;
-		execve(cgi_path.c_str(), argv, const_cast<char *const*>(&env[0]));
+		// std::cerr << "exeve args:{\n" << argv[0] << "\n" << argv[1] << "\n}\n";
+		std::cerr << "env:{\n";
+		FOREACH_VECTOR(const char *, env)
+		{
+			if (it != env.end() - 1)
+				std::cerr << "{"<< *it << "}\n";
+		}
+		std::cerr << "\n}\n";
+		execve(cgi_path.c_str(), argv, env.data());
 		std::cerr << ESC_COLOR_RED << "Error cannot execute : " << cgi_path
 			<< strerror(errno) << ESC_COLOR_RESET << std::endl;
 		exit(1);
@@ -94,96 +156,55 @@ inline static int fork_cgi(int *server_cgi, int *cgi_server, const std::vector<c
 	return pid;
 }
 
-cgi_ret launchCGI(const Location &location,
-				const HTTPRequest &request,
-				const std::string &cgi_path,
+static std::vector<std::string> create_env(const Location &loc,
+				const HTTPRequest &req,
 				const std::string &file_path)
 {
-	if (DP_15 & DP_MASK)
-		std::cout << COL(ESC_COLOR_GREEN, "launching CGI ") << cgi_path << std::endl;
-	int							server_cgi[2];
-	int							cgi_server[2];
-	std::vector<const char *>	env;
-	cgi_ret						ret;
-
-	ret.fd = -1;
-	ret.pid = -1;
-	create_env(location, request, file_path, env);
-
-	// Opening pipes
-	if (open_pipe(server_cgi) == -1)
-		return ret;
-	if (open_pipe(cgi_server) == -1)
-	{
-		close_pipe(server_cgi);
-		return ret;
-	}
-
-	// Launching CGI
-	ret.fd = cgi_server[0];
-	ret.pid = fork_cgi(server_cgi, cgi_server, env, cgi_path, file_path);
-
-	// Parent Process
-	if (DP_16 & DP_MASK)
-		std::cerr << "CGI writing body to it's stdin\n";
-	// Send body to child
-	int bytes_written = write(server_cgi[1], request.getBody().c_str(), request.getBody().size());
-	if (bytes_written < 0)
-	{
-		std::cerr << "Writing request body to pipe failed: "<< std::strerror(errno) << std::endl;
-		return ret;
-	}
-	
-	// Closing unused pipes
-	close_pipe(server_cgi);
-	close(cgi_server[1]);
-	if (DP_16 & DP_MASK)
-		std::cerr << "CGI finished with cgi process\n";
-	return ret;
-}
-
-static void create_env(const Location &loc,
-				const HTTPRequest &req,
-				const std::string &file_path,
-				std::vector<const char *> &env)
-{
 	(void) loc; // TODO utiliser ?
-	std::vector<std::string> tmp_env;
+	std::vector<std::string> string_env;
 
-	tmp_env.push_back(std::string("GATEWAY_INTERFACE=CGI/1.1"));
-	tmp_env.push_back(std::string("SERVER_NAME=" + req.getHeader("host")));
-	tmp_env.push_back(std::string("SERVER_SOFTWARE=WebServ_0.1"));
-	tmp_env.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
-	tmp_env.push_back(std::string("SERVER_PORT="));
-	tmp_env.push_back(std::string("REQUEST_METHOD=" + utils::getMethodStr(req)));
+	string_env.push_back(std::string("GATEWAY_INTERFACE=CGI/1.1"));
+	string_env.push_back(std::string("SERVER_NAME=" + req.getHeader("host")));
+	string_env.push_back(std::string("SERVER_SOFTWARE=WebServ_0.1"));
+	string_env.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
+	string_env.push_back(std::string("SERVER_PORT="));
+	string_env.push_back(std::string("REQUEST_METHOD=" + utils::getMethodStr(req)));
 
 	//is the part that comes after the name of the script
 	//ex:	if the url is /index.php/truc/bidule
 	//		and index.php is a cgi script
 	//		then the PATH_INFO is /truc/bidule
-	tmp_env.push_back(std::string("PATH_INFO="));
+	string_env.push_back(std::string("PATH_INFO="));
 
 
-	tmp_env.push_back(std::string("PATH_TRANSLATED=" + file_path));
-	tmp_env.push_back(std::string("SCRIPT_NAME=" + req.getURI().path));
-	tmp_env.push_back(std::string("DOCUMENT_ROOT=!!!! this should be set to the root of the website i.e. websites/python-website/")); // seems to be useless
-	tmp_env.push_back(std::string("QUERY_STRING=" + req.getURI().query)); // important!
-	tmp_env.push_back(std::string("REMOTE_HOST="));
-	tmp_env.push_back(std::string("REMOTE_ADDR="));
-	tmp_env.push_back(std::string("AUTH_TYPE="));
-	tmp_env.push_back(std::string("REMOTE_USER="));
-	tmp_env.push_back(std::string("REMOTE_IDENT="));
-	tmp_env.push_back(std::string("CONTENT_TYPE=" + req.getHeader("content-type")));
-	tmp_env.push_back(std::string("CONTENT_LENGTH=" + SSTR(req.getBody().length())));
-	tmp_env.push_back(std::string("HTTP_ACCEPT=" + req.getHeader("ACCEPT")));
-	tmp_env.push_back(std::string("HTTP_USER_AGENT=" + req.getHeader("USER-AGENT")));
-	tmp_env.push_back(std::string("HTTP_REFERER="));
-	tmp_env.push_back(std::string("REDIRECT_STATUS="));
-	tmp_env.push_back(std::string("HTTP_COOKIE=" + req.getHeader("Cookie")));
-	tmp_env.push_back(std::string("POTATO=trucbidule")); // THIS IS FINE (said skoulen)
+	string_env.push_back(std::string("PATH_TRANSLATED=" + file_path));
+	string_env.push_back(std::string("SCRIPT_NAME=" + req.getURI().path));
+	string_env.push_back(std::string("DOCUMENT_ROOT=!!!! this should be set to the root of the website i.e. websites/python-website/")); // seems to be useless
+	string_env.push_back(std::string("QUERY_STRING=" + req.getURI().query)); // important!
+	string_env.push_back(std::string("REMOTE_HOST="));
+	string_env.push_back(std::string("REMOTE_ADDR="));
+	string_env.push_back(std::string("AUTH_TYPE="));
+	string_env.push_back(std::string("REMOTE_USER="));
+	string_env.push_back(std::string("REMOTE_IDENT="));
+	string_env.push_back(std::string("CONTENT_TYPE=" + req.getHeader("content-type")));
+	string_env.push_back(std::string("CONTENT_LENGTH=" + SSTR(req.getBody().length())));
+	string_env.push_back(std::string("HTTP_ACCEPT=" + req.getHeader("ACCEPT")));
+	string_env.push_back(std::string("HTTP_USER_AGENT=" + req.getHeader("USER-AGENT")));
+	string_env.push_back(std::string("HTTP_REFERER="));
+	string_env.push_back(std::string("REDIRECT_STATUS="));
+	string_env.push_back(std::string("HTTP_COOKIE=" + req.getHeader("Cookie")));
+	string_env.push_back(std::string("POTATO=trucbidule")); // THIS IS FINE (said skoulen)
+
+	return string_env;
+}
+
+static std::vector<char *> convert_env(std::vector<std::string> &string_env)
+{
+	std::vector<char*> cstring_env;
 
 	// Converting vector of string into vector of const char *
-	FOREACH_VECTOR(std::string, tmp_env)
-		env.push_back(it->c_str());
-	env.push_back(NULL);
+	for(std::vector<std::string>::iterator it = string_env.begin(); it != string_env.end(); ++it)
+		cstring_env.push_back(&it->front());
+	cstring_env.push_back(NULL);
+	return cstring_env;
 }
