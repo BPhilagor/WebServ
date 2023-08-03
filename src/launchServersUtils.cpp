@@ -160,7 +160,7 @@ static int openSocket(SuperServer &config, int port_nbr)
 	}
 
 	// Start listening
-	if (listen(socketFD, BACK_LOG) < 0)
+	if (listen(socketFD, MAX_CONNEXION_QUEUE) < 0)
 	{
 		std::cerr << ESC_COLOR_RED << "Error when establishing a listen: "
 		<< std::strerror(errno) << ESC_COLOR_RESET << std::endl;

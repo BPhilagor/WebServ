@@ -89,7 +89,7 @@ std::string			Location::getRealPath(const std::string& path) const
 		if (getcwd(cwd_buf, s) == NULL)
 		{
 			PERR2("getcwd", std::strerror(errno));
-			exit(1);
+			exit(1); // TODO : Est ce que c'est normal ça ? (bphilago)
 		}
 		return cwd_buf + std::string("/") + _alias + std::string("/") + path;
 	}

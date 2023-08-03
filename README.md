@@ -83,3 +83,6 @@ https://example.com/
 ```
 
 Maybe an idea might be to overload the [] for data, so it's shorthand for the .getObj(n). Acess could look like this `node[0].second[0].first`;
+
+Pour curl test :
+curl --resolve "helloworld:8080:127.0.0.1" "helloworld:8080"
