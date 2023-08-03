@@ -34,9 +34,10 @@
 
 /* debug print options mask */
 
+# define DEBUG_PRINT
+
 # ifdef DEBUG_PRINT
-#  define DP_MASK (DP_1 | DP_2 | DP_3 | DP_4 | DP_5 | DP_6 | DP_7 | DP_8 | DP_9\
-				DP_10 | DP_11 | DP_12 | DP_13)
+#  define DP_MASK (-1)
 # else
 #  define DP_MASK (DP_9)
 # endif

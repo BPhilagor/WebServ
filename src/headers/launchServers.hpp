@@ -10,7 +10,7 @@
 #ifndef LAUNCHSERVERS_HPP
 # define LAUNCHSERVERS_HPP
 
-# define BACK_LOG 1000 /* is this used??*/
+# define MAX_CONNEXION_QUEUE 32767
 
 # ifdef __linux__
 #  include <sys/epoll.h>
