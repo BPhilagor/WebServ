@@ -102,8 +102,9 @@ void	writeHandler(int eqfd, ClientQueue &client_queue, ClientNode *node)
 			<< std::endl << std::endl;
 
 		/* If we announced in the header of the response that we would close the connection, we close it */
-		if (node->buffer_manager.getRequest().getHeader("Connection") == "close")
+		if (node->buffer_manager.getResponse().getHeader("Connection") == "close")
 		{
+			std::cout << "CLOSE" <<std::endl;
 			client_queue.remove(node);
 			return ;
 		}

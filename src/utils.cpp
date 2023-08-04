@@ -14,10 +14,6 @@
 
 #define LOCALHOST_UI32 16777343
 
-int send_to_socket(const std::string &message, int socket_fd) {
-	return write(socket_fd, message.c_str(), message.length());
-}
-
 void trim_outside_whitespace(std::string &line)
 {
 	size_t start = line.find_first_not_of("\t\n\v\f\r ");
